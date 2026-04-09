@@ -1,0 +1,139 @@
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b shadow-sm">
+  <!-- Premium Top Bar -->
+  <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-sm py-2.5">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
+        <span class="font-medium">Livraison Premium Gratuite dès 99€ • Retours Faciles 60 Jours</span>
+      </div>
+      <div class="hidden md:flex gap-6">
+        <button class="hover:text-indigo-100 transition-colors font-medium">Support 24/7</button>
+        <button class="hover:text-indigo-100 transition-colors font-medium">Track Order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Header -->
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="flex items-center gap-8">
+      <!-- Logo -->
+      <a routerLink="/" class="flex-shrink-0 group">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shadow-lg">
+            <span class="text-white text-xl font-bold">H</span>
+          </div>
+          <div>
+            <div class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+              HELIGXIAM
+            </div>
+            <div class="text-xs text-gray-500 -mt-1">Luxury Marketplace</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- Search Bar -->
+      <form (ngSubmit)="handleSearch()" class="flex-1 max-w-2xl">
+        <div class="relative group">
+          <lucide-angular 
+            [img]="Search" 
+            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors"
+          ></lucide-angular>
+          <input
+            type="text"
+            placeholder="Rechercher des produits premium..."
+            [(ngModel)]="searchQuery"
+            name="search"
+            class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+          />
+          <div class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hidden lg:block">
+            <kbd class="px-2 py-1 bg-white border rounded">⌘K</kbd>
+          </div>
+        </div>
+      </form>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-2">
+        <a
+          routerLink="/wishlist"
+          class="hidden lg:flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 rounded-xl transition-all group"
+        >
+          <lucide-angular [img]="Heart" class="w-5 h-5 text-gray-700 group-hover:text-red-500 transition-colors"></lucide-angular>
+          <span class="text-sm font-medium">Favoris</span>
+        </a>
+
+        <a
+          [routerLink]="isLoggedIn ? '/profile' : '/account'"
+          class="hidden lg:flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 rounded-xl transition-all group"
+        >
+          <lucide-angular [img]="User" class="w-5 h-5 text-gray-700 group-hover:text-indigo-600 transition-colors"></lucide-angular>
+          <span class="text-sm font-medium">{{ isLoggedIn ? 'Profil' : 'Compte' }}</span>
+        </a>
+
+        <a
+          routerLink="/cart"
+          class="relative flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all"
+        >
+          <lucide-angular [img]="ShoppingCart" class="w-5 h-5"></lucide-angular>
+          <span class="hidden md:inline text-sm font-medium">Panier</span>
+          <span 
+            *ngIf="cartCount > 0"
+            class="absolute -top-1 -right-1 bg-pink-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-lg animate-pulse"
+          >
+            {{ cartCount }}
+          </span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories Navigation -->
+  <div class="border-t bg-gray-50/50">
+    <div class="max-w-7xl mx-auto px-4">
+      <nav class="flex items-center gap-8 py-3 overflow-x-auto scrollbar-hide">
+        <a 
+          routerLink="/category/électronique" 
+          class="text-sm font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group"
+        >
+          Électronique
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
+        </a>
+        <a 
+          routerLink="/category/mode-&-accessoires" 
+          class="text-sm font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group"
+        >
+          Mode & Accessoires
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
+        </a>
+        <a 
+          routerLink="/category/maison-&-décoration" 
+          class="text-sm font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group"
+        >
+          Maison & Décoration
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
+        </a>
+        <a 
+          routerLink="/category/beauté-&-santé" 
+          class="text-sm font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group"
+        >
+          Beauté & Santé
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
+        </a>
+        <a 
+          [routerLink]="['/search']"
+          [queryParams]="{ badge: 'Premium' }"
+          class="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 whitespace-nowrap transition-colors"
+        >
+          <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
+          Premium
+        </a>
+        <a 
+          [routerLink]="['/search']"
+          [queryParams]="{ promo: 'true' }"
+          class="flex items-center gap-1 text-sm font-medium text-pink-600 hover:text-pink-700 whitespace-nowrap transition-colors"
+        >
+          🔥 Promotions
+        </a>
+      </nav>
+    </div>
+  </div>
+</header>

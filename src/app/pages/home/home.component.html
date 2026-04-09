@@ -1,0 +1,225 @@
+<div class="min-h-screen">
+  <!-- Hero Section -->
+  <section class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white overflow-hidden">
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnptLTEyIDEyYzMuMzE0IDAgNiAyLjY4NiA2IDZzLTIuNjg2IDYtNiA2LTYtMi42ODYtNi02IDIuNjg2LTYgNi02eiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMDUiLz48L2c+PC9zdmc+')] opacity-30"></div>
+    
+    <div class="max-w-7xl mx-auto px-4 py-24 relative">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full mb-6">
+            <lucide-angular [img]="Crown" class="w-4 h-4"></lucide-angular>
+            <span class="text-sm font-medium">Marketplace Premium #1 en France</span>
+          </div>
+          
+          <h1 class="text-6xl font-bold mb-6 leading-tight">
+            Découvrez l'Excellence
+            <span class="block bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
+              HELIGXIAM
+            </span>
+          </h1>
+          
+          <p class="text-xl text-indigo-100 mb-8 leading-relaxed">
+            Des produits premium soigneusement sélectionnés pour vous. 
+            Qualité exceptionnelle, service haut de gamme, satisfaction garantie.
+          </p>
+          
+          <div class="flex flex-wrap gap-4">
+            <a
+              routerLink="/search"
+              class="inline-flex items-center gap-2 bg-white text-indigo-600 px-8 py-4 rounded-xl font-bold hover:shadow-2xl hover:scale-105 transition-all"
+            >
+              Explorer la Collection
+              <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+            </a>
+            <a
+              [routerLink]="['/search']"
+              [queryParams]="{ badge: 'Premium' }"
+              class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md text-white border-2 border-white/30 px-8 py-4 rounded-xl font-bold hover:bg-white/20 transition-all"
+            >
+              <lucide-angular [img]="Sparkles" class="w-5 h-5"></lucide-angular>
+              Collection Premium
+            </a>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-3 gap-6 mt-12 pt-12 border-t border-white/20">
+            <div>
+              <div class="text-3xl font-bold mb-1">50K+</div>
+              <div class="text-sm text-indigo-200">Clients Satisfaits</div>
+            </div>
+            <div>
+              <div class="text-3xl font-bold mb-1">15K+</div>
+              <div class="text-sm text-indigo-200">Produits Premium</div>
+            </div>
+            <div>
+              <div class="text-3xl font-bold mb-1">4.9★</div>
+              <div class="text-sm text-indigo-200">Note Moyenne</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Image Grid -->
+        <div class="hidden lg:block">
+          <div class="grid grid-cols-2 gap-4">
+            <div 
+              *ngFor="let product of featuredProducts.slice(0, 4); let idx = index"
+              class="aspect-square rounded-2xl overflow-hidden shadow-2xl hover:scale-105 transition-transform"
+            >
+              <img 
+                [src]="product.image" 
+                [alt]="product.name"
+                class="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wave Divider -->
+    <div class="absolute bottom-0 left-0 right-0">
+      <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Trust Badges -->
+  <section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <lucide-angular [img]="Package" class="w-8 h-8 text-indigo-600"></lucide-angular>
+          </div>
+          <h3 class="font-bold mb-1">Livraison Express</h3>
+          <p class="text-sm text-gray-600">Gratuite dès 99€</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <lucide-angular [img]="Shield" class="w-8 h-8 text-green-600"></lucide-angular>
+          </div>
+          <h3 class="font-bold mb-1">Paiement Sécurisé</h3>
+          <p class="text-sm text-gray-600">100% Protégé</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <lucide-angular [img]="Award" class="w-8 h-8 text-amber-600"></lucide-angular>
+          </div>
+          <h3 class="font-bold mb-1">Garantie Premium</h3>
+          <p class="text-sm text-gray-600">2 ans minimum</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-gradient-to-br from-pink-100 to-red-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <lucide-angular [img]="Zap" class="w-8 h-8 text-pink-600"></lucide-angular>
+          </div>
+          <h3 class="font-bold mb-1">Support 24/7</h3>
+          <p class="text-sm text-gray-600">Équipe dédiée</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Premium Collection -->
+  <section *ngIf="premiumProducts.length > 0" class="py-20 bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 text-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between mb-12">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <lucide-angular [img]="Crown" class="w-6 h-6 text-yellow-400"></lucide-angular>
+            <span class="text-sm font-bold text-yellow-400 uppercase tracking-wider">Collection Exclusive</span>
+          </div>
+          <h2 class="text-4xl font-bold">Sélection Premium</h2>
+          <p class="text-gray-300 mt-2">Les meilleurs produits, sélectionnés pour vous</p>
+        </div>
+        <a 
+          [routerLink]="['/search']"
+          [queryParams]="{ badge: 'Premium' }"
+          class="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-md px-6 py-3 rounded-xl hover:bg-white/20 transition-all"
+        >
+          Voir tout
+          <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <app-product-card *ngFor="let product of premiumProducts.slice(0, 4)" [product]="product"></app-product-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- Promotions -->
+  <section *ngIf="promoProducts.length > 0" class="py-20 bg-gradient-to-br from-red-50 to-pink-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between mb-12">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="text-2xl">🔥</div>
+            <span class="text-sm font-bold text-red-600 uppercase tracking-wider">Offres Limitées</span>
+          </div>
+          <h2 class="text-4xl font-bold text-gray-900">Promotions Exceptionnelles</h2>
+          <p class="text-gray-600 mt-2">Jusqu'à -30% sur une sélection de produits</p>
+        </div>
+        <a 
+          [routerLink]="['/search']"
+          [queryParams]="{ promo: 'true' }"
+          class="hidden md:flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all"
+        >
+          Toutes les promos
+          <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <app-product-card *ngFor="let product of promoProducts" [product]="product"></app-product-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- Best Sellers -->
+  <section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between mb-12">
+        <div>
+          <div class="flex items-center gap-2 mb-3">
+            <lucide-angular [img]="TrendingUp" class="w-6 h-6 text-blue-600"></lucide-angular>
+            <span class="text-sm font-bold text-blue-600 uppercase tracking-wider">Tendances</span>
+          </div>
+          <h2 class="text-4xl font-bold text-gray-900">Meilleures Ventes</h2>
+          <p class="text-gray-600 mt-2">Les produits les plus appréciés par nos clients</p>
+        </div>
+        <a 
+          [routerLink]="['/search']"
+          [queryParams]="{ sort: 'bestseller' }"
+          class="hidden md:flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
+        >
+          Voir tout
+          <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+        </a>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <app-product-card *ngFor="let product of bestSellers.slice(0, 4)" [product]="product"></app-product-card>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter -->
+  <section class="py-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <lucide-angular [img]="Sparkles" class="w-12 h-12 mx-auto mb-6"></lucide-angular>
+      <h2 class="text-4xl font-bold mb-4">Rejoignez le Club HELIGXIAM</h2>
+      <p class="text-xl text-indigo-100 mb-8">
+        Recevez en avant-première nos offres exclusives, nouveautés et conseils premium
+      </p>
+      <div class="flex gap-4 max-w-xl mx-auto">
+        <input
+          type="email"
+          placeholder="Votre adresse email"
+          class="flex-1 px-6 py-4 rounded-xl text-gray-900 focus:outline-none focus:ring-4 focus:ring-white/50"
+        />
+        <button class="bg-white text-indigo-600 px-8 py-4 rounded-xl font-bold hover:scale-105 transition-all whitespace-nowrap">
+          S'inscrire
+        </button>
+      </div>
+      <p class="text-sm text-indigo-200 mt-4">🎁 -10% sur votre première commande</p>
+    </div>
+  </section>
+</div>

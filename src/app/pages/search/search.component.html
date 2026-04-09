@@ -1,0 +1,156 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">
+        {{ queryParam ? 'Résultats pour "' + queryParam + '"' : 'Tous les produits' }}
+      </h1>
+      <p class="text-gray-600">{{ filteredProducts.length }} produits trouvés</p>
+    </div>
+
+    <div class="flex gap-8">
+      <!-- Filters Sidebar -->
+      <div class="hidden lg:block w-full lg:w-64 flex-shrink-0" [class.block]="showFilters" [class.lg:block]="true">
+        <div class="bg-white rounded-lg p-6 sticky top-24 space-y-6">
+          <div class="flex items-center justify-between lg:justify-start">
+            <h2 class="font-bold text-lg">Filtres</h2>
+            <button
+              (click)="toggleFilters()"
+              class="lg:hidden text-gray-500"
+            >
+              ✕
+            </button>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <h3 class="font-medium mb-3">Catégorie</h3>
+            <div class="space-y-2">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="category"
+                  [value]="''"
+                  [(ngModel)]="selectedCategory"
+                  (change)="onCategoryChange()"
+                  class="w-4 h-4"
+                />
+                <span class="text-sm">Toutes</span>
+              </label>
+              <label *ngFor="let cat of categories" class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="category"
+                  [value]="cat"
+                  [(ngModel)]="selectedCategory"
+                  (change)="onCategoryChange()"
+                  class="w-4 h-4"
+                />
+                <span class="text-sm">{{ cat }}</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Price Range -->
+          <div>
+            <h3 class="font-medium mb-3">Prix</h3>
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <input
+                  type="number"
+                  [(ngModel)]="priceRange[0]"
+                  (ngModelChange)="onPriceRangeChange()"
+                  class="w-full px-3 py-2 border rounded"
+                  placeholder="Min"
+                />
+                <span>-</span>
+                <input
+                  type="number"
+                  [(ngModel)]="priceRange[1]"
+                  (ngModelChange)="onPriceRangeChange()"
+                  class="w-full px-3 py-2 border rounded"
+                  placeholder="Max"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Rating -->
+          <div>
+            <h3 class="font-medium mb-3">Note minimum</h3>
+            <div class="space-y-2">
+              <label *ngFor="let rating of [0, 3, 4, 4.5]" class="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="rating"
+                  [value]="rating"
+                  [(ngModel)]="minRating"
+                  (change)="onRatingChange()"
+                  class="w-4 h-4"
+                />
+                <span class="text-sm">
+                  {{ rating === 0 ? 'Toutes' : rating + '★ et plus' }}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Reset -->
+          <button
+            (click)="resetFilters()"
+            class="w-full text-sm text-blue-600 hover:underline"
+          >
+            Réinitialiser les filtres
+          </button>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="flex-1">
+        <!-- Sort Bar -->
+        <div class="bg-white rounded-lg p-4 mb-6 flex items-center justify-between">
+          <button
+            (click)="toggleFilters()"
+            class="lg:hidden flex items-center gap-2 text-gray-700"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12"></line>
+              <line x1="4" x2="20" y1="6" y2="6"></line>
+              <line x1="4" x2="20" y1="18" y2="18"></line>
+            </svg>
+            Filtres
+          </button>
+          <div class="flex items-center gap-4 ml-auto">
+            <label class="text-sm text-gray-700">Trier par:</label>
+            <select
+              [(ngModel)]="sortBy"
+              (ngModelChange)="onSortChange()"
+              class="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="relevance">Pertinence</option>
+              <option value="price-asc">Prix croissant</option>
+              <option value="price-desc">Prix décroissant</option>
+              <option value="rating">Meilleures notes</option>
+              <option value="name">Nom A-Z</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div *ngIf="filteredProducts.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <app-product-card *ngFor="let product of filteredProducts" [product]="product"></app-product-card>
+        </div>
+        
+        <div *ngIf="filteredProducts.length === 0" class="text-center py-16">
+          <p class="text-gray-600 text-lg mb-4">Aucun produit trouvé</p>
+          <button
+            (click)="resetFilters()"
+            class="text-blue-600 hover:underline"
+          >
+            Réinitialiser les filtres
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

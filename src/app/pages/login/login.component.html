@@ -1,0 +1,564 @@
+<div class="min-h-screen">
+  <!-- Background avec zigzags comme la page d'accueil -->
+  <div class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white overflow-hidden min-h-screen">
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnptLTEyIDEyYzMuMzE0IDAgNiAyLjY4NiA2IDZzLTIuNjg2IDYtNiA2LTYtMi42ODYtNi02IDIuNjg2LTYgNi02eiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMDUiLz48L2c+PC9zdmc+')] opacity-30"></div>
+    
+    <div class="max-w-md mx-auto px-4 py-12 relative">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-white mb-2">Mon Compte</h1>
+        <p class="text-purple-100">
+          <span *ngIf="currentView === 'login'">Connectez-vous à votre compte</span>
+          <span *ngIf="currentView === 'register'">Créez votre compte</span>
+          <span *ngIf="currentView === 'forgot-password'">Réinitialisez votre mot de passe</span>
+          <span *ngIf="currentView === 'privacy'">Politique de confidentialité</span>
+        </p>
+      </div>
+
+      <!-- Login Form -->
+      <div *ngIf="currentView === 'login'" class="bg-white shadow-lg rounded-lg p-8">
+        <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+          <!-- Email -->
+          <div class="mb-4">
+            <label for="login-email" class="block text-sm font-medium text-gray-700 mb-2">
+              Adresse email
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              formControlName="email"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              placeholder="exemple@email.com"
+            />
+            <div *ngIf="getErrorMessage(loginForm, 'email')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(loginForm, 'email') }}
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="mb-4">
+            <label for="login-password" class="block text-sm font-medium text-gray-700 mb-2">
+              Mot de passe
+            </label>
+            <div class="relative">
+              <input
+                id="login-password"
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                (click)="togglePassword('login')"
+                class="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+              >
+                <svg *ngIf="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                <svg *ngIf="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="getErrorMessage(loginForm, 'password')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(loginForm, 'password') }}
+            </div>
+          </div>
+
+          <!-- Captcha -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Vérification de sécurité
+            </label>
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="bg-gray-100 px-4 py-2 rounded border border-gray-300 select-none">
+                <span class="font-mono text-lg font-bold text-gray-700">{{ captchaText }}</span>
+              </div>
+              <button
+                type="button"
+                (click)="generateCaptcha()"
+                class="p-2 text-gray-500 hover:text-gray-700"
+                title="Rafraîchir le captcha"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+              </button>
+            </div>
+            <input
+              type="text"
+              formControlName="captcha"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              placeholder="Entrez le code ci-dessus"
+            />
+            <div *ngIf="getErrorMessage(loginForm, 'captcha')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(loginForm, 'captcha') }}
+            </div>
+          </div>
+
+          <!-- Type d'utilisateur -->
+          <div class="mb-4">
+            <label for="login-user-type" class="block text-sm font-medium text-gray-700 mb-2">
+              Type de compte
+            </label>
+            <select
+              id="login-user-type"
+              formControlName="userType"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            >
+              <option value="">Sélectionnez un type</option>
+              <option value="client">Client</option>
+              <option value="vendeur">Vendeur</option>
+            </select>
+            <div *ngIf="getErrorMessage(loginForm, 'userType')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(loginForm, 'userType') }}
+            </div>
+          </div>
+
+          <!-- Remember Me & Forgot Password -->
+          <div class="flex items-center justify-between mb-6">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                formControlName="rememberMe"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span class="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
+            </label>
+            <button
+              type="button"
+              (click)="switchView('forgot-password')"
+              class="text-sm text-blue-600 hover:text-blue-500"
+            >
+              Mot de passe oublié?
+            </button>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="loginError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+            {{ loginError }}
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+          >
+            Se connecter
+          </button>
+        </form>
+
+        <!-- Register Link -->
+        <div class="mt-6 text-center">
+          <p class="text-sm text-gray-600">
+            Pas encore de compte?
+            <button
+              (click)="switchView('register')"
+              class="text-blue-600 hover:text-blue-500 font-medium"
+            >
+              S'inscrire
+            </button>
+          </p>
+        </div>
+      </div>
+
+      <!-- Register Form -->
+      <div *ngIf="currentView === 'register'" class="bg-white shadow-lg rounded-lg p-8">
+        <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
+          <!-- Name Fields -->
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="register-firstname" class="block text-sm font-medium text-gray-700 mb-2">
+                Prénom
+              </label>
+              <input
+                id="register-firstname"
+                type="text"
+                formControlName="firstName"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="Jean"
+              />
+              <div *ngIf="getErrorMessage(registerForm, 'firstName')" class="mt-1 text-sm text-red-600">
+                {{ getErrorMessage(registerForm, 'firstName') }}
+              </div>
+            </div>
+            <div>
+              <label for="register-lastname" class="block text-sm font-medium text-gray-700 mb-2">
+                Nom
+              </label>
+              <input
+                id="register-lastname"
+                type="text"
+                formControlName="lastName"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="Dupont"
+              />
+              <div *ngIf="getErrorMessage(registerForm, 'lastName')" class="mt-1 text-sm text-red-600">
+                {{ getErrorMessage(registerForm, 'lastName') }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="mb-4">
+            <label for="register-email" class="block text-sm font-medium text-gray-700 mb-2">
+              Adresse email
+            </label>
+            <input
+              id="register-email"
+              type="email"
+              formControlName="email"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              placeholder="exemple@email.com"
+            />
+            <div *ngIf="getErrorMessage(registerForm, 'email')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(registerForm, 'email') }}
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div class="mb-4">
+            <label for="register-phone" class="block text-sm font-medium text-gray-700 mb-2">
+              Téléphone (optionnel)
+            </label>
+            <input
+              id="register-phone"
+              type="tel"
+              formControlName="phone"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              placeholder="0612345678"
+            />
+            <div *ngIf="getErrorMessage(registerForm, 'phone')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(registerForm, 'phone') }}
+            </div>
+          </div>
+
+          <!-- Type d'utilisateur -->
+          <div class="mb-4">
+            <label for="register-user-type" class="block text-sm font-medium text-gray-700 mb-2">
+              Type de compte
+            </label>
+            <select
+              id="register-user-type"
+              formControlName="userType"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+            >
+              <option value="">Sélectionnez un type</option>
+              <option value="client">Client</option>
+              <option value="vendeur">Vendeur</option>
+            </select>
+            <div *ngIf="getErrorMessage(registerForm, 'userType')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(registerForm, 'userType') }}
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="mb-4">
+            <label for="register-password" class="block text-sm font-medium text-gray-700 mb-2">
+              Mot de passe
+            </label>
+            <div class="relative">
+              <input
+                id="register-password"
+                [type]="showRegisterPassword ? 'text' : 'password'"
+                formControlName="password"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                (click)="togglePassword('register')"
+                class="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+              >
+                <svg *ngIf="!showRegisterPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                <svg *ngIf="showRegisterPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="getErrorMessage(registerForm, 'password')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(registerForm, 'password') }}
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="mb-4">
+            <label for="register-confirm-password" class="block text-sm font-medium text-gray-700 mb-2">
+              Confirmer le mot de passe
+            </label>
+            <div class="relative">
+              <input
+                id="register-confirm-password"
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                formControlName="confirmPassword"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                (click)="togglePassword('confirm')"
+                class="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+              >
+                <svg *ngIf="!showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                <svg *ngIf="showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                </svg>
+              </button>
+            </div>
+            <div *ngIf="getErrorMessage(registerForm, 'confirmPassword')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(registerForm, 'confirmPassword') }}
+            </div>
+          </div>
+
+          <!-- Captcha -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Vérification de sécurité
+            </label>
+            <div class="flex items-center space-x-2 mb-2">
+              <div class="bg-gray-100 px-4 py-2 rounded border border-gray-300 select-none">
+                <span class="font-mono text-lg font-bold text-gray-700">{{ captchaText }}</span>
+              </div>
+              <button
+                type="button"
+                (click)="generateCaptcha()"
+                class="p-2 text-gray-500 hover:text-gray-700"
+                title="Rafraîchir le captcha"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+              </button>
+            </div>
+            <input
+              type="text"
+              formControlName="captcha"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              placeholder="Entrez le code ci-dessus"
+            />
+            <div *ngIf="getErrorMessage(registerForm, 'captcha')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(registerForm, 'captcha') }}
+            </div>
+          </div>
+
+          <!-- Terms and Privacy -->
+          <div class="mb-6 space-y-2">
+            <label class="flex items-start">
+              <input
+                type="checkbox"
+                formControlName="acceptTerms"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+              />
+              <span class="ml-2 text-sm text-gray-600">
+                J'accepte les
+                <button type="button" class="text-blue-600 hover:text-blue-500">conditions d'utilisation</button>
+              </span>
+            </label>
+            <label class="flex items-start">
+              <input
+                type="checkbox"
+                formControlName="acceptPrivacy"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+              />
+              <span class="ml-2 text-sm text-gray-600">
+                J'accepte la
+                <button type="button" (click)="switchView('privacy')" class="text-blue-600 hover:text-blue-500">
+                  politique de confidentialité
+                </button>
+              </span>
+            </label>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="registerError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+            {{ registerError }}
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+          >
+            S'inscrire
+          </button>
+        </form>
+
+        <!-- Login Link -->
+        <div class="mt-6 text-center">
+          <p class="text-sm text-gray-600">
+            Déjà un compte?
+            <button
+              (click)="switchView('login')"
+              class="text-blue-600 hover:text-blue-500 font-medium"
+            >
+              Se connecter
+            </button>
+          </p>
+        </div>
+      </div>
+
+      <!-- Forgot Password Form -->
+      <div *ngIf="currentView === 'forgot-password'" class="bg-white shadow-lg rounded-lg p-8">
+        <form [formGroup]="forgotPasswordForm" (ngSubmit)="onForgotPassword()">
+          <div class="mb-6">
+            <p class="text-gray-600 text-sm mb-4">
+              Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+            </p>
+          </div>
+
+          <!-- Email -->
+          <div class="mb-4">
+            <label for="forgot-email" class="block text-sm font-medium text-gray-700 mb-2">
+              Adresse email
+            </label>
+            <input
+              id="forgot-email"
+              type="email"
+              formControlName="email"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+              placeholder="exemple@email.com"
+            />
+            <div *ngIf="getErrorMessage(forgotPasswordForm, 'email')" class="mt-1 text-sm text-red-600">
+              {{ getErrorMessage(forgotPasswordForm, 'email') }}
+            </div>
+          </div>
+
+          <!-- Success Message -->
+          <div *ngIf="forgotPasswordSuccess" class="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
+            {{ forgotPasswordSuccess }}
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="forgotPasswordError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+            {{ forgotPasswordError }}
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+          >
+            Envoyer le lien de réinitialisation
+          </button>
+        </form>
+
+        <!-- Back to Login -->
+        <div class="mt-6 text-center">
+          <button
+            (click)="switchView('login')"
+            class="text-blue-600 hover:text-blue-500 font-medium text-sm"
+          >
+            ← Retour à la connexion
+          </button>
+        </div>
+      </div>
+
+      <!-- Privacy Policy -->
+      <div *ngIf="currentView === 'privacy'" class="bg-white shadow-lg rounded-lg p-8">
+        <div class="prose max-w-none">
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Politique de Confidentialité</h2>
+          
+          <div class="space-y-4 text-gray-700">
+            <section>
+              <h3 class="text-lg font-semibold mb-2">1. Collecte des informations</h3>
+              <p class="text-sm">
+                Nous collectons les informations personnelles que vous nous fournissez lors de votre inscription,
+                notamment votre nom, adresse email, numéro de téléphone et autres informations nécessaires
+                à la création de votre compte.
+              </p>
+            </section>
+
+            <section>
+              <h3 class="text-lg font-semibold mb-2">2. Utilisation des informations</h3>
+              <p class="text-sm">
+                Vos informations sont utilisées pour :
+              </p>
+              <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+                <li>Gérer votre compte et vos commandes</li>
+                <li>Améliorer nos services et votre expérience utilisateur</li>
+                <li>Vous contacter concernant votre compte ou nos services</li>
+                <li>Assurer la sécurité de notre plateforme</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 class="text-lg font-semibold mb-2">3. Protection des données</h3>
+              <p class="text-sm">
+                Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos informations
+                personnelles contre l'accès non autorisé, la modification, la divulgation ou la destruction.
+              </p>
+            </section>
+
+            <section>
+              <h3 class="text-lg font-semibold mb-2">4. Partage des informations</h3>
+              <p class="text-sm">
+                Nous ne vendons, n'échangeons ni ne louons vos informations personnelles à des tiers.
+                Nous ne partageons vos informations que dans les cas suivants :
+              </p>
+              <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+                <li>Avec votre consentement explicite</li>
+                <li>Pour respecter la loi ou une procédure judiciaire</li>
+                <li>Pour protéger nos droits, notre propriété ou notre sécurité</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 class="text-lg font-semibold mb-2">5. Cookies</h3>
+              <p class="text-sm">
+                Notre site utilise des cookies pour améliorer votre expérience, analyser le trafic
+                et personnaliser le contenu. Vous pouvez désactiver les cookies dans les paramètres
+                de votre navigateur.
+              </p>
+            </section>
+
+            <section>
+              <h3 class="text-lg font-semibold mb-2">6. Vos droits</h3>
+              <p class="text-sm">
+                Vous avez le droit d'accéder, de modifier ou de supprimer vos informations personnelles.
+                Vous pouvez également vous désinscrire de notre service à tout moment.
+              </p>
+            </section>
+
+            <section>
+              <h3 class="text-lg font-semibold mb-2">7. Contact</h3>
+              <p class="text-sm">
+                Pour toute question concernant cette politique de confidentialité, veuillez nous contacter
+                à l'adresse email : privacy@heligxiam-marketplace.com
+              </p>
+            </section>
+
+            <div class="mt-6 p-4 bg-gray-50 rounded-md">
+              <p class="text-xs text-gray-600">
+                Dernière mise à jour : {{ today | date:'longDate':'fr-FR' }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Back buttons -->
+        <div class="mt-6 flex justify-center space-x-4">
+          <button
+            (click)="switchView('login')"
+            class="text-blue-600 hover:text-blue-500 font-medium text-sm"
+          >
+            ← Retour à la connexion
+          </button>
+          <button
+            (click)="switchView('register')"
+            class="text-blue-600 hover:text-blue-500 font-medium text-sm"
+          >
+            ← Retour à l'inscription
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

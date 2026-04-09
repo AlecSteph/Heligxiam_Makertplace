@@ -1,0 +1,476 @@
+<div class="min-h-screen bg-white">
+  <!-- Background avec zigzags comme la page d'accueil -->
+  <div class="relative bg-white text-gray-900 overflow-hidden min-h-screen">
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnptLTEyIDEyYzMuMzE0IDAgNiAyLjY4NiA2IDZzLTIuNjg2IDYtNiA2LTYtMi42ODYtNi02IDIuNjg2LTYgNi02eiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMDUiLz48L2c+PC9zdmc+')] opacity-30"></div>
+    
+    <div class="relative z-10">
+      <!-- Header -->
+      <div class="bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <h1 class="text-2xl font-bold text-gray-900">Mon Profil</h1>
+              <div class="flex items-center space-x-2">
+                <span class="px-3 py-1 bg-yellow-400 text-yellow-900 rounded-full text-sm font-medium">
+                  {{ userInfo.level }}
+                </span>
+                <span *ngIf="userInfo.verified" class="text-green-300">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                </span>
+              </div>
+              <button (click)="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4 4m4-4H3a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2H7m4 4v6m0 0l-4 4"></path>
+                </svg>
+                Déconnexion
+              </button>
+            </div>
+            <button routerLink="/" class="text-gray-900/80 hover:text-gray-900">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid lg:grid-cols-4 gap-6">
+          <!-- Sidebar Navigation -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+              <!-- User Info -->
+              <div class="text-center mb-6" style="color: #111827 !important;">
+                <div class="w-20 h-20 mx-auto mb-3 rounded-full bg-gray-100 flex items-center justify-center">
+                  <svg class="w-12 h-12 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold" style="color: #111827 !important;">{{ userInfo.firstName }} {{ userInfo.lastName }}</h3>
+                <p class="text-sm" style="color: #4b5563 !important;">{{ userInfo.email }}</p>
+                <p class="text-xs mt-1" style="color: #6b7280 !important;">Membre depuis {{ userInfo.memberSince | date:'MMMM yyyy' }}</p>
+              </div>
+
+              <!-- Navigation Menu -->
+              <nav class="space-y-1">
+                <button (click)="switchView('dashboard')" [class]="{'bg-gray-100': currentView === 'dashboard'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Tableau de bord</span>
+                </button>
+                
+                <button (click)="switchView('orders')" [class]="{'bg-gray-100': currentView === 'orders'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Mes commandes</span>
+                </button>
+
+                <button (click)="switchView('purchases')" [class]="{'bg-gray-100': currentView === 'purchases'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Mes achats</span>
+                </button>
+
+                <button (click)="switchView('wishlist')" [class]="{'bg-gray-100': currentView === 'wishlist'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Liste de souhaits</span>
+                </button>
+
+                <button (click)="switchView('addresses')" [class]="{'bg-gray-100': currentView === 'addresses'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314-3.314l4.244 4.243a8 8 0 01-2.829 3.829z"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Adresses</span>
+                </button>
+
+                <button (click)="switchView('payments')" [class]="{'bg-gray-100': currentView === 'payments'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Moyens de paiement</span>
+                </button>
+
+                <button (click)="switchView('reviews')" [class]="{'bg-gray-100': currentView === 'reviews'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57.381-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Avis</span>
+                </button>
+
+                <button (click)="switchView('messages')" [class]="{'bg-gray-100': currentView === 'messages'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Messages</span>
+                  <span *ngIf="messages.some(m => !m.read)" class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                    {{ messages.filter(m => !m.read).length }}
+                  </span>
+                </button>
+
+                <button (click)="switchView('settings')" [class]="{'bg-gray-100': currentView === 'settings'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 00-1.065 2.572c-1.756.426-1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c-.94 1.543.826 3.31 2.37 2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Paramètres</span>
+                </button>
+
+                <button (click)="switchView('help')" [class]="{'bg-gray-100': currentView === 'help'}" class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3" style="color: #111827 !important;">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span style="color: #111827 !important;">Aide</span>
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="lg:col-span-3">
+            <div class="bg-white rounded-xl shadow-lg">
+              <!-- Dashboard View -->
+              <div *ngIf="currentView === 'dashboard'" class="p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Tableau de bord</h2>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
+                    <div class="text-3xl font-bold">{{ stats.totalOrders }}</div>
+                    <div class="text-blue-100">Commandes</div>
+                  </div>
+                  <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
+                    <div class="text-3xl font-bold">{{ stats.totalPurchases }}</div>
+                    <div class="text-green-100">Achats</div>
+                  </div>
+                  <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
+                    <div class="text-3xl font-bold">{{ stats.totalSpent | currency:'EUR' }}</div>
+                    <div class="text-purple-100">Total dépensé</div>
+                  </div>
+                  <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-4 text-white">
+                    <div class="text-3xl font-bold">{{ stats.savedItems }}</div>
+                    <div class="text-orange-100">Favoris</div>
+                  </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="mb-8">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-4">Commandes récentes</h3>
+                  <div class="space-y-3">
+                    <div *ngFor="let order of recentOrders" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <div class="font-medium text-gray-900">{{ order.id }}</div>
+                          <div class="text-sm text-gray-600">{{ order.date | date:'dd MMM yyyy' }} • {{ order.items }} articles</div>
+                          <div class="text-sm text-gray-600">Vendeur: {{ order.seller }}</div>
+                        </div>
+                        <div class="text-right">
+                          <div class="font-semibold text-gray-900">{{ order.total | currency:'EUR' }}</div>
+                          <span class="inline-block px-2 py-1 rounded-full text-xs font-medium" [class]="getStatusColor(order.status)">
+                            {{ getStatusText(order.status) }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <button (click)="switchView('orders')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-center">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                    <div class="text-sm font-medium text-gray-900">Voir commandes</div>
+                  </button>
+                  <button (click)="switchView('wishlist')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-center">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    </svg>
+                    <div class="text-sm font-medium text-gray-900">Favoris</div>
+                  </button>
+                  <button (click)="switchView('addresses')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-center">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314-3.314l4.244 4.243a8 8 0 01-2.829 3.829z"></path>
+                    </svg>
+                    <div class="text-sm font-medium text-gray-900">Adresses</div>
+                  </button>
+                  <button (click)="switchView('settings')" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 text-center">
+                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 00-1.065 2.572c-1.756.426-1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c-.94 1.543.826 3.31 2.37 2.37.996.608 2.296.07 2.572-1.065z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <div class="text-sm font-medium text-gray-900">Paramètres</div>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Orders View -->
+              <div *ngIf="currentView === 'orders'" class="p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Mes commandes</h2>
+                <div class="space-y-4">
+                  <div *ngFor="let order of recentOrders" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <div class="font-medium text-gray-900">{{ order.id }}</div>
+                        <div class="text-sm text-gray-600">{{ order.date | date:'dd MMM yyyy à HH:mm' }}</div>
+                        <div class="text-sm text-gray-600">{{ order.items }} articles • Vendeur: {{ order.seller }}</div>
+                      </div>
+                      <div class="text-right">
+                        <div class="font-semibold text-gray-900">{{ order.total | currency:'EUR' }}</div>
+                        <span class="inline-block px-2 py-1 rounded-full text-xs font-medium" [class]="getStatusColor(order.status)">
+                          {{ getStatusText(order.status) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Wishlist View -->
+              <div *ngIf="currentView === 'wishlist'" class="p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Liste de souhaits</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div *ngFor="let item of wishlist" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="relative">
+                      <img [src]="item.image" [alt]="item.name" class="w-full h-48 object-cover rounded-lg mb-3">
+                      <span *ngIf="item.discount > 0" class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                        -{{ item.discount }}%
+                      </span>
+                    </div>
+                    <h3 class="font-medium text-gray-900 mb-1">{{ item.name }}</h3>
+                    <p class="text-sm text-gray-600 mb-2">Vendu par {{ item.seller }}</p>
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <div class="text-lg font-bold text-gray-900">{{ item.price | currency:'EUR' }}</div>
+                        <div class="flex items-center text-sm text-yellow-500">
+                          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57.381-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                          </svg>
+                          <span class="ml-1">{{ item.rating }}</span>
+                        </div>
+                      </div>
+                      <button (click)="removeFromWishlist(item.id)" class="text-red-500 hover:text-red-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Addresses View -->
+              <div *ngIf="currentView === 'addresses'" class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                  <h2 class="text-2xl font-bold text-gray-900">Mes adresses</h2>
+                  <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                    Ajouter une adresse
+                  </button>
+                </div>
+                <div class="space-y-4">
+                  <div *ngFor="let address of addresses" class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <div class="font-medium text-gray-900">{{ address.name }}</div>
+                        <div class="text-gray-600">{{ address.street }}</div>
+                        <div class="text-gray-600">{{ address.postalCode }} {{ address.city }}</div>
+                        <div class="text-gray-600">{{ address.country }}</div>
+                        <div class="text-gray-600">{{ address.phone }}</div>
+                      </div>
+                      <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-700">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 0L15 5m-3 0v6m0-6h6"></path>
+                          </svg>
+                        </button>
+                        <button class="text-red-600 hover:text-red-700">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Methods View -->
+              <div *ngIf="currentView === 'payments'" class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                  <h2 class="text-2xl font-bold text-gray-900">Moyens de paiement</h2>
+                  <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                    Ajouter un moyen
+                  </button>
+                </div>
+                <div class="space-y-4">
+                  <div *ngFor="let payment of paymentMethods" class="border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center space-x-3">
+                        <div class="w-12 h-8 bg-gray-200 rounded flex items-center justify-center">
+                          <span class="text-xs font-bold text-gray-600">{{ payment.type === 'card' ? 'CARD' : 'PP' }}</span>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-900">{{ payment.name }}</div>
+                          <div class="text-sm text-gray-600">
+                            <span *ngIf="payment.type === 'card'">**** **** **** {{ payment.last4 }}</span>
+                            <span *ngIf="payment.type === 'paypal'">{{ payment.email }}</span>
+                          </div>
+                          <div *ngIf="payment.type === 'card'" class="text-sm text-gray-600">Expire: {{ payment.expiry }}</div>
+                        </div>
+                      </div>
+                      <div class="flex items-center space-x-2">
+                        <span *ngIf="payment.isDefault" class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Par défaut</span>
+                        <button class="text-blue-600 hover:text-blue-700">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 0L15 5m-3 0v6m0-6h6"></path>
+                          </svg>
+                        </button>
+                        <button class="text-red-600 hover:text-red-700">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Settings View -->
+              <div *ngIf="currentView === 'settings'" class="p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Paramètres du compte</h2>
+                
+                <!-- Profile Settings -->
+                <div class="mb-8">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-4">Informations personnelles</h3>
+                  <form [formGroup]="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                      <input formControlName="firstName" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500 text-gray-900">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                      <input formControlName="lastName" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500 text-gray-900">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input formControlName="email" type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500 text-gray-900">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                      <input formControlName="phone" type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500 text-gray-900">
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                      <textarea formControlName="bio" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500 text-gray-900"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                      <button type="button" (click)="saveProfile()" class="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700">
+                        Sauvegarder les modifications
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Security Settings -->
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-4">Sécurité</h3>
+                  <div class="space-y-3">
+                    <button class="w-full text-left px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-between">
+                      <span class="text-gray-900">Changer le mot de passe</span>
+                      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </button>
+                    <button class="w-full text-left px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-between">
+                      <span class="text-gray-900">Authentification à deux facteurs</span>
+                      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </button>
+                    <button class="w-full text-left px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-between">
+                      <span class="text-gray-900">Notifications par email</span>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                      </label>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Help View -->
+              <div *ngIf="currentView === 'help'" class="p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Centre d'aide</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="border border-gray-200 rounded-lg p-6">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                      <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">FAQ</h3>
+                    <p class="text-gray-600 mb-4">Trouvez des réponses aux questions les plus fréquentes.</p>
+                    <button class="text-purple-600 hover:text-purple-700 font-medium">Consulter la FAQ</button>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-6">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                      <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Contactez-nous</h3>
+                    <p class="text-gray-600 mb-4">Besoin d'aide ? Notre équipe est là pour vous.</p>
+                    <button class="text-purple-600 hover:text-purple-700 font-medium">Envoyer un message</button>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                      <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                      </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Retours et remboursements</h3>
+                    <p class="text-gray-600 mb-4">Politique de retour simple et remboursements rapides.</p>
+                    <button class="text-purple-600 hover:text-purple-700 font-medium">En savoir plus</button>
+                  </div>
+                  
+                  <div class="border border-gray-200 rounded-lg p-6">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                      <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                      </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Livraison et suivi</h3>
+                    <p class="text-gray-600 mb-4">Suivez vos commandes en temps réel.</p>
+                    <button class="text-purple-600 hover:text-purple-700 font-medium">Suivre une commande</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Placeholder views for other sections -->
+              <div *ngIf="['purchases', 'reviews', 'messages'].includes(currentView)" class="p-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">
+                  <span *ngIf="currentView === 'purchases'">Mes achats</span>
+                  <span *ngIf="currentView === 'reviews'">Mes avis</span>
+                  <span *ngIf="currentView === 'messages'">Mes messages</span>
+                </h2>
+                <div class="text-center py-12">
+                  <div class="text-gray-500">Cette section est en cours de développement.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
