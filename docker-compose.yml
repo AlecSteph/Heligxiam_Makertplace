@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=heligxiam
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres_password
+      - JWT_SECRET=super_secret_jwt_key_change_in_production
+      - JWT_EXPIRES_IN=1h
+      - JWT_REFRESH_EXPIRES_IN=7d
+      - POW_DIFFICULTY=4
+      - BCRYPT_ROUNDS=12
+      - PEPPER=super_secret_pepper_change_in_production
+      - RATE_WINDOW_MS=900000
+      - RATE_MAX=1000
+      - AUTH_RATE_WINDOW_MS=900000
+      - AUTH_RATE_MAX=5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - auth-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=heligxiam
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../HELIGXIAM.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - auth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  auth-network:
+    driver: bridge

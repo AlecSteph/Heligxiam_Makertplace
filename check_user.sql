@@ -1,0 +1,1 @@
+SELECT id_user, nom, prenom, email, role, created_at FROM Utilisateur;
