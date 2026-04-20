@@ -8,8 +8,15 @@
 
 # Node
 /node_modules
+**/node_modules
 npm-debug.log
 yarn-error.log
+
+# Env files (secrets)
+.env
+**/.env
+!.env.example
+!**/.env.example
 
 # IDEs and editors
 .editorconfig

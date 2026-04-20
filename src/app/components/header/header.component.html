@@ -61,13 +61,90 @@
           <span class="text-sm font-medium">Favoris</span>
         </a>
 
+        <!-- Non connecté : lien Compte -->
         <a
-          [routerLink]="isLoggedIn ? '/profile' : '/account'"
+          *ngIf="!isLoggedIn"
+          routerLink="/account"
           class="hidden lg:flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 rounded-xl transition-all group"
         >
           <lucide-angular [img]="User" class="w-5 h-5 text-gray-700 group-hover:text-indigo-600 transition-colors"></lucide-angular>
-          <span class="text-sm font-medium">{{ isLoggedIn ? 'Profil' : 'Compte' }}</span>
+          <span class="text-sm font-medium">Compte</span>
         </a>
+
+        <!-- Connecté : menu utilisateur -->
+        <div *ngIf="isLoggedIn" class="relative hidden lg:block" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            (click)="toggleUserMenu($event)"
+            class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-xl transition-all group"
+            [attr.aria-expanded]="showUserMenu"
+            aria-haspopup="true"
+          >
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+              {{ userInitials || 'U' }}
+            </div>
+            <span class="text-sm font-medium text-gray-800">
+              {{ currentUser?.prenom || 'Profil' }}
+            </span>
+            <svg class="w-4 h-4 text-gray-500 transition-transform" [class.rotate-180]="showUserMenu" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown -->
+          <div
+            *ngIf="showUserMenu"
+            class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-fade-in"
+          >
+            <div class="px-4 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-100">
+              <p class="text-sm font-semibold text-gray-900 truncate">
+                {{ currentUser?.prenom }} {{ currentUser?.nom }}
+              </p>
+              <p class="text-xs text-gray-500 truncate">{{ currentUser?.email }}</p>
+              <span class="inline-block mt-1 px-2 py-0.5 text-[10px] font-medium bg-indigo-100 text-indigo-700 rounded-full uppercase tracking-wide">
+                {{ currentUser?.role }}
+              </span>
+            </div>
+
+            <nav class="py-1">
+              <a
+                routerLink="/profile"
+                (click)="closeUserMenu()"
+                class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <lucide-angular [img]="User" class="w-4 h-4 text-gray-500"></lucide-angular>
+                Mon profil
+              </a>
+              <a
+                routerLink="/wishlist"
+                (click)="closeUserMenu()"
+                class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <lucide-angular [img]="Heart" class="w-4 h-4 text-gray-500"></lucide-angular>
+                Mes favoris
+              </a>
+              <a
+                routerLink="/cart"
+                (click)="closeUserMenu()"
+                class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <lucide-angular [img]="ShoppingCart" class="w-4 h-4 text-gray-500"></lucide-angular>
+                Mon panier
+              </a>
+            </nav>
+
+            <div class="border-t border-gray-100">
+              <button
+                type="button"
+                (click)="logout()"
+                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <lucide-angular [img]="LogOut" class="w-4 h-4"></lucide-angular>
+                Se déconnecter
+              </button>
+            </div>
+          </div>
+        </div>
 
         <a
           routerLink="/cart"
@@ -89,49 +166,76 @@
   <!-- Categories Navigation -->
   <div class="border-t bg-gray-50/50">
     <div class="max-w-7xl mx-auto px-4">
-      <nav class="flex items-center gap-8 py-3 overflow-x-auto scrollbar-hide">
-        <a 
-          routerLink="/category/électronique" 
-          class="text-sm font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group"
-        >
+      <nav class="flex items-center gap-6 py-3 overflow-x-auto scrollbar-hide text-sm">
+        <a routerLink="/category/electronique"
+           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
           Électronique
           <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
         </a>
-        <a 
-          routerLink="/category/mode-&-accessoires" 
-          class="text-sm font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group"
-        >
+        <a routerLink="/category/mode"
+           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
           Mode & Accessoires
           <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
         </a>
-        <a 
-          routerLink="/category/maison-&-décoration" 
-          class="text-sm font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group"
-        >
-          Maison & Décoration
+        <a routerLink="/category/maison"
+           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
+          Maison & Déco
           <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
         </a>
-        <a 
-          routerLink="/category/beauté-&-santé" 
-          class="text-sm font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group"
-        >
+        <a routerLink="/category/beaute"
+           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
           Beauté & Santé
           <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
         </a>
-        <a 
-          [routerLink]="['/search']"
-          [queryParams]="{ badge: 'Premium' }"
-          class="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 whitespace-nowrap transition-colors"
-        >
+        <a routerLink="/category/sport"
+           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
+          Sport & Fitness
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
+        </a>
+        <a routerLink="/category/auto"
+           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
+          Automobile
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
+        </a>
+
+        <!-- Separator -->
+        <span class="hidden md:inline-block h-4 w-px bg-gray-300"></span>
+
+        <a [routerLink]="['/search']" [queryParams]="{ sort: 'rating' }"
+           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
+          Meilleures ventes
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
+        </a>
+        <a [routerLink]="['/search']" [queryParams]="{ badge: 'Nouveau' }"
+           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
+          Nouveautés
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
+        </a>
+        <a [routerLink]="['/search']" [queryParams]="{ tab: 'brands' }"
+           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
+          Marques
+          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
+        </a>
+
+        <!-- Separator -->
+        <span class="hidden md:inline-block h-4 w-px bg-gray-300"></span>
+
+        <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }"
+           class="flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-700 whitespace-nowrap transition-colors">
           <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
           Premium
         </a>
-        <a 
-          [routerLink]="['/search']"
-          [queryParams]="{ promo: 'true' }"
-          class="flex items-center gap-1 text-sm font-medium text-pink-600 hover:text-pink-700 whitespace-nowrap transition-colors"
-        >
+        <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }"
+           class="flex items-center gap-1 font-medium text-pink-600 hover:text-pink-700 whitespace-nowrap transition-colors">
           🔥 Promotions
+        </a>
+        <a [routerLink]="['/search']" [queryParams]="{ promo: 'flash' }"
+           class="flex items-center gap-1 font-medium text-red-600 hover:text-red-700 whitespace-nowrap transition-colors">
+          ⚡ Ventes Flash
+        </a>
+        <a [routerLink]="['/search']" [queryParams]="{ promo: 'deals' }"
+           class="font-medium text-emerald-600 hover:text-emerald-700 whitespace-nowrap transition-colors">
+          💰 Bons plans
         </a>
       </nav>
     </div>

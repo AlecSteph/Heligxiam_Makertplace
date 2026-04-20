@@ -30,7 +30,11 @@ export class LoginComponent implements OnInit {
   registerError: string = '';
   forgotPasswordSuccess: string = '';
   forgotPasswordError: string = '';
-  
+
+  // Popup de succès d'inscription
+  showRegisterSuccessModal: boolean = false;
+  registeredUserName: string = '';
+
   isLoading: boolean = false;
   
   // Proof of Work
@@ -79,12 +83,12 @@ export class LoginComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.pattern('^[0-9]{10}$')]],
       userType: ['', [Validators.required]],
-      password: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$')]],
+      password: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d@$!%*?&]{8,}$')]],
       confirmPassword: ['', [Validators.required]],
       captcha: ['', [Validators.required]],
       acceptTerms: [false, [Validators.requiredTrue]],
       acceptPrivacy: [false, [Validators.requiredTrue]]
-    }, { validator: this.passwordMatchValidator });
+    }, { validators: this.passwordMatchValidator });
 
     this.forgotPasswordForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
@@ -92,9 +96,21 @@ export class LoginComponent implements OnInit {
   }
 
   passwordMatchValidator(form: FormGroup): ValidationErrors | null {
-    const password = form.get('password')?.value;
-    const confirmPassword = form.get('confirmPassword')?.value;
-    return password === confirmPassword ? null : { passwordMismatch: true };
+    const passwordCtrl = form.get('password');
+    const confirmCtrl = form.get('confirmPassword');
+    if (!passwordCtrl || !confirmCtrl) return null;
+
+    if (confirmCtrl.value && passwordCtrl.value !== confirmCtrl.value) {
+      const existing = confirmCtrl.errors || {};
+      confirmCtrl.setErrors({ ...existing, passwordMismatch: true });
+      return { passwordMismatch: true };
+    }
+
+    if (confirmCtrl.errors) {
+      const { passwordMismatch, ...rest } = confirmCtrl.errors;
+      confirmCtrl.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    return null;
   }
 
   // Générer un captcha simple pour compatibilité avec le template
@@ -192,8 +208,11 @@ export class LoginComponent implements OnInit {
   }
 
   onLogin(): void {
+    this.loginError = '';
+
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
+      this.loginError = 'Veuillez remplir tous les champs obligatoires correctement.';
       return;
     }
 
@@ -244,8 +263,11 @@ export class LoginComponent implements OnInit {
   }
 
   onRegister(): void {
+    this.registerError = '';
+
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
+      this.registerError = 'Veuillez corriger les champs en rouge avant de continuer.';
       return;
     }
 
@@ -278,7 +300,8 @@ export class LoginComponent implements OnInit {
       ).subscribe({
         next: () => {
           this.registerError = '';
-          this.switchView('login');
+          this.registeredUserName = `${registerData.prenom} ${registerData.nom}`.trim();
+          this.showRegisterSuccessModal = true;
         },
         error: (error) => {
           console.error('Erreur d\'inscription:', error);
@@ -288,6 +311,14 @@ export class LoginComponent implements OnInit {
     } catch (error) {
       this.registerError = 'Erreur lors du calcul de la preuve de travail';
       this.isLoading = false;
+    }
+  }
+
+  closeRegisterSuccessModal(goToLogin: boolean = true): void {
+    this.showRegisterSuccessModal = false;
+    this.registerForm.reset();
+    if (goToLogin) {
+      this.switchView('login');
     }
   }
 
@@ -310,7 +341,11 @@ export class LoginComponent implements OnInit {
       if (control.errors['email']) return 'Veuillez entrer une adresse email valide';
       if (control.errors['minlength']) return `Minimum ${control.errors['minlength'].requiredLength} caractères`;
       if (control.errors['passwordMismatch']) return 'Les mots de passe ne correspondent pas';
-      if (control.errors['pattern']) return 'Veuillez entrer un numéro de téléphone valide';
+      if (control.errors['pattern']) {
+        if (field === 'phone') return 'Veuillez entrer un numéro de téléphone valide (10 chiffres)';
+        if (field === 'password') return 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre';
+        return 'Format invalide';
+      }
     }
     return '';
   }

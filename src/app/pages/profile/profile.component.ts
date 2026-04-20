@@ -1,7 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { User } from '../../models/auth.model';
 
 @Component({
   selector: 'app-profile',
@@ -10,17 +13,19 @@ import { Router } from '@angular/router';
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit, OnDestroy {
   currentView: 'dashboard' | 'orders' | 'purchases' | 'wishlist' | 'addresses' | 'payments' | 'reviews' | 'messages' | 'settings' | 'security' | 'help' = 'dashboard';
-  
-  // Données utilisateur
+
+  private authSubscription?: Subscription;
+
+  // Données utilisateur (alimentées par l'AuthService après connexion)
   userInfo = {
-    firstName: 'Jean',
-    lastName: 'Dupont',
-    email: 'jean.dupont@email.com',
-    phone: '0612345678',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     avatar: '/assets/images/default-avatar.png',
-    memberSince: new Date('2023-01-15'),
+    memberSince: new Date(),
     userType: 'client',
     verified: true,
     level: 'Gold'
@@ -162,9 +167,50 @@ export class ProfileComponent {
   addressForm: FormGroup = new FormGroup({});
   paymentForm: FormGroup = new FormGroup({});
 
-  constructor(private fb: FormBuilder, private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private authService: AuthService
+  ) {
     this.initializeForms();
-    this.checkAuthentication();
+  }
+
+  ngOnInit(): void {
+    if (!this.authService.isAuthenticated) {
+      this.router.navigate(['/account']);
+      return;
+    }
+
+    this.authSubscription = this.authService.authState$.subscribe(state => {
+      if (!state.isAuthenticated) {
+        this.router.navigate(['/account']);
+        return;
+      }
+      if (state.user) {
+        this.syncUserInfo(state.user);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.authSubscription?.unsubscribe();
+  }
+
+  private syncUserInfo(user: User): void {
+    this.userInfo = {
+      ...this.userInfo,
+      firstName: user.prenom,
+      lastName: user.nom,
+      email: user.email,
+      memberSince: user.created_at ? new Date(user.created_at) : new Date(),
+      userType: user.role
+    };
+
+    this.profileForm.patchValue({
+      firstName: user.prenom,
+      lastName: user.nom,
+      email: user.email
+    });
   }
 
   initializeForms(): void {
@@ -251,34 +297,7 @@ export class ProfileComponent {
     }
   }
 
-  checkAuthentication(): void {
-    // Vérifier si l'utilisateur est connecté
-    const userToken = localStorage.getItem('userToken');
-    if (!userToken) {
-      // Si pas de token, rediriger vers la page de connexion
-      this.router.navigate(['/account']);
-      return;
-    }
-    
-    // Simuler la récupération des informations utilisateur
-    console.log('Utilisateur authentifié');
-  }
-
   logout(): void {
-    // Effacer les données de session
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userInfo');
-    
-    // Forcer la mise à jour du header en déclenchant un événement de stockage
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'userToken',
-      newValue: null,
-      oldValue: localStorage.getItem('userToken')
-    }));
-    
-    // Forcer la navigation vers la page de connexion
-    this.router.navigate(['/account']);
-    
-    console.log('Utilisateur déconnecté');
+    this.authService.logout();
   }
 }

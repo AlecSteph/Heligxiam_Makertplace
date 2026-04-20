@@ -3,7 +3,7 @@
   <div class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white overflow-hidden min-h-screen">
     <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnptLTEyIDEyYzMuMzE0IDAgNiAyLjY4NiA2IDZzLTIuNjg2IDYtNiA2LTYtMi42ODYtNi02IDIuNjg2LTYgNi02eiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMDUiLz48L2c+PC9zdmc+')] opacity-30"></div>
     
-    <div class="max-w-md mx-auto px-4 py-12 relative">
+    <div class="mx-auto px-4 py-12 relative" [ngClass]="currentView === 'register' ? 'max-w-4xl' : 'max-w-md'">
       <!-- Header -->
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-white mb-2">Mon Compte</h1>
@@ -167,95 +167,117 @@
       <!-- Register Form -->
       <div *ngIf="currentView === 'register'" class="bg-white shadow-lg rounded-lg p-8">
         <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
-          <!-- Name Fields -->
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label for="register-firstname" class="block text-sm font-medium text-gray-700 mb-2">
-                Prénom
-              </label>
-              <input
-                id="register-firstname"
-                type="text"
-                formControlName="firstName"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                placeholder="Jean"
-              />
-              <div *ngIf="getErrorMessage(registerForm, 'firstName')" class="mt-1 text-sm text-red-600">
-                {{ getErrorMessage(registerForm, 'firstName') }}
+          <!-- Layout 2 colonnes -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- === COLONNE 1 : Informations personnelles === -->
+            <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+              <h3 class="text-base font-semibold text-gray-800 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                Informations personnelles
+              </h3>
+
+              <!-- Name Fields -->
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label for="register-firstname" class="block text-sm font-medium text-gray-700 mb-2">
+                    Prénom
+                  </label>
+                  <input
+                    id="register-firstname"
+                    type="text"
+                    formControlName="firstName"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    placeholder="Jean"
+                  />
+                  <div *ngIf="getErrorMessage(registerForm, 'firstName')" class="mt-1 text-sm text-red-600">
+                    {{ getErrorMessage(registerForm, 'firstName') }}
+                  </div>
+                </div>
+                <div>
+                  <label for="register-lastname" class="block text-sm font-medium text-gray-700 mb-2">
+                    Nom
+                  </label>
+                  <input
+                    id="register-lastname"
+                    type="text"
+                    formControlName="lastName"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    placeholder="Dupont"
+                  />
+                  <div *ngIf="getErrorMessage(registerForm, 'lastName')" class="mt-1 text-sm text-red-600">
+                    {{ getErrorMessage(registerForm, 'lastName') }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="mb-4">
+                <label for="register-email" class="block text-sm font-medium text-gray-700 mb-2">
+                  Adresse email
+                </label>
+                <input
+                  id="register-email"
+                  type="email"
+                  formControlName="email"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  placeholder="exemple@email.com"
+                />
+                <div *ngIf="getErrorMessage(registerForm, 'email')" class="mt-1 text-sm text-red-600">
+                  {{ getErrorMessage(registerForm, 'email') }}
+                </div>
+              </div>
+
+              <!-- Phone -->
+              <div class="mb-4">
+                <label for="register-phone" class="block text-sm font-medium text-gray-700 mb-2">
+                  Téléphone (optionnel)
+                </label>
+                <input
+                  id="register-phone"
+                  type="tel"
+                  formControlName="phone"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  placeholder="0612345678"
+                />
+                <div *ngIf="getErrorMessage(registerForm, 'phone')" class="mt-1 text-sm text-red-600">
+                  {{ getErrorMessage(registerForm, 'phone') }}
+                </div>
+              </div>
+
+              <!-- Type d'utilisateur -->
+              <div>
+                <label for="register-user-type" class="block text-sm font-medium text-gray-700 mb-2">
+                  Type de compte
+                </label>
+                <select
+                  id="register-user-type"
+                  formControlName="userType"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                >
+                  <option value="">Sélectionnez un type</option>
+                  <option value="client">Client</option>
+                  <option value="vendeur">Vendeur</option>
+                </select>
+                <div *ngIf="getErrorMessage(registerForm, 'userType')" class="mt-1 text-sm text-red-600">
+                  {{ getErrorMessage(registerForm, 'userType') }}
+                </div>
               </div>
             </div>
-            <div>
-              <label for="register-lastname" class="block text-sm font-medium text-gray-700 mb-2">
-                Nom
-              </label>
-              <input
-                id="register-lastname"
-                type="text"
-                formControlName="lastName"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                placeholder="Dupont"
-              />
-              <div *ngIf="getErrorMessage(registerForm, 'lastName')" class="mt-1 text-sm text-red-600">
-                {{ getErrorMessage(registerForm, 'lastName') }}
-              </div>
-            </div>
-          </div>
 
-          <!-- Email -->
-          <div class="mb-4">
-            <label for="register-email" class="block text-sm font-medium text-gray-700 mb-2">
-              Adresse email
-            </label>
-            <input
-              id="register-email"
-              type="email"
-              formControlName="email"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-              placeholder="exemple@email.com"
-            />
-            <div *ngIf="getErrorMessage(registerForm, 'email')" class="mt-1 text-sm text-red-600">
-              {{ getErrorMessage(registerForm, 'email') }}
-            </div>
-          </div>
+            <!-- === COLONNE 2 : Sécurité et validation === -->
+            <div class="bg-gray-50 rounded-lg p-5 border border-gray-100">
+              <h3 class="text-base font-semibold text-gray-800 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                Sécurité &amp; validation
+              </h3>
 
-          <!-- Phone -->
-          <div class="mb-4">
-            <label for="register-phone" class="block text-sm font-medium text-gray-700 mb-2">
-              Téléphone (optionnel)
-            </label>
-            <input
-              id="register-phone"
-              type="tel"
-              formControlName="phone"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-              placeholder="0612345678"
-            />
-            <div *ngIf="getErrorMessage(registerForm, 'phone')" class="mt-1 text-sm text-red-600">
-              {{ getErrorMessage(registerForm, 'phone') }}
-            </div>
-          </div>
-
-          <!-- Type d'utilisateur -->
-          <div class="mb-4">
-            <label for="register-user-type" class="block text-sm font-medium text-gray-700 mb-2">
-              Type de compte
-            </label>
-            <select
-              id="register-user-type"
-              formControlName="userType"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-            >
-              <option value="">Sélectionnez un type</option>
-              <option value="client">Client</option>
-              <option value="vendeur">Vendeur</option>
-            </select>
-            <div *ngIf="getErrorMessage(registerForm, 'userType')" class="mt-1 text-sm text-red-600">
-              {{ getErrorMessage(registerForm, 'userType') }}
-            </div>
-          </div>
-
-          <!-- Password -->
-          <div class="mb-4">
+              <!-- Password -->
+              <div class="mb-4">
             <label for="register-password" class="block text-sm font-medium text-gray-700 mb-2">
               Mot de passe
             </label>
@@ -265,7 +287,7 @@
                 [type]="showRegisterPassword ? 'text' : 'password'"
                 formControlName="password"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                placeholder="••••••••"
+                placeholder="Au moins 8 caractères, 1 majuscule, 1 chiffre"
               />
               <button
                 type="button"
@@ -297,7 +319,7 @@
                 [type]="showConfirmPassword ? 'text' : 'password'"
                 formControlName="confirmPassword"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                placeholder="••••••••"
+                placeholder="Retapez le mot de passe"
               />
               <button
                 type="button"
@@ -377,15 +399,19 @@
             </label>
           </div>
 
+            </div>
+            <!-- === Fin des 2 colonnes === -->
+          </div>
+
           <!-- Error Message -->
-          <div *ngIf="registerError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+          <div *ngIf="registerError" class="mt-6 mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
             {{ registerError }}
           </div>
 
           <!-- Submit Button -->
           <button
             type="submit"
-            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+            class="mt-6 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium py-2.5 px-4 rounded-md hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md transition duration-200"
           >
             S'inscrire
           </button>
@@ -559,6 +585,65 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal de succès d'inscription -->
+  <div
+    *ngIf="showRegisterSuccessModal"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="register-success-title"
+    (click)="closeRegisterSuccessModal(true)"
+  >
+    <div
+      class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center transform transition-all animate-scale-in"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Icône de succès -->
+      <div class="mx-auto mb-5 flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg">
+        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+
+      <h2 id="register-success-title" class="text-2xl font-bold text-gray-900 mb-2">
+        Bienvenue{{ registeredUserName ? ', ' + registeredUserName : '' }} !
+      </h2>
+      <p class="text-gray-600 mb-6">
+        Votre compte a été créé avec succès.<br />
+        Vous pouvez maintenant vous connecter pour accéder à votre espace.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button
+          type="button"
+          (click)="closeRegisterSuccessModal(true)"
+          class="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium py-2.5 px-4 rounded-lg hover:from-indigo-700 hover:to-purple-700 shadow-md transition"
+        >
+          Se connecter
+        </button>
+        <button
+          type="button"
+          (click)="closeRegisterSuccessModal(false)"
+          class="flex-1 bg-gray-100 text-gray-700 font-medium py-2.5 px-4 rounded-lg hover:bg-gray-200 transition"
+        >
+          Fermer
+        </button>
+      </div>
+
+      <!-- Bouton fermer en coin -->
+      <button
+        type="button"
+        (click)="closeRegisterSuccessModal(false)"
+        aria-label="Fermer"
+        class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
     </div>
   </div>
 </div>

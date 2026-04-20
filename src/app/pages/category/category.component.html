@@ -1,28 +1,570 @@
-<div class="min-h-screen bg-gray-50">
-  <div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Breadcrumb -->
-    <div class="flex items-center gap-2 text-sm text-gray-600 mb-6">
-      <a routerLink="/" class="hover:text-blue-600">Accueil</a>
-      <span>/</span>
-      <span class="text-gray-900">{{ categoryName }}</span>
+<!-- Fallback: catégorie inconnue -->
+<div *ngIf="!config" class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+  <div class="text-center max-w-md">
+    <div class="text-6xl mb-4">🔎</div>
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">Catégorie introuvable</h1>
+    <p class="text-gray-600 mb-6">Cette catégorie n'existe pas ou a été déplacée.</p>
+    <a routerLink="/" class="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
+      Retour à l'accueil
+    </a>
+  </div>
+</div>
+
+<div *ngIf="config" class="min-h-screen bg-gray-50">
+  <!-- Breadcrumb -->
+  <div class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-2 text-sm">
+      <a routerLink="/" class="text-gray-500 hover:text-indigo-600">Accueil</a>
+      <span class="text-gray-400">/</span>
+      <a routerLink="/" class="text-gray-500 hover:text-indigo-600">Catégories</a>
+      <span class="text-gray-400">/</span>
+      <span class="text-gray-900 font-medium">{{ config.name }}</span>
+    </div>
+  </div>
+
+  <!-- =========== HERO =========== -->
+  <section [class]="'relative overflow-hidden bg-gradient-to-br ' + config.gradient">
+    <img [src]="config.heroImage" [alt]="config.name"
+         class="absolute inset-0 w-full h-full object-cover opacity-30" />
+    <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+    <div class="relative max-w-7xl mx-auto px-4 py-12 md:py-16">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div class="text-white max-w-2xl">
+          <span class="inline-block text-xs font-bold bg-white/25 backdrop-blur-sm px-3 py-1 rounded-full uppercase tracking-widest mb-3">
+            Univers {{ config.name }}
+          </span>
+          <h1 class="text-3xl md:text-5xl font-bold mb-3 leading-tight">
+            {{ config.tagline }}
+          </h1>
+          <p class="text-white/90 text-base md:text-lg max-w-xl">{{ config.description }}</p>
+          <div class="flex flex-wrap gap-4 mt-6 text-sm">
+            <div class="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full">
+              <lucide-angular [img]="Package" class="w-4 h-4"></lucide-angular>
+              {{ categoryProducts.length }}+ produits
+            </div>
+            <div class="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full">
+              <lucide-angular [img]="Award" class="w-4 h-4"></lucide-angular>
+              Garantie 2 ans
+            </div>
+            <div class="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full">
+              <lucide-angular [img]="Zap" class="w-4 h-4"></lucide-angular>
+              Livraison express
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== SOUS-CATÉGORIES (Pills + Images) =========== -->
+  <section class="bg-white border-b">
+    <!-- Pills -->
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex gap-2 overflow-x-auto scrollbar-hide">
+        <button *ngFor="let sub of config.subcategories"
+                type="button"
+                (click)="selectedSubcategory = sub.label"
+                [class]="'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border ' +
+                  (selectedSubcategory === sub.label
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-900 hover:text-gray-900')">
+          {{ sub.label }}
+        </button>
+      </div>
     </div>
 
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ categoryName }}</h1>
-      <p class="text-gray-600">{{ categoryProducts.length }} produits disponibles</p>
+    <!-- Featured subcategories (image tiles) -->
+    <div class="max-w-7xl mx-auto px-4 pb-6">
+      <div class="grid grid-cols-4 md:grid-cols-8 gap-3">
+        <a *ngFor="let sub of config.featuredSubcategories"
+           [routerLink]="['/search']"
+           [queryParams]="{ category: config.matchCategory, q: sub.label }"
+           class="group text-center">
+          <div class="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-1.5 group-hover:scale-105 transition-transform shadow-sm">
+            <img [src]="sub.image" [alt]="sub.label"
+                 class="w-full h-full object-cover group-hover:brightness-95 transition" />
+          </div>
+          <span class="text-xs font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">
+            {{ sub.label }}
+          </span>
+        </a>
+      </div>
     </div>
+  </section>
 
-    <!-- Products Grid -->
-    <div *ngIf="categoryProducts.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <app-product-card *ngFor="let product of categoryProducts" [product]="product"></app-product-card>
+  <!-- =========== BANNIÈRES PROMO =========== -->
+  <section class="max-w-7xl mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div *ngFor="let banner of config.banners"
+           class="relative aspect-[16/7] rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer group">
+        <img [src]="banner.image" [alt]="banner.title" class="w-full h-full object-cover" />
+        <div [class]="'absolute inset-0 bg-gradient-to-tr ' + banner.accent"></div>
+        <div class="absolute inset-0 p-4 flex flex-col justify-end text-white">
+          <h3 class="text-lg font-bold leading-tight mb-0.5 line-clamp-2">{{ banner.title }}</h3>
+          <p class="text-xs text-white/90 mb-2 line-clamp-1">{{ banner.subtitle }}</p>
+          <span class="inline-flex items-center gap-1 text-xs font-semibold">
+            {{ banner.cta }}
+            <lucide-angular [img]="ChevronRight" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></lucide-angular>
+          </span>
+        </div>
+      </div>
     </div>
-    
-    <div *ngIf="categoryProducts.length === 0" class="text-center py-16">
-      <p class="text-gray-600 text-lg mb-4">Aucun produit dans cette catégorie</p>
-      <a routerLink="/" class="text-blue-600 hover:underline">
-        Retour à l'accueil
+  </section>
+
+  <!-- =========== VIDÉOS DE TEST / REVIEWS =========== -->
+  <section class="bg-gradient-to-b from-gray-900 to-black text-white py-10">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <span class="inline-flex items-center gap-1.5 text-xs font-bold text-red-400 uppercase tracking-wide mb-1">
+            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            Live reviews
+          </span>
+          <h2 class="text-2xl md:text-3xl font-bold">Des testeurs passent les produits au banc d'essai</h2>
+          <p class="text-sm text-gray-400 mt-1">Unboxings, comparatifs et tests longue durée par notre communauté d'experts.</p>
+        </div>
+        <div class="hidden md:flex gap-2">
+          <button type="button" (click)="scrollCarousel('videoCarousel', 'left')"
+                  aria-label="Précédent"
+                  class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
+            <lucide-angular [img]="ChevronLeft" class="w-5 h-5"></lucide-angular>
+          </button>
+          <button type="button" (click)="scrollCarousel('videoCarousel', 'right')"
+                  aria-label="Suivant"
+                  class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
+            <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+          </button>
+        </div>
+      </div>
+
+      <div id="videoCarousel"
+           class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-4">
+        <button *ngFor="let video of config.videoReviews"
+                type="button"
+                (click)="openVideo(video)"
+                class="group flex-shrink-0 w-72 md:w-80 snap-start text-left">
+          <div class="relative aspect-video rounded-xl overflow-hidden bg-gray-800 mb-3">
+            <img [src]="video.thumbnail" [alt]="video.title"
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+            <!-- Play button -->
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="w-14 h-14 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                <lucide-angular [img]="Play" class="w-6 h-6 text-red-600 translate-x-0.5"></lucide-angular>
+              </div>
+            </div>
+            <!-- Duration badge -->
+            <span class="absolute bottom-2 right-2 text-xs font-bold bg-black/80 backdrop-blur-sm px-2 py-0.5 rounded">
+              {{ video.duration }}
+            </span>
+            <span class="absolute top-2 left-2 text-[10px] font-bold uppercase bg-red-600 px-2 py-0.5 rounded">
+              HD
+            </span>
+          </div>
+          <div class="flex gap-3">
+            <img [src]="video.avatar" [alt]="video.author"
+                 class="w-9 h-9 rounded-full flex-shrink-0" />
+            <div class="min-w-0">
+              <h3 class="text-sm font-semibold line-clamp-2 mb-1 group-hover:text-indigo-300 transition-colors">
+                {{ video.title }}
+              </h3>
+              <p class="text-xs text-gray-400">{{ video.author }} • {{ video.views }}</p>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== FLASH DEAL COUNTDOWN =========== -->
+  <section *ngIf="deals.length" class="bg-gradient-to-r from-red-600 via-pink-600 to-orange-500 text-white">
+    <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+          <lucide-angular [img]="Flame" class="w-6 h-6"></lucide-angular>
+        </div>
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold">Ventes Flash {{ config.name }}</h2>
+          <p class="text-sm text-white/90">Jusqu'à -70% • Stock limité</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-medium hidden md:inline">Fin dans :</span>
+        <div class="flex gap-1.5 font-mono font-bold">
+          <span class="bg-black/30 backdrop-blur-sm px-3 py-2 rounded-lg min-w-[52px] text-center text-lg">{{ pad(countdownHours) }}h</span>
+          <span class="bg-black/30 backdrop-blur-sm px-3 py-2 rounded-lg min-w-[52px] text-center text-lg">{{ pad(countdownMinutes) }}m</span>
+          <span class="bg-black/30 backdrop-blur-sm px-3 py-2 rounded-lg min-w-[52px] text-center text-lg">{{ pad(countdownSeconds) }}s</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== GRANDS SUCCÈS (Top rated) =========== -->
+  <section *ngIf="topRated.length" class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex items-end justify-between mb-4">
+      <div>
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <lucide-angular [img]="Award" class="w-6 h-6 text-amber-500"></lucide-angular>
+          Grands succès
+        </h2>
+        <p class="text-sm text-gray-500">Les mieux notés par nos clients</p>
+      </div>
+      <a [routerLink]="['/search']" [queryParams]="{ category: config.matchCategory, sort: 'rating' }"
+         class="text-sm font-medium text-indigo-600 hover:text-indigo-700">Voir plus →</a>
+    </div>
+    <div class="relative">
+      <button (click)="scrollCarousel('topRatedCarousel', 'left')" type="button"
+              class="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border items-center justify-center hover:scale-110 transition-transform">
+        <lucide-angular [img]="ChevronLeft" class="w-5 h-5"></lucide-angular>
+      </button>
+      <div id="topRatedCarousel"
+           class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2">
+        <div *ngFor="let product of topRated"
+             class="flex-shrink-0 w-56 md:w-64 snap-start">
+          <app-product-card [product]="product"></app-product-card>
+        </div>
+      </div>
+      <button (click)="scrollCarousel('topRatedCarousel', 'right')" type="button"
+              class="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border items-center justify-center hover:scale-110 transition-transform">
+        <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+      </button>
+    </div>
+  </section>
+
+  <!-- =========== NOUVEAUTÉS =========== -->
+  <section *ngIf="newArrivals.length" class="bg-white border-y">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="flex items-end justify-between mb-4">
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <lucide-angular [img]="Sparkles" class="w-6 h-6 text-indigo-500"></lucide-angular>
+            Nouveautés
+          </h2>
+          <p class="text-sm text-gray-500">Les dernières arrivées</p>
+        </div>
+        <a [routerLink]="['/search']" [queryParams]="{ category: config.matchCategory, sort: 'newest' }"
+           class="text-sm font-medium text-indigo-600 hover:text-indigo-700">Voir plus →</a>
+      </div>
+      <div class="relative">
+        <button (click)="scrollCarousel('newArrivalsCarousel', 'left')" type="button"
+                class="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border items-center justify-center hover:scale-110 transition-transform">
+          <lucide-angular [img]="ChevronLeft" class="w-5 h-5"></lucide-angular>
+        </button>
+        <div id="newArrivalsCarousel"
+             class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2">
+          <div *ngFor="let product of newArrivals"
+               class="flex-shrink-0 w-56 md:w-64 snap-start">
+            <app-product-card [product]="product"></app-product-card>
+          </div>
+        </div>
+        <button (click)="scrollCarousel('newArrivalsCarousel', 'right')" type="button"
+                class="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border items-center justify-center hover:scale-110 transition-transform">
+          <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== OFFRES DU MOMENT (deals strip avec % remise) =========== -->
+  <section *ngIf="deals.length" class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex items-end justify-between mb-4">
+      <div>
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <lucide-angular [img]="Tag" class="w-6 h-6 text-red-500"></lucide-angular>
+          Offres du moment
+        </h2>
+        <p class="text-sm text-gray-500">Les meilleures remises en cours</p>
+      </div>
+      <a [routerLink]="['/search']" [queryParams]="{ category: config.matchCategory, promo: 'true' }"
+         class="text-sm font-medium text-indigo-600 hover:text-indigo-700">Voir plus →</a>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+      <a *ngFor="let product of deals.slice(0, 10)"
+         [routerLink]="['/product', product.id]"
+         class="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all">
+        <div class="relative aspect-square bg-gray-50 overflow-hidden">
+          <img [src]="product.image" [alt]="product.name"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+          <span *ngIf="computeDiscount(product) > 0"
+                class="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md shadow">
+            -{{ computeDiscount(product) }}%
+          </span>
+          <span class="absolute bottom-2 left-2 bg-black/75 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+            <lucide-angular [img]="Clock" class="w-3 h-3 inline -mt-0.5"></lucide-angular>
+            Fin dans {{ pad(countdownHours) }}:{{ pad(countdownMinutes) }}:{{ pad(countdownSeconds) }}
+          </span>
+        </div>
+        <div class="p-2.5">
+          <h3 class="text-xs font-medium text-gray-800 line-clamp-2 mb-1 h-8">{{ product.name }}</h3>
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-base font-bold text-red-600">{{ product.price.toFixed(2) }}€</span>
+            <span *ngIf="product.originalPrice"
+                  class="text-xs text-gray-400 line-through">{{ product.originalPrice.toFixed(2) }}€</span>
+          </div>
+          <p class="text-[10px] text-gray-500 mt-0.5">Le plus bas : {{ product.price.toFixed(2) }}€</p>
+        </div>
       </a>
+    </div>
+  </section>
+
+  <!-- =========== CATALOGUE PRINCIPAL AVEC FILTRES =========== -->
+  <section class="bg-white border-t">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="flex items-end justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900">Tout le catalogue {{ config.name }}</h2>
+          <p class="text-sm text-gray-500 mt-0.5">
+            {{ filteredProducts.length }} résultat{{ filteredProducts.length > 1 ? 's' : '' }}
+            <span *ngIf="activeFilterCount() > 0"> • {{ activeFilterCount() }} filtre{{ activeFilterCount() > 1 ? 's' : '' }} actif{{ activeFilterCount() > 1 ? 's' : '' }}</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- Mobile filter toggle -->
+          <button type="button"
+                  (click)="toggleMobileFilters()"
+                  class="lg:hidden flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium bg-white">
+            <lucide-angular [img]="Filter" class="w-4 h-4"></lucide-angular>
+            Filtres
+            <span *ngIf="activeFilterCount() > 0"
+                  class="bg-indigo-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              {{ activeFilterCount() }}
+            </span>
+          </button>
+          <!-- Sort dropdown -->
+          <select [(ngModel)]="sortBy" (change)="setSort(sortBy)"
+                  class="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="featured">Trier par : Recommandés</option>
+            <option value="priceAsc">Prix croissant</option>
+            <option value="priceDesc">Prix décroissant</option>
+            <option value="rating">Meilleures notes</option>
+            <option value="newest">Plus récents</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-[260px_1fr] gap-6">
+        <!-- Filters sidebar -->
+        <aside [class]="'lg:block ' + (mobileFiltersOpen ? 'fixed inset-0 z-50 bg-white overflow-y-auto p-4 lg:p-0 lg:static lg:bg-transparent lg:inset-auto' : 'hidden')">
+          <div class="lg:sticky lg:top-20">
+            <!-- Mobile header -->
+            <div class="lg:hidden flex items-center justify-between mb-4 pb-3 border-b">
+              <h3 class="text-lg font-bold">Filtres</h3>
+              <button type="button" (click)="toggleMobileFilters()"
+                      class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+                <lucide-angular [img]="X" class="w-5 h-5"></lucide-angular>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-base font-bold text-gray-900 hidden lg:block">Affiner la recherche</h3>
+              <button *ngIf="activeFilterCount() > 0"
+                      type="button"
+                      (click)="clearAllFilters()"
+                      class="text-xs text-indigo-600 hover:text-indigo-700 font-medium underline">
+                Tout effacer
+              </button>
+            </div>
+
+            <!-- Price -->
+            <div class="border-t pt-4 mb-4">
+              <h4 class="text-sm font-bold text-gray-900 mb-2.5 uppercase tracking-wide">Prix</h4>
+              <div class="space-y-1.5">
+                <button *ngFor="let range of config.priceRanges; let i = index"
+                        type="button"
+                        (click)="setPriceRange(i)"
+                        [class]="'w-full text-left px-2 py-1.5 text-sm rounded transition-colors ' +
+                          (selectedPriceRange === i ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-700 hover:bg-gray-50')">
+                  {{ range.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Rating -->
+            <div class="border-t pt-4 mb-4">
+              <h4 class="text-sm font-bold text-gray-900 mb-2.5 uppercase tracking-wide">Note client</h4>
+              <div class="space-y-1.5">
+                <button *ngFor="let r of [4, 3, 2, 1]"
+                        type="button"
+                        (click)="setMinRating(r)"
+                        [class]="'w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded transition-colors ' +
+                          (minRating === r ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-700 hover:bg-gray-50')">
+                  <span class="flex">
+                    <lucide-angular *ngFor="let _ of [].constructor(r); let i = index"
+                                   [img]="Star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></lucide-angular>
+                    <lucide-angular *ngFor="let _ of [].constructor(5 - r); let i = index"
+                                   [img]="Star" class="w-3.5 h-3.5 text-gray-300"></lucide-angular>
+                  </span>
+                  & plus
+                </button>
+              </div>
+            </div>
+
+            <!-- Brand -->
+            <div class="border-t pt-4 mb-4">
+              <h4 class="text-sm font-bold text-gray-900 mb-2.5 uppercase tracking-wide">Marque</h4>
+              <div class="space-y-1 max-h-64 overflow-y-auto">
+                <label *ngFor="let brand of config.brands"
+                       class="flex items-center gap-2 px-2 py-1.5 text-sm rounded cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input type="checkbox"
+                         [checked]="isBrandSelected(brand)"
+                         (change)="toggleBrand(brand)"
+                         class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300" />
+                  <span [class]="isBrandSelected(brand) ? 'font-semibold text-indigo-700' : 'text-gray-700'">
+                    {{ brand }}
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Availability + Promo -->
+            <div class="border-t pt-4 mb-4">
+              <h4 class="text-sm font-bold text-gray-900 mb-2.5 uppercase tracking-wide">Disponibilité</h4>
+              <label class="flex items-center gap-2 px-2 py-1.5 text-sm rounded cursor-pointer hover:bg-gray-50">
+                <input type="checkbox"
+                       [(ngModel)]="onlyInStock"
+                       (change)="applyFilters()"
+                       class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300" />
+                <span class="text-gray-700">En stock uniquement</span>
+              </label>
+              <label class="flex items-center gap-2 px-2 py-1.5 text-sm rounded cursor-pointer hover:bg-gray-50">
+                <input type="checkbox"
+                       [(ngModel)]="onlyPromo"
+                       (change)="applyFilters()"
+                       class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300" />
+                <span class="text-gray-700">En promotion</span>
+              </label>
+            </div>
+
+            <!-- Premium badge -->
+            <div class="border-t pt-4 mb-4">
+              <div class="p-3 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100">
+                <div class="flex items-start gap-2">
+                  <lucide-angular [img]="Sparkles" class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5"></lucide-angular>
+                  <div>
+                    <p class="text-xs font-bold text-indigo-900">HELIGXIAM Premium</p>
+                    <p class="text-[11px] text-indigo-700 mt-0.5">Livraison gratuite, retours offerts, accès aux ventes privées.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Apply button (mobile) -->
+            <button type="button"
+                    (click)="toggleMobileFilters()"
+                    class="lg:hidden w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">
+              Appliquer ({{ filteredProducts.length }})
+            </button>
+          </div>
+        </aside>
+
+        <!-- Products grid -->
+        <div>
+          <div *ngIf="filteredProducts.length > 0"
+               class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            <app-product-card *ngFor="let product of filteredProducts"
+                              [product]="product"></app-product-card>
+          </div>
+          <div *ngIf="filteredProducts.length === 0"
+               class="text-center py-16 bg-gray-50 rounded-xl">
+            <div class="text-5xl mb-3">🔍</div>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">Aucun produit ne correspond</h3>
+            <p class="text-sm text-gray-500 mb-4">Essayez d'ajuster vos filtres</p>
+            <button type="button" (click)="clearAllFilters()"
+                    class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm">
+              Réinitialiser les filtres
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== MEILLEURES VENTES =========== -->
+  <section *ngIf="bestSellers.length" class="bg-white border-t">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="flex items-end justify-between mb-4">
+        <div>
+          <h2 class="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <lucide-angular [img]="TrendingUp" class="w-6 h-6 text-green-600"></lucide-angular>
+            Meilleures ventes
+          </h2>
+          <p class="text-sm text-gray-500">Les plus commandés ce mois-ci</p>
+        </div>
+        <a [routerLink]="['/search']" [queryParams]="{ category: config.matchCategory, sort: 'bestseller' }"
+           class="text-sm font-medium text-indigo-600 hover:text-indigo-700">Voir plus →</a>
+      </div>
+      <div class="relative">
+        <button (click)="scrollCarousel('bestSellersCarousel', 'left')" type="button"
+                class="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border items-center justify-center hover:scale-110 transition-transform">
+          <lucide-angular [img]="ChevronLeft" class="w-5 h-5"></lucide-angular>
+        </button>
+        <div id="bestSellersCarousel"
+             class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory pb-2">
+          <div *ngFor="let product of bestSellers; let i = index"
+               class="flex-shrink-0 w-56 md:w-64 snap-start relative">
+            <div class="absolute -top-2 -left-2 z-10 w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white font-bold text-lg flex items-center justify-center shadow-lg border-2 border-white">
+              {{ i + 1 }}
+            </div>
+            <app-product-card [product]="product"></app-product-card>
+          </div>
+        </div>
+        <button (click)="scrollCarousel('bestSellersCarousel', 'right')" type="button"
+                class="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-white shadow-lg border items-center justify-center hover:scale-110 transition-transform">
+          <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== VOS RECOMMANDATIONS =========== -->
+  <section *ngIf="recommendations.length" class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex items-end justify-between mb-4">
+      <div>
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <lucide-angular [img]="Heart" class="w-6 h-6 text-pink-500"></lucide-angular>
+          Vos recommandations
+        </h2>
+        <p class="text-sm text-gray-500">Sélectionnés rien que pour vous</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <app-product-card *ngFor="let product of recommendations"
+                        [product]="product"></app-product-card>
+    </div>
+  </section>
+</div>
+
+<!-- =========== VIDEO MODAL =========== -->
+<div *ngIf="activeVideo"
+     class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+     (click)="closeVideo()">
+  <div class="relative w-full max-w-4xl" (click)="$event.stopPropagation()">
+    <button type="button"
+            (click)="closeVideo()"
+            aria-label="Fermer"
+            class="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors">
+      <lucide-angular [img]="X" class="w-8 h-8"></lucide-angular>
+    </button>
+    <div class="aspect-video rounded-xl overflow-hidden bg-black shadow-2xl">
+      <video [src]="activeVideo.videoUrl"
+             controls
+             autoplay
+             class="w-full h-full"
+             [poster]="activeVideo.thumbnail">
+        Votre navigateur ne supporte pas les vidéos HTML5.
+      </video>
+    </div>
+    <div class="mt-4 text-white">
+      <h3 class="text-xl font-bold mb-1">{{ activeVideo.title }}</h3>
+      <div class="flex items-center gap-3 text-sm text-gray-300">
+        <img [src]="activeVideo.avatar" [alt]="activeVideo.author"
+             class="w-8 h-8 rounded-full" />
+        <span>{{ activeVideo.author }}</span>
+        <span>•</span>
+        <span>{{ activeVideo.views }}</span>
+        <span>•</span>
+        <span>{{ activeVideo.duration }}</span>
+      </div>
     </div>
   </div>
 </div>
