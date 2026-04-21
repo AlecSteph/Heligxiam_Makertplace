@@ -1,186 +1,502 @@
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-indigo-50">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50/40">
   <!-- Notification -->
-  <div *ngIf="showNotification" class="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 animate-pulse">
-    <div class="flex items-center space-x-2">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 9"></path>
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 9"></path>
-      </svg>
-      <span class="font-medium">{{ notificationMessage }}</span>
-    </div>
+  <div *ngIf="showNotification"
+       class="fixed top-4 right-4 z-[70] bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-fade-in">
+    <lucide-angular [img]="CheckCircle2" class="w-5 h-5"></lucide-angular>
+    <span class="font-semibold">{{ notificationMessage }}</span>
   </div>
 
-  <!-- Empty Cart -->
-  <div *ngIf="cart.length === 0" class="flex items-center justify-center py-20">
-    <div class="text-center max-w-md px-4">
-      <div class="w-32 h-32 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-        <lucide-angular [img]="ShoppingBag" class="w-16 h-16 text-indigo-600"></lucide-angular>
+  <!-- ==================================================================== -->
+  <!-- EMPTY CART -->
+  <!-- ==================================================================== -->
+  <section *ngIf="cart.length === 0" class="max-w-3xl mx-auto px-4 py-20 text-center">
+    <div class="relative inline-block mb-8">
+      <div class="w-40 h-40 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center">
+        <lucide-angular [img]="ShoppingBag" class="w-20 h-20 text-indigo-500"></lucide-angular>
       </div>
-      <h2 class="text-3xl font-bold text-gray-900 mb-3">Votre panier est vide</h2>
-      <p class="text-gray-600 mb-8 text-lg">Découvrez notre collection premium et trouvez vos produits favoris</p>
-      <a
-        routerLink="/"
-        class="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all"
-      >
+      <div class="absolute -top-1 -right-2 w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center">
+        <lucide-angular [img]="Sparkles" class="w-6 h-6 text-amber-500"></lucide-angular>
+      </div>
+    </div>
+    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">Votre panier est vide</h2>
+    <p class="text-gray-600 text-lg mb-8 max-w-md mx-auto">Parcourez notre collection premium et ajoutez vos coups de cœur. Livraison gratuite dès 99€ d'achat.</p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center mb-12">
+      <a routerLink="/" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl font-bold hover:shadow-xl hover:scale-[1.02] transition-all">
         Découvrir la Collection
         <lucide-angular [img]="ArrowRight" class="w-5 h-5"></lucide-angular>
       </a>
-    </div>
-  </div>
-
-  <!-- Cart with Items -->
-  <div *ngIf="cart.length > 0" class="max-w-7xl mx-auto px-4 py-12">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-gray-900 mb-2">Panier ({{ cart.length }})</h1>
-      <p class="text-gray-600">Vérifiez vos articles avant de passer commande</p>
+      <a routerLink="/wishlist" class="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 text-gray-900 px-8 py-4 rounded-xl font-bold hover:border-indigo-300 hover:bg-indigo-50 transition-all">
+        <lucide-angular [img]="Heart" class="w-5 h-5 text-rose-500"></lucide-angular>
+        Mes favoris
+      </a>
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-8">
-      <!-- Cart Items -->
-      <div class="lg:col-span-2 space-y-4">
-        <div *ngFor="let item of cart" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div class="flex gap-6">
-            <!-- Image -->
-            <a [routerLink]="['/product', item.id]" class="flex-shrink-0">
-              <div class="w-32 h-32 rounded-xl overflow-hidden bg-gray-100 ring-2 ring-gray-100 hover:ring-indigo-200 transition-all">
-                <img
-                  [src]="item.image"
-                  [alt]="item.name"
-                  class="w-full h-full object-cover hover:scale-110 transition-transform"
-                />
-              </div>
-            </a>
+    <!-- Recommendations for empty state -->
+    <div *ngIf="recommendations.length > 0" class="mt-16 text-left">
+      <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <lucide-angular [img]="Sparkles" class="w-6 h-6 text-amber-500"></lucide-angular>
+        Nos coups de cœur du moment
+      </h3>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <a *ngFor="let product of recommendations.slice(0, 6)"
+           [routerLink]="['/product', product.id]"
+           class="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all">
+          <div class="aspect-square bg-gray-50 overflow-hidden">
+            <img [src]="product.image" [alt]="product.name" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+          </div>
+          <div class="p-3">
+            <h4 class="text-sm font-bold text-gray-900 line-clamp-2 mb-1">{{ product.name }}</h4>
+            <p class="text-base font-extrabold text-gray-900">{{ product.price | currency:'EUR':'symbol':'1.2-2' }}</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
 
-            <!-- Info -->
-            <div class="flex-1 min-w-0">
-              <a
-                [routerLink]="['/product', item.id]"
-                class="font-bold text-lg text-gray-900 hover:text-indigo-600 line-clamp-2 mb-2 transition-colors block"
-              >
-                {{ item.name }}
+  <!-- ==================================================================== -->
+  <!-- CART WITH ITEMS -->
+  <!-- ==================================================================== -->
+  <section *ngIf="cart.length > 0" class="max-w-7xl mx-auto px-4 py-8 md:py-10">
+
+    <!-- Stepper -->
+    <nav aria-label="Progression de la commande" class="mb-6">
+      <ol class="flex items-center gap-2 text-sm">
+        <li class="flex items-center gap-2 text-indigo-600 font-bold">
+          <span class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs">1</span>
+          Panier
+        </li>
+        <lucide-angular [img]="ChevronRight" class="w-4 h-4 text-gray-400"></lucide-angular>
+        <li class="flex items-center gap-2 text-gray-500">
+          <span class="w-7 h-7 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+          Livraison
+        </li>
+        <lucide-angular [img]="ChevronRight" class="w-4 h-4 text-gray-400"></lucide-angular>
+        <li class="flex items-center gap-2 text-gray-500">
+          <span class="w-7 h-7 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+          Paiement
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Heading -->
+    <div class="flex items-end justify-between mb-6 flex-wrap gap-3">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">Mon panier</h1>
+        <p class="text-gray-600 mt-1">
+          <span class="font-bold text-gray-900">{{ cart.length }}</span> article{{ cart.length > 1 ? 's' : '' }} ·
+          <span class="font-bold">{{ itemsCount }}</span> unité{{ itemsCount > 1 ? 's' : '' }}
+          <span *ngIf="itemsSavings > 0"> · <span class="text-emerald-600 font-bold">Vous économisez {{ itemsSavings | currency:'EUR':'symbol':'1.2-2' }}</span></span>
+        </p>
+      </div>
+      <button (click)="clearCart()" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-red-600 font-semibold transition-colors">
+        <lucide-angular [img]="Trash2" class="w-4 h-4"></lucide-angular>
+        Vider le panier
+      </button>
+    </div>
+
+    <!-- Free shipping progress bar -->
+    <div *ngIf="subtotal < 99" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-4 mb-6 flex items-center gap-4">
+      <div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
+        <lucide-angular [img]="Truck" class="w-6 h-6"></lucide-angular>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm text-gray-800">
+          Ajoutez <span class="font-bold text-indigo-700">{{ remainingForFreeShipping | currency:'EUR':'symbol':'1.2-2' }}</span>
+          pour bénéficier de la <span class="font-bold">livraison gratuite</span>
+        </p>
+        <div class="mt-2 h-2 bg-blue-100 rounded-full overflow-hidden">
+          <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all" [style.width.%]="shippingProgress"></div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="subtotal >= 99" class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-100 rounded-2xl p-4 mb-6 flex items-center gap-3">
+      <div class="w-12 h-12 bg-emerald-600 text-white rounded-xl flex items-center justify-center flex-shrink-0">
+        <lucide-angular [img]="CheckCircle2" class="w-6 h-6"></lucide-angular>
+      </div>
+      <p class="text-sm text-emerald-800 font-semibold">Félicitations ! Vous bénéficiez de la livraison gratuite standard.</p>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- GRID -->
+    <!-- =================================================================== -->
+    <div class="grid lg:grid-cols-3 gap-6">
+
+      <!-- LEFT: Items + Delivery + Saved -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Items list -->
+        <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <header class="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white flex items-center justify-between">
+            <h2 class="font-bold text-gray-900 flex items-center gap-2">
+              <lucide-angular [img]="Package" class="w-5 h-5 text-indigo-600"></lucide-angular>
+              Vos articles ({{ cart.length }})
+            </h2>
+            <span class="text-xs text-gray-500 font-medium hidden sm:block">Vendu et expédié par HELIGXIAM</span>
+          </header>
+
+          <ul class="divide-y divide-gray-100">
+            <li *ngFor="let item of cart; trackBy: trackById" class="p-4 md:p-5 flex gap-4 group">
+              <!-- Image -->
+              <a [routerLink]="['/product', item.id]" class="flex-shrink-0">
+                <div class="w-24 h-24 md:w-32 md:h-32 rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-100 group-hover:ring-indigo-200 transition">
+                  <img [src]="item.image" [alt]="item.name"
+                       class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                </div>
               </a>
-              <p *ngIf="item.brand" class="text-sm text-indigo-600 font-semibold mb-2">{{ item.brand }}</p>
-              <p class="text-sm text-gray-500 mb-4">{{ item.category }}</p>
-              
-              <div class="flex items-center gap-4">
-                <!-- Quantity -->
-                <div class="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
-                  <button
-                    (click)="updateQuantity(item.id, item.quantity - 1)"
-                    class="px-4 py-2 hover:bg-gray-50 transition-colors font-bold"
-                  >
-                    -
+
+              <!-- Info -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <p *ngIf="item.brand" class="text-[11px] uppercase tracking-widest font-bold text-indigo-600">{{ item.brand }}</p>
+                    <a [routerLink]="['/product', item.id]"
+                       class="block font-bold text-gray-900 hover:text-indigo-600 line-clamp-2 leading-tight transition-colors">
+                      {{ item.name }}
+                    </a>
+                    <p class="text-xs text-gray-500 mt-1">{{ item.category }}</p>
+                  </div>
+
+                  <!-- Price desktop -->
+                  <div class="text-right flex-shrink-0 hidden md:block">
+                    <p class="text-xl font-extrabold text-gray-900">{{ (item.price * item.quantity) | currency:'EUR':'symbol':'1.2-2' }}</p>
+                    <p *ngIf="item.originalPrice && item.originalPrice > item.price" class="text-sm text-gray-400 line-through">
+                      {{ (item.originalPrice * item.quantity) | currency:'EUR':'symbol':'1.2-2' }}
+                    </p>
+                    <p *ngIf="itemSavings(item) > 0" class="text-xs text-emerald-600 font-bold mt-0.5">
+                      Vous économisez {{ itemSavings(item) | currency:'EUR':'symbol':'1.2-2' }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Stock / shipping indicators -->
+                <div class="flex flex-wrap gap-2 mt-2">
+                  <span *ngIf="item.inStock" class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                    <lucide-angular [img]="CheckCircle2" class="w-3 h-3"></lucide-angular>
+                    En stock
+                  </span>
+                  <span *ngIf="!item.inStock" class="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full">
+                    <lucide-angular [img]="AlertCircle" class="w-3 h-3"></lucide-angular>
+                    Stock limité
+                  </span>
+                  <span *ngIf="itemDiscountPct(item) > 0" class="inline-flex items-center gap-1 text-[11px] font-black text-white bg-red-600 px-2 py-0.5 rounded-full">
+                    -{{ itemDiscountPct(item) }}%
+                  </span>
+                  <span class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-600 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-full">
+                    <lucide-angular [img]="Truck" class="w-3 h-3"></lucide-angular>
+                    Livraison {{ deliveryEstimate() }}
+                  </span>
+                </div>
+
+                <!-- Price mobile -->
+                <div class="md:hidden mt-3">
+                  <p class="text-lg font-extrabold text-gray-900">{{ (item.price * item.quantity) | currency:'EUR':'symbol':'1.2-2' }}</p>
+                  <p *ngIf="item.originalPrice && item.originalPrice > item.price" class="text-xs text-gray-400 line-through">
+                    {{ (item.originalPrice * item.quantity) | currency:'EUR':'symbol':'1.2-2' }}
+                  </p>
+                </div>
+
+                <!-- Actions row -->
+                <div class="flex flex-wrap items-center gap-3 mt-3">
+                  <!-- Qty stepper -->
+                  <div class="inline-flex items-center bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+                    <button type="button" (click)="updateQuantity(item.id, item.quantity - 1)"
+                            class="w-9 h-9 flex items-center justify-center hover:bg-gray-100 text-gray-700 transition-colors"
+                            aria-label="Diminuer">
+                      <lucide-angular [img]="Minus" class="w-3.5 h-3.5"></lucide-angular>
+                    </button>
+                    <span class="w-10 text-center font-bold text-gray-900">{{ item.quantity }}</span>
+                    <button type="button" (click)="updateQuantity(item.id, item.quantity + 1)"
+                            class="w-9 h-9 flex items-center justify-center hover:bg-gray-100 text-gray-700 transition-colors"
+                            aria-label="Augmenter">
+                      <lucide-angular [img]="Plus" class="w-3.5 h-3.5"></lucide-angular>
+                    </button>
+                  </div>
+
+                  <!-- Divider -->
+                  <span class="h-5 w-px bg-gray-200 hidden sm:inline-block"></span>
+
+                  <button type="button" (click)="moveToWishlist(item)"
+                          class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-rose-600 transition-colors">
+                    <lucide-angular [img]="Heart" class="w-4 h-4"></lucide-angular>
+                    Déplacer dans mes favoris
                   </button>
-                  <span class="px-6 py-2 font-bold">{{ item.quantity }}</span>
-                  <button
-                    (click)="updateQuantity(item.id, item.quantity + 1)"
-                    class="px-4 py-2 hover:bg-gray-50 transition-colors font-bold"
-                  >
-                    +
+                  <button type="button" (click)="saveForLater(item)"
+                          class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-indigo-600 transition-colors">
+                    <lucide-angular [img]="Clock" class="w-4 h-4"></lucide-angular>
+                    Garder pour plus tard
+                  </button>
+                  <button type="button" (click)="removeFromCart(item.id)"
+                          class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-red-600 transition-colors ml-auto">
+                    <lucide-angular [img]="Trash2" class="w-4 h-4"></lucide-angular>
+                    Supprimer
                   </button>
                 </div>
-                
-                <!-- Remove -->
-                <button
-                  (click)="removeFromCart(item.id)"
-                  class="text-red-600 hover:text-red-700 flex items-center gap-2 text-sm font-medium transition-colors"
-                >
-                  <lucide-angular [img]="Trash2" class="w-4 h-4"></lucide-angular>
-                  Supprimer
+              </div>
+            </li>
+          </ul>
+
+          <footer class="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-sm">
+            <span class="text-gray-600 font-medium">Sous-total ({{ itemsCount }} article{{ itemsCount > 1 ? 's' : '' }})</span>
+            <span class="text-lg font-extrabold text-gray-900">{{ subtotal | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </footer>
+        </div>
+
+        <!-- Delivery options -->
+        <div class="bg-white rounded-2xl border border-gray-100 p-5">
+          <h2 class="font-bold text-gray-900 flex items-center gap-2 mb-4">
+            <lucide-angular [img]="MapPin" class="w-5 h-5 text-indigo-600"></lucide-angular>
+            Mode de livraison
+          </h2>
+          <div class="grid md:grid-cols-3 gap-3">
+            <label *ngFor="let opt of deliveryOptions"
+                   [class]="'relative block p-4 rounded-xl border-2 cursor-pointer transition-all ' +
+                     (delivery === opt.id
+                       ? 'border-indigo-500 bg-indigo-50/60 ring-2 ring-indigo-100'
+                       : 'border-gray-200 hover:border-gray-300 bg-white')">
+              <input type="radio" name="delivery" [value]="opt.id" [(ngModel)]="delivery" class="sr-only">
+
+              <div *ngIf="opt.recommended" class="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded-full shadow">
+                Recommandé
+              </div>
+
+              <div class="flex items-start gap-3">
+                <div [class]="'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ' +
+                     (delivery === opt.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600')">
+                  <lucide-angular [img]="opt.icon" class="w-5 h-5"></lucide-angular>
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-gray-900 text-sm leading-tight">{{ opt.label }}</p>
+                  <p class="text-xs text-gray-500 mt-0.5">{{ opt.sub }}</p>
+                  <p class="text-sm font-extrabold mt-2" [class]="opt.price === 0 ? 'text-emerald-600' : 'text-gray-900'">
+                    {{ opt.price === 0 ? (opt.id === 'standard' ? opt.eta : 'Gratuite') : (opt.price | currency:'EUR':'symbol':'1.2-2') }}
+                  </p>
+                </div>
+              </div>
+            </label>
+          </div>
+          <p class="text-xs text-gray-500 mt-3 flex items-center gap-1.5">
+            <lucide-angular [img]="Clock" class="w-3.5 h-3.5"></lucide-angular>
+            Estimation de livraison : <span class="font-semibold text-gray-700">{{ deliveryEstimate() }}</span>
+          </p>
+        </div>
+
+        <!-- Saved for later -->
+        <div *ngIf="savedForLater.length > 0" class="bg-white rounded-2xl border border-gray-100 p-5">
+          <h2 class="font-bold text-gray-900 flex items-center gap-2 mb-4">
+            <lucide-angular [img]="Clock" class="w-5 h-5 text-amber-500"></lucide-angular>
+            Gardés pour plus tard ({{ savedForLater.length }})
+          </h2>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div *ngFor="let p of savedForLater" class="flex gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+              <a [routerLink]="['/product', p.id]" class="flex-shrink-0 w-16 h-16 rounded-lg bg-white overflow-hidden">
+                <img [src]="p.image" [alt]="p.name" class="w-full h-full object-cover">
+              </a>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-900 line-clamp-1">{{ p.name }}</p>
+                <p class="text-sm font-extrabold text-indigo-600 mt-0.5">{{ p.price | currency:'EUR':'symbol':'1.2-2' }}</p>
+                <div class="flex gap-1 mt-1.5">
+                  <button (click)="restoreSaved(p)" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">
+                    Remettre au panier
+                  </button>
+                  <span class="text-xs text-gray-300">|</span>
+                  <button (click)="removeSaved(p.id)" class="text-xs font-semibold text-gray-500 hover:text-red-600">
+                    Retirer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div *ngIf="recommendations.length > 0" class="bg-white rounded-2xl border border-gray-100 p-5">
+          <h2 class="font-bold text-gray-900 flex items-center gap-2 mb-4">
+            <lucide-angular [img]="Sparkles" class="w-5 h-5 text-amber-500"></lucide-angular>
+            Complétez votre commande
+          </h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div *ngFor="let rec of recommendations.slice(0, 6)"
+                 class="group border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-all">
+              <a [routerLink]="['/product', rec.id]" class="block aspect-square bg-gray-50 overflow-hidden">
+                <img [src]="rec.image" [alt]="rec.name"
+                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+              </a>
+              <div class="p-2.5">
+                <p class="text-xs font-bold text-gray-900 line-clamp-2 mb-1 leading-snug">{{ rec.name }}</p>
+                <div class="flex items-center justify-between">
+                  <p class="text-sm font-extrabold text-gray-900">{{ rec.price | currency:'EUR':'symbol':'1.0-0' }}</p>
+                  <button (click)="addRecommendation(rec)"
+                          class="w-7 h-7 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition-colors shadow"
+                          aria-label="Ajouter">
+                    <lucide-angular [img]="Plus" class="w-4 h-4"></lucide-angular>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- RIGHT: Summary (sticky) -->
+      <!-- =================================================================== -->
+      <aside class="lg:col-span-1">
+        <div class="sticky top-4 space-y-4">
+
+          <!-- Promo code -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-5">
+            <h3 class="font-bold text-gray-900 flex items-center gap-2 mb-3">
+              <lucide-angular [img]="BadgePercent" class="w-5 h-5 text-rose-500"></lucide-angular>
+              Code promotionnel
+            </h3>
+
+            <!-- Applied promo display -->
+            <div *ngIf="appliedPromo" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <lucide-angular [img]="CheckCircle2" class="w-4 h-4 text-emerald-600"></lucide-angular>
+                  <p class="font-black text-emerald-700 text-sm">{{ appliedPromo.code }}</p>
+                </div>
+                <p class="text-xs text-emerald-700 mt-0.5">{{ appliedPromo.label }}</p>
+              </div>
+              <button (click)="removePromo()" class="text-emerald-700 hover:text-red-600 font-semibold text-xs">
+                Retirer
+              </button>
+            </div>
+
+            <!-- Input + apply -->
+            <div *ngIf="!appliedPromo">
+              <div class="flex gap-2">
+                <input type="text" [(ngModel)]="promoInput" placeholder="Entrer un code"
+                       (keyup.enter)="applyPromoCode()"
+                       class="flex-1 px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:bg-white uppercase font-semibold tracking-wider">
+                <button (click)="applyPromoCode()"
+                        class="px-4 py-2.5 bg-gray-900 hover:bg-black text-white rounded-xl font-bold text-sm transition-colors">
+                  Appliquer
+                </button>
+              </div>
+              <p *ngIf="promoError" class="text-xs text-red-600 font-semibold mt-2 flex items-center gap-1">
+                <lucide-angular [img]="AlertCircle" class="w-3.5 h-3.5"></lucide-angular>
+                {{ promoError }}
+              </p>
+
+              <!-- Suggested codes -->
+              <div class="mt-3 space-y-1.5">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Codes disponibles</p>
+                <button *ngFor="let promo of availablePromos"
+                        (click)="useSuggestedPromo(promo)"
+                        class="w-full flex items-center justify-between gap-2 p-2 rounded-lg border border-dashed border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/40 transition-all text-left">
+                  <div class="min-w-0 flex-1">
+                    <p class="font-black text-indigo-600 text-xs tracking-wider">{{ promo.code }}</p>
+                    <p class="text-[11px] text-gray-600 truncate">{{ promo.label }}</p>
+                  </div>
+                  <span class="text-[10px] font-bold text-indigo-600 flex-shrink-0">APPLIQUER →</span>
                 </button>
               </div>
             </div>
-
-            <!-- Price -->
-            <div class="text-right">
-              <p class="font-bold text-2xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-1">
-                {{ (item.price * item.quantity).toFixed(2) }}€
-              </p>
-              <p class="text-sm text-gray-500">
-                {{ item.price.toFixed(2) }}€ / unité
-              </p>
-            </div>
           </div>
-        </div>
 
-        <button
-          (click)="clearCart()"
-          class="text-red-600 hover:text-red-700 text-sm flex items-center gap-2 font-medium"
-        >
-          <lucide-angular [img]="Trash2" class="w-4 h-4"></lucide-angular>
-          Vider le panier
-        </button>
-      </div>
+          <!-- Summary -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+            <h3 class="font-bold text-gray-900 text-lg mb-4">Récapitulatif</h3>
 
-      <!-- Summary -->
-      <div class="lg:col-span-1">
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 sticky top-24">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6">Récapitulatif</h2>
-
-          <div class="space-y-4 mb-6">
-            <div class="flex justify-between text-gray-700">
-              <span>Sous-total</span>
-              <span class="font-bold">{{ total.toFixed(2) }}€</span>
-            </div>
-            <div class="flex justify-between text-gray-700">
-              <span>Livraison</span>
-              <span class="font-bold">
-                <span *ngIf="shipping === 0" class="text-green-600">Gratuite ✓</span>
-                <span *ngIf="shipping > 0">{{ shipping.toFixed(2) }}€</span>
-              </span>
-            </div>
-            
-            <div *ngIf="total < 99" class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
-              <p class="text-sm text-blue-700 font-medium">
-                Plus que <span class="font-bold">{{ remainingForFreeShipping.toFixed(2) }}€</span> pour la livraison gratuite! 🎉
-              </p>
-              <div class="mt-2 h-2 bg-blue-200 rounded-full overflow-hidden">
-                <div 
-                  class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all"
-                  [style.width.%]="shippingProgress"
-                ></div>
+            <div class="space-y-2.5 mb-4 text-sm">
+              <div class="flex justify-between text-gray-700">
+                <span>Sous-total ({{ itemsCount }} article{{ itemsCount > 1 ? 's' : '' }})</span>
+                <span class="font-bold text-gray-900">{{ subtotal | currency:'EUR':'symbol':'1.2-2' }}</span>
               </div>
-            </div>
-            
-            <div class="border-t-2 pt-4">
-              <div class="flex justify-between font-bold text-xl text-gray-900">
-                <span>Total</span>
-                <span class="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  {{ finalTotal.toFixed(2) }}€
+
+              <div *ngIf="itemsSavings > 0" class="flex justify-between text-emerald-600">
+                <span>Remises produits</span>
+                <span class="font-bold">-{{ itemsSavings | currency:'EUR':'symbol':'1.2-2' }}</span>
+              </div>
+
+              <div *ngIf="promoDiscount > 0" class="flex justify-between text-rose-600">
+                <span class="flex items-center gap-1">
+                  Code {{ appliedPromo?.code }}
+                  <lucide-angular [img]="BadgePercent" class="w-3.5 h-3.5"></lucide-angular>
+                </span>
+                <span class="font-bold">-{{ promoDiscount | currency:'EUR':'symbol':'1.2-2' }}</span>
+              </div>
+
+              <div class="flex justify-between text-gray-700">
+                <span>Livraison</span>
+                <span class="font-bold">
+                  <span *ngIf="shipping === 0" class="text-emerald-600 inline-flex items-center gap-1">
+                    Gratuite
+                    <lucide-angular [img]="CheckCircle2" class="w-3.5 h-3.5"></lucide-angular>
+                  </span>
+                  <span *ngIf="shipping > 0" class="text-gray-900">{{ shipping | currency:'EUR':'symbol':'1.2-2' }}</span>
                 </span>
               </div>
+
+              <div class="border-t border-gray-200 pt-3 mt-3 flex justify-between items-end">
+                <div>
+                  <p class="font-extrabold text-gray-900 text-lg">Total</p>
+                  <p class="text-[10px] text-gray-500 uppercase tracking-widest">TVA incluse</p>
+                </div>
+                <p class="text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                  {{ finalTotal | currency:'EUR':'symbol':'1.2-2' }}
+                </p>
+              </div>
+            </div>
+
+            <button class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3.5 rounded-xl font-black text-base shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all mb-3">
+              <lucide-angular [img]="Lock" class="w-4 h-4"></lucide-angular>
+              Passer la commande
+              <lucide-angular [img]="ArrowRight" class="w-4 h-4"></lucide-angular>
+            </button>
+
+            <a routerLink="/" class="block text-center text-sm text-indigo-600 hover:text-indigo-700 font-semibold">
+              ← Continuer mes achats
+            </a>
+
+            <!-- Payment methods -->
+            <div class="mt-4 pt-4 border-t border-gray-100">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Moyens de paiement acceptés</p>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-1 bg-gray-50 border border-gray-200 rounded text-[11px] font-bold text-gray-700">VISA</span>
+                <span class="px-2 py-1 bg-gray-50 border border-gray-200 rounded text-[11px] font-bold text-gray-700">MASTERCARD</span>
+                <span class="px-2 py-1 bg-gray-50 border border-gray-200 rounded text-[11px] font-bold text-gray-700">PAYPAL</span>
+                <span class="px-2 py-1 bg-gray-50 border border-gray-200 rounded text-[11px] font-bold text-gray-700">APPLE PAY</span>
+                <span class="px-2 py-1 bg-amber-50 border border-amber-200 rounded text-[11px] font-bold text-amber-700">3× sans frais</span>
+              </div>
             </div>
           </div>
 
-          <button class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all mb-4">
-            Passer la commande
-          </button>
-
-          <a
-            routerLink="/"
-            class="block text-center text-indigo-600 hover:text-indigo-700 text-sm font-medium"
-          >
-            Continuer mes achats
-          </a>
-
-          <!-- Trust Badges -->
-          <div class="mt-6 pt-6 border-t space-y-3">
-            <div class="flex items-center gap-3 text-sm text-gray-700">
-              <lucide-angular [img]="Shield" class="w-5 h-5 text-green-600"></lucide-angular>
-              <span>Paiement 100% sécurisé</span>
+          <!-- Trust badges -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <lucide-angular [img]="Shield" class="w-4 h-4 text-emerald-600"></lucide-angular>
+              </div>
+              <div>
+                <p class="font-bold text-gray-900 text-sm">Paiement 100% sécurisé</p>
+                <p class="text-xs text-gray-500">Transactions chiffrées SSL 256 bits</p>
+              </div>
             </div>
-            <div class="flex items-center gap-3 text-sm text-gray-700">
-              <lucide-angular [img]="Truck" class="w-5 h-5 text-blue-600"></lucide-angular>
-              <span>Livraison express 24-48h</span>
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <lucide-angular [img]="Truck" class="w-4 h-4 text-blue-600"></lucide-angular>
+              </div>
+              <div>
+                <p class="font-bold text-gray-900 text-sm">Livraison rapide</p>
+                <p class="text-xs text-gray-500">Express 24-48h disponible</p>
+              </div>
             </div>
-            <div class="flex items-center gap-3 text-sm text-gray-700">
-              <lucide-angular [img]="Sparkles" class="w-5 h-5 text-purple-600"></lucide-angular>
-              <span>Retour gratuit sous 60 jours</span>
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 bg-purple-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <lucide-angular [img]="RefreshCcw" class="w-4 h-4 text-purple-600"></lucide-angular>
+              </div>
+              <div>
+                <p class="font-bold text-gray-900 text-sm">Retour gratuit 60 jours</p>
+                <p class="text-xs text-gray-500">Satisfait ou remboursé</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </aside>
     </div>
-  </div>
+  </section>
 </div>

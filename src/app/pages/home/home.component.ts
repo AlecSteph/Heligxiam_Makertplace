@@ -1,6 +1,7 @@
 import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import {
   LucideAngularModule,
   ChevronRight,
@@ -93,18 +94,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   readonly Gift = Gift;
   readonly Truck = Truck;
   readonly Headphones = Headphones;
-
-  // Rail de catégories rapides
-  categoryPills = [
-    { label: 'Électronique', emoji: '💻', route: '/category/électronique' },
-    { label: 'Mode', emoji: '👗', route: '/category/mode-&-accessoires' },
-    { label: 'Maison', emoji: '🏠', route: '/category/maison-&-décoration' },
-    { label: 'Beauté', emoji: '💄', route: '/category/beauté-&-santé' },
-    { label: 'Sport', emoji: '⚽', route: '/category/sport-&-fitness' },
-    { label: 'Gaming', emoji: '🎮', queryParams: { q: 'gaming' }, route: '/search' },
-    { label: 'Auto', emoji: '🚗', route: '/category/automobile' },
-    { label: 'Cadeaux', emoji: '🎁', queryParams: { badge: 'Exclusif' }, route: '/search' }
-  ];
 
   // Cartes "Univers" (4 tuiles 2x2) - style Amazon
   universesTop: Universe[] = [
@@ -259,7 +248,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   ];
 
-  constructor() {
+  // Showcase YouTube videos (autoplay/loop/muted, controls hidden, not clickable)
+  // To change a video, just replace the YouTube ID below.
+  showcaseVideo1Url!: SafeResourceUrl;
+  showcaseVideo2Url!: SafeResourceUrl;
+  private readonly showcaseVideo1Id = 'Aj_q42qk8vs'; // Retail / shopping stock footage
+  private readonly showcaseVideo2Id = 'Aj_q42qk8vs'; // Same source, different segment
+  private readonly showcaseVideo1Start = 0;
+  private readonly showcaseVideo2Start = 120;
+
+  constructor(private sanitizer: DomSanitizer) {
     this.allProducts = PRODUCTS;
     this.featuredProducts = PRODUCTS.slice(0, 6);
     this.bestSellers = PRODUCTS.filter(p => p.badge === 'Bestseller' || p.rating >= 4.8);
@@ -267,6 +265,30 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.premiumProducts = PRODUCTS.filter(p => p.badge === 'Premium' || p.badge === 'Exclusif' || p.badge === 'Pro');
     this.budgetProducts = [...PRODUCTS].sort((a, b) => a.price - b.price).slice(0, 4);
     this.buildHeroSlides();
+    this.showcaseVideo1Url = this.buildYoutubeUrl(this.showcaseVideo1Id, this.showcaseVideo1Start);
+    this.showcaseVideo2Url = this.buildYoutubeUrl(this.showcaseVideo2Id, this.showcaseVideo2Start);
+  }
+
+  private buildYoutubeUrl(id: string, start: number): SafeResourceUrl {
+    const params = new URLSearchParams({
+      autoplay: '1',
+      mute: '1',
+      loop: '1',
+      playlist: id,        // required so `loop=1` actually loops the single video
+      controls: '0',       // hide play/pause/seek controls
+      modestbranding: '1', // hide YouTube logo
+      rel: '0',            // no related videos at end
+      showinfo: '0',       // hide title/uploader
+      iv_load_policy: '3', // hide annotations
+      disablekb: '1',      // disable keyboard shortcuts
+      fs: '0',             // hide fullscreen button
+      playsinline: '1',    // inline playback on iOS
+      cc_load_policy: '0', // no captions
+      start: String(start)
+    }).toString();
+    return this.sanitizer.bypassSecurityTrustResourceUrl(
+      `https://www.youtube-nocookie.com/embed/${id}?${params}`
+    );
   }
 
   ngOnInit(): void {
@@ -276,6 +298,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.stopAutoPlay();
   }
+
 
   private buildHeroSlides(): void {
     const heroProducts = PRODUCTS.slice(0, 4);

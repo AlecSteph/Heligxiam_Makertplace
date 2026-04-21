@@ -1,0 +1,418 @@
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
+  <!-- =================== HERO =================== -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-600 text-white print:hidden">
+    <div class="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 -left-10 w-72 h-72 bg-pink-400/20 rounded-full blur-3xl"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 py-10 md:py-14">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-bold uppercase tracking-widest bg-white/15 backdrop-blur border border-white/20 rounded-full mb-3">
+            <lucide-angular [img]="Lock" class="w-3.5 h-3.5"></lucide-angular>
+            Informations légales
+          </span>
+          <h1 class="text-3xl md:text-5xl font-extrabold leading-tight mb-3">
+            Vos droits, notre <span class="text-amber-300">transparence</span>
+          </h1>
+          <p class="text-base md:text-lg text-white/90 max-w-2xl">
+            Consultez nos conditions générales, notre politique de confidentialité, la gestion des cookies et nos mentions légales.
+          </p>
+          <p class="text-xs text-white/70 mt-3 inline-flex items-center gap-1.5">
+            <lucide-angular [img]="CalendarDays" class="w-3.5 h-3.5"></lucide-angular>
+            Dernière mise à jour : {{ lastUpdate | date:'longDate':'':'fr-FR' }}
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <button (click)="print()"
+                  class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur border border-white/30 rounded-xl font-semibold transition">
+            <lucide-angular [img]="Printer" class="w-4 h-4"></lucide-angular>
+            Imprimer
+          </button>
+          <a href="mailto:legal@heligxiam-marketplace.com"
+             class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-indigo-700 hover:bg-indigo-50 rounded-xl font-bold shadow-md transition">
+            <lucide-angular [img]="Mail" class="w-4 h-4"></lucide-angular>
+            Nous contacter
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================== MAIN LAYOUT =================== -->
+  <section class="max-w-7xl mx-auto px-4 py-8 md:py-10">
+    <div class="grid lg:grid-cols-[260px_1fr] gap-6 lg:gap-10">
+
+      <!-- Sidebar navigation -->
+      <aside class="print:hidden">
+        <div class="sticky top-4 space-y-2">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3 mb-2">Sections</p>
+          <button *ngFor="let entry of navEntries"
+                  type="button"
+                  (click)="selectSection(entry.id)"
+                  [class]="'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition-all border ' +
+                    (activeSection === entry.id
+                      ? 'bg-white shadow-md border-slate-200 ' + entry.accent
+                      : 'bg-transparent border-transparent text-slate-600 hover:bg-white/60 hover:border-slate-100')">
+            <span [class]="'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br ' + entry.color + ' text-white shadow-sm'">
+              <lucide-angular [img]="entry.icon" class="w-4 h-4"></lucide-angular>
+            </span>
+            <span class="flex-1 min-w-0 truncate">{{ entry.short }}</span>
+            <lucide-angular *ngIf="activeSection === entry.id" [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+          </button>
+
+          <!-- Help block -->
+          <div class="mt-4 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <lucide-angular [img]="Info" class="w-4 h-4 text-indigo-600"></lucide-angular>
+              <p class="text-sm font-bold text-indigo-900">Besoin d'aide ?</p>
+            </div>
+            <p class="text-xs text-indigo-800/80 mb-3">Notre équipe vous répond 7j/7</p>
+            <a routerLink="/guide" fragment="aide"
+               class="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-700">
+              Accéder au support
+              <lucide-angular [img]="ChevronRight" class="w-3.5 h-3.5"></lucide-angular>
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Content -->
+      <article class="space-y-8 legal-prose">
+
+        <!-- ============ CGU ============ -->
+        <section id="terms" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
+          <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md">
+              <lucide-angular [img]="Scale" class="w-6 h-6"></lucide-angular>
+            </div>
+            <div>
+              <p class="text-[11px] font-bold uppercase tracking-widest text-indigo-600">Article 1</p>
+              <h2 class="text-2xl font-extrabold text-slate-900">Conditions générales d'utilisation</h2>
+              <p class="text-xs text-slate-500 mt-0.5">En vigueur depuis le {{ lastUpdate | date:'longDate':'':'fr-FR' }}</p>
+            </div>
+          </div>
+
+          <p class="text-slate-600 text-sm mb-6">
+            Bienvenue sur HELIGXIAM. Les présentes conditions générales (« <strong>CGU</strong> ») régissent l'utilisation de notre
+            marketplace accessible via le site internet et les applications mobiles. En accédant à nos services, vous reconnaissez
+            avoir lu, compris et accepté l'intégralité de ces conditions.
+          </p>
+
+          <h3>1. Objet</h3>
+          <p>
+            HELIGXIAM est une place de marché en ligne qui permet aux utilisateurs (« <strong>Acheteurs</strong> ») de commander des produits
+            proposés par des vendeurs tiers partenaires (« <strong>Vendeurs</strong> »). HELIGXIAM agit en qualité d'intermédiaire technique
+            et n'est pas partie au contrat de vente conclu entre l'Acheteur et le Vendeur.
+          </p>
+
+          <h3>2. Compte utilisateur</h3>
+          <ul>
+            <li>L'inscription est gratuite et requiert une adresse email valide.</li>
+            <li>Vous vous engagez à fournir des informations exactes, complètes et à jour.</li>
+            <li>Vous êtes seul responsable de la confidentialité de votre mot de passe.</li>
+            <li>Tout usage frauduleux pourra entraîner la suspension ou la suppression du compte.</li>
+          </ul>
+
+          <h3>3. Commandes et paiement</h3>
+          <p>
+            Les prix sont affichés TTC, en euros. Le paiement est dû au moment de la commande et réalisé via nos prestataires
+            sécurisés (carte bancaire, PayPal, Apple Pay, paiement en 3×). Un email de confirmation récapitule votre commande.
+          </p>
+
+          <h3>4. Livraison</h3>
+          <ul>
+            <li><strong>Standard</strong> : 3 à 5 jours ouvrés, gratuite dès 99 € d'achat.</li>
+            <li><strong>Express</strong> : 24-48h (9,90 €).</li>
+            <li><strong>Premium Same-Day</strong> : aujourd'hui avant 22h sur zones éligibles (19,90 €).</li>
+          </ul>
+          <p>En cas de retard, vous pouvez contacter notre service client et/ou demander l'annulation conformément à la réglementation.</p>
+
+          <h3>5. Droit de rétractation et retours</h3>
+          <p>
+            Vous disposez d'un délai de <strong>60 jours</strong> (soit plus que le délai légal de 14 jours) pour retourner votre commande,
+            sans motif à fournir. Les frais de retour sont gratuits via notre portail de retours.
+            Certains produits (hygiène, produits personnalisés, contenu numérique) ne peuvent être retournés pour des raisons légales.
+          </p>
+
+          <h3>6. Garantie A à Z</h3>
+          <p>
+            HELIGXIAM s'engage contractuellement sur la conformité du produit et sa livraison dans les délais. En cas de litige avec un Vendeur,
+            notre <strong>Garantie A à Z</strong> vous protège : remboursement intégral si la réclamation est fondée, sous 48 heures maximum.
+          </p>
+
+          <h3>7. Responsabilité</h3>
+          <p>
+            HELIGXIAM ne saurait être tenue responsable des dommages indirects liés à l'utilisation du Site. Les Vendeurs sont responsables de la
+            conformité des produits qu'ils mettent en vente. Pour plus d'informations sur les Vendeurs, consultez notre
+            <a routerLink="/sell" class="text-indigo-600 font-semibold hover:underline">programme partenaire</a>.
+          </p>
+
+          <h3>8. Propriété intellectuelle</h3>
+          <p>
+            L'ensemble des contenus, marques, logos et éléments graphiques du Site sont la propriété exclusive de HELIGXIAM ou de ses partenaires.
+            Toute reproduction, totale ou partielle, sans autorisation écrite préalable est strictement interdite.
+          </p>
+
+          <h3>9. Modifications</h3>
+          <p>
+            HELIGXIAM se réserve le droit de modifier à tout moment les présentes CGU. Les utilisateurs seront informés de toute modification
+            substantielle par email et/ou notification sur le Site. La poursuite d'utilisation vaut acceptation.
+          </p>
+
+          <h3>10. Droit applicable et juridiction</h3>
+          <p>
+            Les présentes CGU sont régies par le droit français. Tout litige relatif à leur exécution ou leur interprétation relèvera de la
+            compétence exclusive des tribunaux de Paris, sous réserve des dispositions légales d'ordre public.
+          </p>
+
+          <div class="mt-6 p-4 bg-indigo-50 border border-indigo-100 rounded-xl flex items-start gap-3">
+            <lucide-angular [img]="CheckCircle2" class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5"></lucide-angular>
+            <p class="text-xs text-indigo-900 leading-relaxed">
+              En créant un compte, vous déclarez avoir pris connaissance de ces CGU et les accepter sans réserve.
+              Un exemplaire peut être téléchargé ou imprimé à tout moment via le bouton « Imprimer » en haut de page.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ PRIVACY ============ -->
+        <section id="privacy" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
+          <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md">
+              <lucide-angular [img]="ShieldCheck" class="w-6 h-6"></lucide-angular>
+            </div>
+            <div>
+              <p class="text-[11px] font-bold uppercase tracking-widest text-emerald-600">Article 2</p>
+              <h2 class="text-2xl font-extrabold text-slate-900">Politique de confidentialité</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Conforme au RGPD (Règlement (UE) 2016/679)</p>
+            </div>
+          </div>
+
+          <p class="text-slate-600 text-sm mb-6">
+            Chez HELIGXIAM, la protection de vos données personnelles est une priorité absolue. Cette politique décrit les données que nous
+            collectons, comment nous les utilisons, et les droits dont vous disposez.
+          </p>
+
+          <h3>1. Données collectées</h3>
+          <ul>
+            <li><strong>Identification</strong> : nom, prénom, email, mot de passe (chiffré), date de naissance.</li>
+            <li><strong>Coordonnées</strong> : adresses postales de livraison et de facturation, numéro de téléphone.</li>
+            <li><strong>Paiement</strong> : les données bancaires ne sont jamais stockées sur nos serveurs — elles transitent directement par nos prestataires PCI-DSS.</li>
+            <li><strong>Navigation</strong> : pages visitées, produits consultés, adresse IP, type d'appareil, cookies.</li>
+          </ul>
+
+          <h3>2. Finalités du traitement</h3>
+          <ul>
+            <li>Exécution et suivi des commandes (contrat).</li>
+            <li>Gestion de votre compte et de nos relations commerciales.</li>
+            <li>Amélioration de nos services et personnalisation de votre expérience.</li>
+            <li>Envoi de communications marketing (uniquement avec votre consentement explicite).</li>
+            <li>Prévention de la fraude et respect de nos obligations légales.</li>
+          </ul>
+
+          <h3>3. Base légale</h3>
+          <p>
+            Les traitements reposent sur l'exécution du contrat (commande), votre consentement (newsletter, cookies non essentiels),
+            notre intérêt légitime (sécurité, statistiques) et nos obligations légales (facturation, comptabilité).
+          </p>
+
+          <h3>4. Destinataires</h3>
+          <p>
+            Vos données sont accessibles à nos équipes habilitées ainsi qu'à nos sous-traitants (hébergeurs, prestataires de paiement,
+            transporteurs, plateformes d'emailing), tous soumis à des obligations strictes de confidentialité et de sécurité.
+            <strong>Nous ne vendons jamais vos données</strong> à des tiers.
+          </p>
+
+          <h3>5. Durée de conservation</h3>
+          <ul>
+            <li>Données de compte : durée de vie du compte + 3 ans d'inactivité.</li>
+            <li>Commandes et factures : 10 ans (obligations comptables).</li>
+            <li>Cookies : maximum 13 mois.</li>
+            <li>Logs de connexion : 1 an.</li>
+          </ul>
+
+          <h3>6. Vos droits</h3>
+          <p>Conformément au RGPD, vous disposez à tout moment des droits suivants :</p>
+          <ul>
+            <li><strong>Accès</strong> et copie de vos données.</li>
+            <li><strong>Rectification</strong> des données inexactes.</li>
+            <li><strong>Suppression</strong> (« droit à l'oubli ») sous réserve des obligations légales.</li>
+            <li><strong>Limitation</strong> ou <strong>opposition</strong> au traitement.</li>
+            <li><strong>Portabilité</strong> de vos données vers un autre service.</li>
+            <li>Retrait de votre consentement à tout moment.</li>
+          </ul>
+          <p>
+            Pour exercer ces droits, contactez notre DPO à l'adresse
+            <a href="mailto:privacy@heligxiam-marketplace.com" class="text-emerald-600 font-semibold hover:underline">privacy&#64;heligxiam-marketplace.com</a>.
+            Vous avez également le droit d'introduire une réclamation auprès de la CNIL.
+          </p>
+
+          <h3>7. Sécurité</h3>
+          <p>
+            Nos serveurs sont hébergés en France, sécurisés via chiffrement SSL 256 bits, authentification à deux facteurs pour nos équipes,
+            tests d'intrusion réguliers et surveillance 24/7.
+          </p>
+
+          <h3>8. Transferts internationaux</h3>
+          <p>
+            Dans la mesure où certains sous-traitants sont situés hors de l'Union Européenne, les transferts sont encadrés par les Clauses
+            Contractuelles Types (CCT) validées par la Commission européenne, garantissant un niveau de protection équivalent.
+          </p>
+
+          <div class="mt-6 p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-start gap-3">
+            <lucide-angular [img]="Lock" class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5"></lucide-angular>
+            <p class="text-xs text-emerald-900 leading-relaxed">
+              Votre vie privée est un droit, pas une option. Vous gardez le contrôle complet sur vos données à tout moment
+              depuis votre <a routerLink="/profile" [queryParams]="{ view: 'security' }" class="font-bold underline">espace Sécurité</a>.
+            </p>
+          </div>
+        </section>
+
+        <!-- ============ COOKIES ============ -->
+        <section id="cookies" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
+          <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md">
+              <lucide-angular [img]="Cookie" class="w-6 h-6"></lucide-angular>
+            </div>
+            <div>
+              <p class="text-[11px] font-bold uppercase tracking-widest text-amber-600">Article 3</p>
+              <h2 class="text-2xl font-extrabold text-slate-900">Gestion des cookies</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Recommandation CNIL et ePrivacy</p>
+            </div>
+          </div>
+
+          <h3>1. Qu'est-ce qu'un cookie ?</h3>
+          <p>
+            Un cookie est un petit fichier texte déposé sur votre terminal lorsque vous visitez notre Site. Il permet d'assurer le bon
+            fonctionnement du Site, de mémoriser vos préférences et de mesurer l'audience.
+          </p>
+
+          <h3>2. Catégories utilisées</h3>
+          <div class="grid md:grid-cols-2 gap-3 mt-3 not-prose">
+            <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                <p class="font-bold text-sm text-slate-900">Essentiels</p>
+                <span class="ml-auto text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase">Actifs</span>
+              </div>
+              <p class="text-xs text-slate-600">Authentification, panier, sécurité. Indispensables au service.</p>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                <p class="font-bold text-sm text-slate-900">Fonctionnels</p>
+              </div>
+              <p class="text-xs text-slate-600">Mémorisation de vos préférences (langue, devise, thème).</p>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="w-2 h-2 bg-purple-500 rounded-full"></span>
+                <p class="font-bold text-sm text-slate-900">Analytiques</p>
+              </div>
+              <p class="text-xs text-slate-600">Mesure d'audience anonymisée pour améliorer le Site.</p>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="w-2 h-2 bg-pink-500 rounded-full"></span>
+                <p class="font-bold text-sm text-slate-900">Marketing</p>
+              </div>
+              <p class="text-xs text-slate-600">Personnalisation des publicités — soumis à votre consentement explicite.</p>
+            </div>
+          </div>
+
+          <h3 class="mt-6">3. Gérer vos préférences</h3>
+          <p>
+            Lors de votre première visite, un bandeau vous permet d'accepter, de refuser ou de personnaliser les cookies non essentiels.
+            Vous pouvez modifier vos choix à tout moment via le lien « Cookies » en pied de page ou dans les paramètres de votre navigateur.
+          </p>
+
+          <h3>4. Durée de conservation</h3>
+          <p>Les cookies sont conservés pour une durée maximale de 13 mois à compter de votre consentement.</p>
+        </section>
+
+        <!-- ============ LEGAL NOTICE ============ -->
+        <section id="legal" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8">
+          <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-600 to-gray-700 text-white flex items-center justify-center shadow-md">
+              <lucide-angular [img]="FileText" class="w-6 h-6"></lucide-angular>
+            </div>
+            <div>
+              <p class="text-[11px] font-bold uppercase tracking-widest text-slate-600">Article 4</p>
+              <h2 class="text-2xl font-extrabold text-slate-900">Mentions légales</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Obligations LCEN</p>
+            </div>
+          </div>
+
+          <h3>Éditeur du Site</h3>
+          <p>
+            <strong>HELIGXIAM Marketplace SAS</strong><br>
+            Capital social : 250 000 €<br>
+            Siège social : 25 rue du Commerce, 75015 Paris, France<br>
+            RCS Paris : 912 345 678<br>
+            SIRET : 912 345 678 00015<br>
+            TVA intra-communautaire : FR 45 912345678<br>
+            Directeur de la publication : Aurélien Martin
+          </p>
+
+          <h3>Hébergeur</h3>
+          <p>
+            <strong>OVH Cloud</strong><br>
+            2 rue Kellermann, 59100 Roubaix, France<br>
+            Téléphone : +33 9 72 10 10 07
+          </p>
+
+          <h3>Contact</h3>
+          <p>
+            Service client :
+            <a href="mailto:support@heligxiam-marketplace.com" class="text-indigo-600 font-semibold hover:underline">support&#64;heligxiam-marketplace.com</a><br>
+            Affaires juridiques :
+            <a href="mailto:legal@heligxiam-marketplace.com" class="text-indigo-600 font-semibold hover:underline">legal&#64;heligxiam-marketplace.com</a><br>
+            Téléphone : 01 70 00 00 00 (24h/24, service gratuit + prix d'un appel local)
+          </p>
+
+          <h3>Propriété intellectuelle</h3>
+          <p>
+            La marque HELIGXIAM, le logo et l'ensemble des éléments du Site sont protégés par les dispositions françaises et internationales
+            relatives à la propriété intellectuelle. Toute reproduction non autorisée est passible de poursuites.
+          </p>
+
+          <h3>Médiation de la consommation</h3>
+          <p>
+            Conformément aux articles L.616-1 et R.616-1 du code de la consommation, nous proposons un dispositif de médiation de la consommation.
+            L'entité de médiation retenue est : <strong>CNPM – Médiation de la consommation</strong>, 27 avenue de la Libération, 42400 Saint-Chamond —
+            <a href="https://cnpm-mediation-consommation.eu" target="_blank" rel="noopener" class="text-indigo-600 font-semibold hover:underline">cnpm-mediation-consommation.eu</a>.
+          </p>
+        </section>
+
+        <!-- Footer card -->
+        <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl p-6 md:p-8 relative overflow-hidden print:hidden">
+          <div class="absolute -top-12 -right-12 w-56 h-56 bg-white/10 rounded-full blur-3xl"></div>
+          <div class="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-start gap-3">
+              <div class="w-11 h-11 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center flex-shrink-0">
+                <lucide-angular [img]="Sparkles" class="w-5 h-5"></lucide-angular>
+              </div>
+              <div>
+                <p class="font-bold text-lg">Une question sur vos droits ?</p>
+                <p class="text-sm text-white/90">Notre équipe juridique répond sous 48 h ouvrées.</p>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <a href="mailto:legal@heligxiam-marketplace.com"
+                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-indigo-700 rounded-xl font-bold shadow hover:shadow-lg transition">
+                <lucide-angular [img]="Mail" class="w-4 h-4"></lucide-angular>
+                Nous écrire
+              </a>
+              <button (click)="print()" type="button"
+                      class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur border border-white/30 rounded-xl font-semibold transition">
+                <lucide-angular [img]="Download" class="w-4 h-4"></lucide-angular>
+                Télécharger en PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </article>
+    </div>
+  </section>
+</div>

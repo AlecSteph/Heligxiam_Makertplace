@@ -1,0 +1,716 @@
+<div class="bg-white text-gray-900">
+
+  <!-- =========== TOP BANNER =========== -->
+  <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm py-2.5">
+    <div class="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-center gap-2 text-center">
+      <span class="font-semibold">🎯 Frais réduits en 2026 — marges plus importantes.</span>
+      <a href="#preparez" (click)="$event.preventDefault(); scrollToSection('preparez')"
+         class="underline font-bold hover:no-underline">
+        Découvrez ce que vous économisez →
+      </a>
+    </div>
+  </div>
+
+  <!-- =========== HERO =========== -->
+  <section class="relative bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white overflow-hidden">
+    <div class="absolute inset-0 opacity-20">
+      <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1600&q=80"
+           alt="" class="w-full h-full object-cover" />
+    </div>
+    <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 py-14 md:py-20 grid md:grid-cols-2 gap-8 items-center">
+      <div>
+        <span class="inline-flex items-center gap-2 text-xs font-bold bg-white/15 backdrop-blur-sm px-3 py-1.5 rounded-full uppercase tracking-widest mb-4">
+          <lucide-angular [img]="Store" class="w-3.5 h-3.5"></lucide-angular>
+          HELIGXIAM Partenaires
+        </span>
+        <h1 class="text-4xl md:text-6xl font-bold leading-tight mb-4">
+          Vendez sur la marketplace premium
+          <span class="bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">
+            #1 en France
+          </span>
+        </h1>
+        <p class="text-lg text-white/90 mb-6 max-w-xl">
+          Développez votre activité auprès de <strong>800 000+ acheteurs qualifiés</strong> chaque mois.
+          Inscription en 10 minutes, premières ventes dès cette semaine.
+        </p>
+        <div class="flex flex-wrap gap-3 mb-6">
+          <a routerLink="/account" [queryParams]="{ mode: 'register', role: 'seller' }"
+             class="inline-flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-xl shadow-xl hover:scale-105 transition-transform">
+            S'inscrire comme vendeur
+            <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+          </a>
+          <button type="button" (click)="scrollToSection('preparez')"
+                  class="inline-flex items-center gap-2 px-6 py-3.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition">
+            Voir les tarifs
+          </button>
+        </div>
+        <p class="text-sm text-white/70">
+          À partir de <strong class="text-white">29€/mois (HT)</strong> + commission • Sans engagement • Résiliable à tout moment
+        </p>
+      </div>
+
+      <div class="hidden md:block relative">
+        <div class="aspect-video rounded-2xl overflow-hidden shadow-2xl bg-black relative group cursor-pointer">
+          <img src="https://images.unsplash.com/photo-1556740772-1a741367b93e?w=800&q=80"
+               alt="Vendeurs heureux" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-20 h-20 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+              <lucide-angular [img]="Play" class="w-8 h-8 text-red-600 translate-x-0.5"></lucide-angular>
+            </div>
+          </div>
+          <div class="absolute bottom-3 left-3 right-3 text-white">
+            <p class="text-xs font-semibold mb-0.5">Vidéo · 01:55</p>
+            <p class="text-sm font-bold line-clamp-1">Atelier Parisien : +186% de CA en 8 mois</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="relative border-t border-white/10 bg-black/20 backdrop-blur-sm">
+      <div class="max-w-7xl mx-auto px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div *ngFor="let stat of stats" class="text-center md:text-left">
+          <div class="text-2xl md:text-3xl font-bold text-white">{{ stat.value }}</div>
+          <div class="text-xs text-white/70 uppercase tracking-wide">{{ stat.label }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== STICKY STEPS NAV + CONTENT =========== -->
+  <div class="max-w-7xl mx-auto px-4 py-10">
+    <div class="grid lg:grid-cols-[280px_1fr] gap-8">
+
+      <!-- Sticky Side Nav -->
+      <aside class="hidden lg:block">
+        <div class="sticky top-24">
+          <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Guide en 7 étapes</h3>
+          <nav class="space-y-1">
+            <button *ngFor="let step of steps"
+                    type="button"
+                    (click)="scrollToSection(step.id)"
+                    [class]="'w-full flex items-start gap-3 px-3 py-2.5 text-left rounded-lg transition-all border-l-2 ' +
+                      (activeSection === step.id
+                        ? 'bg-indigo-50 border-indigo-600 text-indigo-900'
+                        : 'border-transparent hover:bg-gray-50 text-gray-700')">
+              <div [class]="'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-xs ' +
+                (activeSection === step.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600')">
+                {{ step.num }}
+              </div>
+              <div class="flex-1 min-w-0 pt-0.5">
+                <div class="text-sm font-semibold leading-tight">{{ step.title }}</div>
+                <div class="text-xs text-gray-500 leading-tight mt-0.5">{{ step.subtitle }}</div>
+              </div>
+            </button>
+          </nav>
+
+          <div class="mt-6 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
+            <div class="flex items-start gap-2 mb-2">
+              <lucide-angular [img]="Sparkles" class="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5"></lucide-angular>
+              <div>
+                <p class="text-sm font-bold text-gray-900">Prime nouveau vendeur</p>
+                <p class="text-xs text-gray-600">Jusqu'à <strong class="text-orange-700">47 250€</strong> d'avantages cumulés la 1ère année.</p>
+              </div>
+            </div>
+            <a routerLink="/account" [queryParams]="{ mode: 'register', role: 'seller' }"
+               class="block w-full text-center px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-lg hover:shadow-md transition">
+              S'inscrire maintenant
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="space-y-16">
+
+        <!-- =========== STEP 1 =========== -->
+        <section id="preparez" class="scroll-mt-24">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center shadow-md">01</div>
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold">Préparez-vous à vendre</h2>
+              <p class="text-gray-500 text-sm">Choisissez le plan qui correspond à votre activité</p>
+            </div>
+          </div>
+
+          <!-- Pricing cards -->
+          <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <div *ngFor="let plan of pricingPlans"
+                 [class]="'relative rounded-2xl p-6 border-2 transition-all ' +
+                   (plan.highlight
+                     ? 'border-indigo-600 bg-gradient-to-br from-indigo-50 to-purple-50 shadow-xl scale-[1.02]'
+                     : 'border-gray-200 bg-white hover:border-gray-300')">
+              <span *ngIf="plan.badge"
+                    class="absolute -top-3 right-6 px-3 py-1 text-xs font-bold uppercase tracking-wide bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full shadow">
+                {{ plan.badge }}
+              </span>
+              <div class="mb-4">
+                <h3 class="text-xl font-bold">{{ plan.name }}</h3>
+                <p class="text-sm text-gray-500">{{ plan.subtitle }}</p>
+              </div>
+              <div class="mb-4">
+                <span class="text-4xl font-bold">{{ plan.price }}</span>
+                <span class="text-sm text-gray-600 ml-1">{{ plan.priceUnit }}</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-5">{{ plan.description }}</p>
+              <ul class="space-y-2 mb-6">
+                <li *ngFor="let feature of plan.features"
+                    class="flex items-start gap-2 text-sm">
+                  <lucide-angular *ngIf="feature.included" [img]="Check" class="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5"></lucide-angular>
+                  <lucide-angular *ngIf="!feature.included" [img]="X" class="w-4 h-4 text-gray-300 flex-shrink-0 mt-0.5"></lucide-angular>
+                  <span [class]="feature.included ? 'text-gray-800' : 'text-gray-400 line-through'">{{ feature.label }}</span>
+                </li>
+              </ul>
+              <a routerLink="/account" [queryParams]="{ mode: 'register', role: 'seller', plan: plan.name.toLowerCase() }"
+                 [class]="'block w-full text-center px-4 py-2.5 rounded-lg font-bold transition-all ' +
+                   (plan.highlight
+                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-xl hover:scale-[1.02]'
+                     : 'bg-gray-900 text-white hover:bg-gray-800')">
+                {{ plan.cta }}
+              </a>
+            </div>
+          </div>
+
+          <!-- Commission rates -->
+          <div class="rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-5 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
+              <lucide-angular [img]="Receipt" class="w-4 h-4 text-gray-600"></lucide-angular>
+              <h3 class="text-sm font-bold">Commissions par catégorie (en plus de l'abonnement)</h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-5 text-xs divide-y md:divide-y-0 md:divide-x divide-gray-100">
+              <div *ngFor="let rate of commissionRates" class="p-3">
+                <div class="text-gray-500 text-[11px] uppercase tracking-wide">{{ rate.category }}</div>
+                <div class="text-lg font-bold text-indigo-700 mt-0.5">{{ rate.rate }}</div>
+                <div class="text-[10px] text-gray-400">min. {{ rate.min }}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========== STEP 2 =========== -->
+        <section id="compte" class="scroll-mt-24">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white font-bold flex items-center justify-center shadow-md">02</div>
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold">Créez votre compte vendeur</h2>
+              <p class="text-gray-500 text-sm">Préparez ces documents pour une vérification rapide</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-3">
+            <div *ngFor="let item of verificationItems"
+                 class="flex items-start gap-3 p-4 rounded-xl border border-gray-200 bg-white hover:border-indigo-300 hover:shadow-sm transition-all">
+              <div class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                <lucide-angular [img]="item.icon" class="w-5 h-5 text-indigo-600"></lucide-angular>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-900 mb-0.5">{{ item.type }}</p>
+                <p class="text-xs text-gray-600">{{ item.doc }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-3">
+            <lucide-angular [img]="Shield" class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"></lucide-angular>
+            <div>
+              <p class="text-sm font-bold text-blue-900">Vérification sous 24-72h ouvrées</p>
+              <p class="text-xs text-blue-800">Nos contrôles maintiennent la confiance des acheteurs et protègent votre marque.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========== STEP 3 =========== -->
+        <section id="tva" class="scroll-mt-24">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white font-bold flex items-center justify-center shadow-md">03</div>
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold">Restez conforme à la TVA</h2>
+              <p class="text-gray-500 text-sm">On vous accompagne sur la réglementation française et européenne</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-[1fr_280px] gap-4">
+            <div class="p-6 rounded-xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200">
+              <p class="text-sm text-gray-800 leading-relaxed mb-4">
+                Selon votre activité, vous devrez peut-être vous immatriculer à la TVA en France ou dans un pays européen.
+                Cela dépend du <strong>lieu de votre siège social</strong>, de votre <strong>modèle commercial</strong>,
+                et de votre <strong>chiffre d'affaires annuel</strong>.
+              </p>
+              <p class="text-sm text-gray-800 leading-relaxed mb-5">
+                Notre <strong>Centre de connaissances TVA</strong> regroupe tous les guides et modèles pour
+                rester conforme sans perdre de temps. Des partenaires fiscaux certifiés peuvent aussi
+                prendre en charge vos déclarations.
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <a class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition">
+                  Centre de connaissances TVA
+                  <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+                </a>
+                <a class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-emerald-300 text-emerald-700 text-sm font-semibold rounded-lg hover:bg-emerald-50 transition">
+                  Trouver un partenaire fiscal
+                </a>
+              </div>
+            </div>
+
+            <div class="p-5 rounded-xl bg-white border border-gray-200">
+              <div class="aspect-video rounded-lg overflow-hidden bg-gray-100 mb-3 relative group cursor-pointer">
+                <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&q=80" alt=""
+                     class="w-full h-full object-cover" />
+                <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                    <lucide-angular [img]="Play" class="w-5 h-5 text-red-600 translate-x-0.5"></lucide-angular>
+                  </div>
+                </div>
+                <span class="absolute bottom-2 right-2 bg-black/80 text-white text-[11px] font-bold px-2 py-0.5 rounded">04:38</span>
+              </div>
+              <p class="text-xs text-gray-500 mb-1">Vidéo</p>
+              <p class="text-sm font-bold">La TVA dans toute l'Europe</p>
+              <p class="text-xs text-gray-500 mt-1">Comprenez vos obligations en 5 minutes</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========== STEP 4 =========== -->
+        <section id="produits" class="scroll-mt-24">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 text-white font-bold flex items-center justify-center shadow-md">04</div>
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold">Listez vos produits</h2>
+              <p class="text-gray-500 text-sm">Créez des fiches produit qui convertissent</p>
+            </div>
+          </div>
+
+          <!-- Categories table -->
+          <div class="rounded-xl border border-gray-200 overflow-hidden mb-6">
+            <div class="px-5 py-3 bg-gray-50 border-b border-gray-200">
+              <h3 class="text-sm font-bold">Catégories disponibles & autorisations</h3>
+            </div>
+            <div class="divide-y divide-gray-100">
+              <div *ngFor="let cat of categoryRestrictions"
+                   class="flex items-center justify-between gap-3 px-5 py-3 hover:bg-gray-50 transition-colors">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-gray-900">{{ cat.name }}</p>
+                  <p class="text-xs text-gray-500">{{ cat.examples }}</p>
+                </div>
+                <span [class]="'text-xs font-bold px-2.5 py-1 rounded-md border whitespace-nowrap ' + getAuthorizationColor(cat.authorization)">
+                  {{ getAuthorizationLabel(cat.authorization) }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product detail page anatomy -->
+          <div class="rounded-xl border border-gray-200 bg-gradient-to-br from-slate-50 to-gray-50 p-6">
+            <h3 class="text-sm font-bold mb-4 flex items-center gap-2">
+              <lucide-angular [img]="Tag" class="w-4 h-4"></lucide-angular>
+              Les 7 éléments d'une fiche produit gagnante
+            </h3>
+            <div class="grid md:grid-cols-2 gap-3">
+              <div *ngFor="let elt of [
+                { n: '1', t: 'Titre optimisé', d: '200 caractères max. Mots-clés, marque et attributs clés' },
+                { n: '2', t: 'Images haute qualité', d: '1000×1000 px minimum. Fond blanc + photos contextuelles' },
+                { n: '3', t: 'Variations produit', d: 'Tailles, couleurs, parfums... regroupés sur une même fiche' },
+                { n: '4', t: 'Points clés (bullets)', d: '5 avantages courts et percutants pour convaincre' },
+                { n: '5', t: 'Offre en vedette', d: 'Boîte d\'achat visible à droite (Acheter/Ajouter au panier)' },
+                { n: '6', t: 'Description longue', d: 'Storytelling + mots-clés pour améliorer le SEO interne' },
+                { n: '7', t: 'Identifiant unique', d: 'GTIN, EAN, UPC ou ISBN pour vos produits référencés' }
+              ]" class="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200">
+                <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
+                  {{ elt.n }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold">{{ elt.t }}</p>
+                  <p class="text-xs text-gray-600 mt-0.5">{{ elt.d }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========== STEP 5 =========== -->
+        <section id="livraison" class="scroll-mt-24">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white font-bold flex items-center justify-center shadow-md">05</div>
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold">Livrez vos produits aux clients</h2>
+              <p class="text-gray-500 text-sm">Choisissez entre notre logistique ou la vôtre</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <!-- FBA card -->
+            <div class="rounded-2xl p-6 border-2 border-indigo-600 bg-gradient-to-br from-indigo-50 to-purple-50 relative">
+              <span class="absolute -top-3 left-6 px-3 py-1 text-xs font-bold uppercase bg-indigo-600 text-white rounded-full">Recommandé</span>
+              <div class="flex items-start gap-3 mb-4">
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center flex-shrink-0">
+                  <lucide-angular [img]="Truck" class="w-6 h-6 text-white"></lucide-angular>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold">Logistique HELIGXIAM</h3>
+                  <p class="text-xs text-gray-600">Nous gérons stockage, emballage, livraison et retours</p>
+                </div>
+              </div>
+              <ol class="space-y-3 mb-5 text-sm">
+                <li class="flex gap-2">
+                  <span class="w-6 h-6 rounded-full bg-indigo-200 text-indigo-700 font-bold flex items-center justify-center flex-shrink-0 text-xs">1</span>
+                  Expédiez votre stock dans nos entrepôts. Nous le scannons et le mettons en ligne.
+                </li>
+                <li class="flex gap-2">
+                  <span class="w-6 h-6 rounded-full bg-indigo-200 text-indigo-700 font-bold flex items-center justify-center flex-shrink-0 text-xs">2</span>
+                  À chaque commande, nous emballons et expédions au client en 24-48h.
+                </li>
+                <li class="flex gap-2">
+                  <span class="w-6 h-6 rounded-full bg-indigo-200 text-indigo-700 font-bold flex items-center justify-center flex-shrink-0 text-xs">3</span>
+                  Nous percevons le paiement et vous versons les fonds tous les 15 jours.
+                </li>
+                <li class="flex gap-2">
+                  <span class="w-6 h-6 rounded-full bg-indigo-200 text-indigo-700 font-bold flex items-center justify-center flex-shrink-0 text-xs">4</span>
+                  Notre service client gère questions, retours et remboursements.
+                </li>
+              </ol>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="px-2 py-1 text-[10px] font-bold bg-white rounded-full border border-indigo-200 text-indigo-700">Badge Premium automatique</span>
+                <span class="px-2 py-1 text-[10px] font-bold bg-white rounded-full border border-indigo-200 text-indigo-700">Livraison express gratuite</span>
+                <span class="px-2 py-1 text-[10px] font-bold bg-white rounded-full border border-indigo-200 text-indigo-700">12 centres en Europe</span>
+              </div>
+            </div>
+
+            <!-- Self-ship card -->
+            <div class="rounded-2xl p-6 border-2 border-gray-200 bg-white">
+              <div class="flex items-start gap-3 mb-4">
+                <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-600 to-slate-700 flex items-center justify-center flex-shrink-0">
+                  <lucide-angular [img]="Package" class="w-6 h-6 text-white"></lucide-angular>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold">Expédié par le vendeur</h3>
+                  <p class="text-xs text-gray-600">Vous stockez et expédiez vous-même</p>
+                </div>
+              </div>
+              <ul class="space-y-2 mb-5 text-sm">
+                <li class="flex gap-2"><lucide-angular [img]="Check" class="w-4 h-4 text-green-600 mt-0.5"></lucide-angular>Contrôle total sur l'emballage</li>
+                <li class="flex gap-2"><lucide-angular [img]="Check" class="w-4 h-4 text-green-600 mt-0.5"></lucide-angular>Frais d'expédition refacturés au client</li>
+                <li class="flex gap-2"><lucide-angular [img]="Check" class="w-4 h-4 text-green-600 mt-0.5"></lucide-angular>Idéal pour produits volumineux ou fragiles</li>
+                <li class="flex gap-2"><lucide-angular [img]="Check" class="w-4 h-4 text-green-600 mt-0.5"></lucide-angular>Partenariat avec La Poste, UPS, Chronopost</li>
+                <li class="flex gap-2"><lucide-angular [img]="X" class="w-4 h-4 text-gray-300 mt-0.5"></lucide-angular><span class="text-gray-500">Pas de badge Premium automatique</span></li>
+              </ul>
+              <div class="p-3 bg-gray-50 rounded-lg text-xs text-gray-600">
+                <strong class="text-gray-900">Outil "Achat d'affranchissement"</strong> : bénéficiez de tarifs négociés
+                jusqu'à -40% via nos transporteurs partenaires.
+              </div>
+            </div>
+          </div>
+
+          <!-- Revenue calculator -->
+          <div class="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-6">
+            <div class="flex items-center gap-2 mb-4">
+              <lucide-angular [img]="DollarSign" class="w-5 h-5 text-orange-600"></lucide-angular>
+              <h3 class="text-lg font-bold">Calculatrice de revenus</h3>
+              <span class="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-bold">Simulation en temps réel</span>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6">
+              <!-- Inputs -->
+              <div class="space-y-3">
+                <div>
+                  <label class="text-xs font-bold text-gray-700 uppercase tracking-wide">Plan choisi</label>
+                  <div class="grid grid-cols-2 gap-2 mt-1.5">
+                    <button type="button" (click)="calcPlan = 'individuel'"
+                            [class]="'px-3 py-2 rounded-lg text-sm font-semibold transition border-2 ' +
+                              (calcPlan === 'individuel' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-gray-200 text-gray-700')">
+                      Particulier
+                    </button>
+                    <button type="button" (click)="calcPlan = 'pro'"
+                            [class]="'px-3 py-2 rounded-lg text-sm font-semibold transition border-2 ' +
+                              (calcPlan === 'pro' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-gray-200 text-gray-700')">
+                      Professionnel
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-gray-700 uppercase tracking-wide">Prix de vente (€)</label>
+                  <input type="number" [(ngModel)]="calcPrice" min="0" step="0.01"
+                         class="w-full mt-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-gray-700 uppercase tracking-wide">Frais de livraison facturés au client (€)</label>
+                  <input type="number" [(ngModel)]="calcShipping" min="0" step="0.01"
+                         class="w-full mt-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-gray-700 uppercase tracking-wide">Coût de revient produit (€)</label>
+                  <input type="number" [(ngModel)]="calcCost" min="0" step="0.01"
+                         class="w-full mt-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+              </div>
+
+              <!-- Output -->
+              <div class="bg-white rounded-xl p-5 border border-gray-200">
+                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Résultat par vente</h4>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">Revenu brut (prix + livraison)</span>
+                    <span class="font-semibold">{{ calcSubtotal.toFixed(2) }}€</span>
+                  </div>
+                  <div class="flex justify-between text-red-600">
+                    <span>- Commission (12%)</span>
+                    <span>-{{ calcCommissionAmount.toFixed(2) }}€</span>
+                  </div>
+                  <div *ngIf="calcPlan === 'pro'" class="flex justify-between text-red-600">
+                    <span>- Frais logistique</span>
+                    <span>-{{ calcFbaFee.toFixed(2) }}€</span>
+                  </div>
+                  <div *ngIf="calcPlan === 'individuel'" class="flex justify-between text-red-600">
+                    <span>- Frais par article</span>
+                    <span>-{{ calcPerItemFee.toFixed(2) }}€</span>
+                  </div>
+                  <div class="flex justify-between text-red-600">
+                    <span>- Coût de revient</span>
+                    <span>-{{ calcCost.toFixed(2) }}€</span>
+                  </div>
+                  <div class="border-t border-dashed my-2"></div>
+                  <div class="flex justify-between items-baseline">
+                    <span class="font-bold">Marge nette</span>
+                    <span [class]="'text-2xl font-bold ' + (calcNetRevenue >= 0 ? 'text-green-600' : 'text-red-600')">
+                      {{ calcNetRevenue.toFixed(2) }}€
+                    </span>
+                  </div>
+                  <div class="flex justify-between text-xs">
+                    <span class="text-gray-500">Marge / prix de vente</span>
+                    <span class="font-semibold" [class]="calcMargin >= 0 ? 'text-green-600' : 'text-red-600'">
+                      {{ calcMargin.toFixed(1) }}%
+                    </span>
+                  </div>
+                  <div *ngIf="calcPlan === 'pro'" class="text-[11px] text-gray-500 mt-2 pt-2 border-t">
+                    <ng-container *ngIf="calcBreakEvenVolume > 0; else unprofitable">
+                      + abonnement mensuel <strong>29€/mois HT</strong> amorti dès <strong>{{ calcBreakEvenVolume }}</strong> ventes/mois
+                    </ng-container>
+                    <ng-template #unprofitable>
+                      <span class="text-red-600">Marge insuffisante pour couvrir l'abonnement 29€/mois HT</span>
+                    </ng-template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========== STEP 6 =========== -->
+        <section id="clients" class="scroll-mt-24">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white font-bold flex items-center justify-center shadow-md">06</div>
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold">Attirez des clients</h2>
+              <p class="text-gray-500 text-sm">4 leviers pour booster vos ventes rapidement</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div *ngFor="let card of [
+              { icon: Zap, title: 'Livraison express Premium', text: 'Obtenez le badge Premium en utilisant notre logistique. Les clients achètent 3× plus quand il est présent.', color: 'from-indigo-500 to-blue-600' },
+              { icon: Megaphone, title: 'Publicité sponsorisée', text: 'Boostez vos fiches dans les résultats de recherche et sur les pages produit concurrentes. ROI moyen constaté : 4,2×.', color: 'from-fuchsia-500 to-pink-600' },
+              { icon: Tag, title: 'Prix compétitifs', text: 'Activez la retarification automatique qui ajuste vos prix 24/7 selon la concurrence pour rester en tête.', color: 'from-emerald-500 to-green-600' },
+              { icon: Sparkles, title: 'Promotions & coupons', text: 'Créez des réductions, livraisons gratuites ou coupons numériques qui incitent à l\'achat immédiat.', color: 'from-amber-500 to-orange-600' }
+            ]"
+                 class="p-6 rounded-2xl bg-white border border-gray-200 hover:shadow-lg hover:-translate-y-0.5 transition-all">
+              <div [class]="'w-12 h-12 rounded-xl bg-gradient-to-br ' + card.color + ' flex items-center justify-center mb-4 shadow-sm'">
+                <lucide-angular [img]="card.icon" class="w-6 h-6 text-white"></lucide-angular>
+              </div>
+              <h3 class="text-lg font-bold mb-2">{{ card.title }}</h3>
+              <p class="text-sm text-gray-600 leading-relaxed">{{ card.text }}</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========== STEP 7 =========== -->
+        <section id="developpez" class="scroll-mt-24">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white font-bold flex items-center justify-center shadow-md">07</div>
+            <div>
+              <h2 class="text-2xl md:text-3xl font-bold">Développez-vous après votre 1ère vente</h2>
+              <p class="text-gray-500 text-sm">Les 90 premiers jours sont clés pour décoller</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <!-- Europe -->
+            <div class="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+              <div class="flex items-center gap-2 mb-3">
+                <lucide-angular [img]="Globe" class="w-5 h-5 text-blue-600"></lucide-angular>
+                <h3 class="text-lg font-bold">Vendez dans toute l'Europe</h3>
+              </div>
+              <p class="text-sm text-gray-700 mb-4">
+                Un seul compte pour vendre sur <strong>heligxiam.fr, .de, .it, .es et .co.uk</strong>.
+                Notre logistique pan-européenne stocke et expédie depuis 12 centres en Europe.
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <span class="px-2 py-1 text-xs font-semibold bg-white rounded-full border border-blue-200">🇫🇷 France</span>
+                <span class="px-2 py-1 text-xs font-semibold bg-white rounded-full border border-blue-200">🇩🇪 Allemagne</span>
+                <span class="px-2 py-1 text-xs font-semibold bg-white rounded-full border border-blue-200">🇮🇹 Italie</span>
+                <span class="px-2 py-1 text-xs font-semibold bg-white rounded-full border border-blue-200">🇪🇸 Espagne</span>
+                <span class="px-2 py-1 text-xs font-semibold bg-white rounded-full border border-blue-200">🇬🇧 UK</span>
+              </div>
+            </div>
+
+            <!-- Academy -->
+            <div class="p-6 rounded-2xl bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200">
+              <div class="flex items-center gap-2 mb-3">
+                <lucide-angular [img]="GraduationCap" class="w-5 h-5 text-violet-600"></lucide-angular>
+                <h3 class="text-lg font-bold">HELIGXIAM Academy</h3>
+              </div>
+              <p class="text-sm text-gray-700 mb-4">
+                Des centaines de tutos vidéo, guides et webinaires pour apprendre à optimiser
+                vos fiches produits, votre publicité et votre logistique.
+              </p>
+              <a class="inline-flex items-center gap-2 text-sm font-bold text-violet-700 hover:text-violet-800">
+                Accéder à l'Academy
+                <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+              </a>
+            </div>
+          </div>
+
+          <!-- Nouveau vendeur bonus -->
+          <div class="p-6 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-white">
+            <div class="flex items-start gap-4 flex-col md:flex-row">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                  <lucide-angular [img]="Award" class="w-6 h-6"></lucide-angular>
+                  <span class="text-xs font-bold uppercase tracking-widest bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">Guide nouveau vendeur</span>
+                </div>
+                <h3 class="text-2xl md:text-3xl font-bold mb-2">Jusqu'à 47 250€ d'avantages</h3>
+                <ul class="space-y-1.5 text-sm mb-4">
+                  <li class="flex items-start gap-2"><lucide-angular [img]="Check" class="w-4 h-4 flex-shrink-0 mt-0.5"></lucide-angular><span><strong>10% de cashback</strong> sur vos 45 000 premiers euros de ventes (puis 5% jusqu'à 900 000€)</span></li>
+                  <li class="flex items-start gap-2"><lucide-angular [img]="Check" class="w-4 h-4 flex-shrink-0 mt-0.5"></lucide-angular><span><strong>90€</strong> de crédit frais d'expédition sur transporteurs partenaires</span></li>
+                  <li class="flex items-start gap-2"><lucide-angular [img]="Check" class="w-4 h-4 flex-shrink-0 mt-0.5"></lucide-angular><span>Jusqu'à <strong>850€</strong> de crédits pour créer vos 1ères annonces Sponsored Products</span></li>
+                  <li class="flex items-start gap-2"><lucide-angular [img]="Check" class="w-4 h-4 flex-shrink-0 mt-0.5"></lucide-angular><span><strong>45€</strong> de crédit pour créer des bons de réduction clients</span></li>
+                </ul>
+                <a routerLink="/account" [queryParams]="{ mode: 'register', role: 'seller' }"
+                   class="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-orange-600 font-bold rounded-lg hover:scale-105 transition-transform">
+                  Activer mes primes
+                  <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========== BENEFITS GRID =========== -->
+  <section class="bg-gray-50 border-y py-14">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl md:text-3xl font-bold mb-2">Pourquoi les vendeurs choisissent HELIGXIAM</h2>
+        <p class="text-gray-600">Tout ce dont vous avez besoin pour lancer et développer votre marque en ligne</p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div *ngFor="let benefit of benefits"
+             class="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-md transition-shadow">
+          <div class="w-11 h-11 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-3">
+            <lucide-angular [img]="benefit.icon" class="w-5 h-5 text-white"></lucide-angular>
+          </div>
+          <h3 class="text-sm font-bold mb-1">{{ benefit.title }}</h3>
+          <p class="text-xs text-gray-600 leading-relaxed">{{ benefit.text }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== TESTIMONIALS =========== -->
+  <section class="py-14">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl md:text-3xl font-bold mb-2">Des boutiques qui cartonnent sur HELIGXIAM</h2>
+        <p class="text-gray-600">Rejoignez plus de 3 000 vendeurs qui développent leur activité avec nous</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-5">
+        <div *ngFor="let t of testimonials"
+             class="rounded-2xl overflow-hidden bg-white border border-gray-200 hover:shadow-xl transition-shadow">
+          <div class="aspect-[5/3] relative">
+            <img [src]="t.image" [alt]="t.company" class="w-full h-full object-cover" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+            <div class="absolute bottom-3 left-3 right-3 text-white">
+              <span class="inline-block text-[11px] font-bold bg-amber-500 px-2 py-0.5 rounded-md uppercase mb-1">
+                {{ t.metric }}
+              </span>
+            </div>
+          </div>
+          <div class="p-5">
+            <p class="text-sm text-gray-700 italic leading-relaxed mb-4">« {{ t.quote }} »</p>
+            <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
+              <img [src]="t.avatar" [alt]="t.author"
+                   class="w-10 h-10 rounded-full" />
+              <div>
+                <p class="text-sm font-bold">{{ t.author }}</p>
+                <p class="text-xs text-gray-500">{{ t.role }} • {{ t.company }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== FAQ =========== -->
+  <section class="bg-gray-50 py-14">
+    <div class="max-w-3xl mx-auto px-4">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl md:text-3xl font-bold mb-2">Questions fréquentes</h2>
+        <p class="text-gray-600">Tout ce que vous devez savoir avant de vous lancer</p>
+      </div>
+      <div class="space-y-2">
+        <div *ngFor="let faq of faqItems; let i = index"
+             class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <button type="button"
+                  (click)="toggleFaq(i)"
+                  class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-gray-50 transition">
+            <span class="text-sm font-semibold text-gray-900">{{ faq.question }}</span>
+            <lucide-angular [img]="ChevronDown"
+                           [class]="'w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ' + (faq.open ? 'rotate-180 text-indigo-600' : '')">
+            </lucide-angular>
+          </button>
+          <div *ngIf="faq.open" class="px-5 pb-4 text-sm text-gray-600 leading-relaxed animate-fade-in">
+            {{ faq.answer }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========== FINAL CTA =========== -->
+  <section class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white overflow-hidden">
+    <div class="absolute inset-0 opacity-20">
+      <img src="https://images.unsplash.com/photo-1556742077-0a6b0e9073ec?w=1600&q=80"
+           alt="" class="w-full h-full object-cover" />
+    </div>
+    <div class="relative max-w-5xl mx-auto px-4 py-16 text-center">
+      <span class="inline-flex items-center gap-2 text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full uppercase tracking-widest mb-4">
+        <lucide-angular [img]="Store" class="w-3.5 h-3.5"></lucide-angular>
+        Prêt à vous lancer ?
+      </span>
+      <h2 class="text-3xl md:text-5xl font-bold mb-4 leading-tight">
+        Commencez à vendre dès aujourd'hui
+      </h2>
+      <p class="text-lg text-white/90 max-w-2xl mx-auto mb-8">
+        Rejoignez des milliers de vendeurs qui développent leur activité grâce à HELIGXIAM.
+        Inscription rapide, 1ère vente possible cette semaine.
+      </p>
+      <div class="flex flex-wrap justify-center gap-3 mb-6">
+        <a routerLink="/account" [queryParams]="{ mode: 'register', role: 'seller' }"
+           class="inline-flex items-center gap-2 px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl shadow-xl hover:scale-105 transition-transform">
+          S'inscrire comme vendeur
+          <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+        </a>
+        <a href="#preparez" (click)="$event.preventDefault(); scrollToSection('preparez')"
+           class="inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition">
+          Revoir les tarifs
+        </a>
+      </div>
+      <p class="text-sm text-white/80">
+        29€/mois (HT) + commission • Sans engagement • Résiliable à tout moment
+      </p>
+    </div>
+  </section>
+</div>

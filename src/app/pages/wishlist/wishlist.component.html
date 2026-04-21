@@ -1,129 +1,453 @@
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-pink-50">
-  <!-- Header -->
-  <div class="max-w-7xl mx-auto px-4 py-8">
-    <div class="text-center mb-12">
-      <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-pink-100 to-red-100 rounded-full flex items-center justify-center">
-        <lucide-angular [img]="Heart" class="w-12 h-12 text-pink-600"></lucide-angular>
-      </div>
-      <h1 class="text-4xl font-bold text-gray-900 mb-4">Mes Favoris</h1>
-      <p class="text-gray-600 text-lg">Retrouvez tous les produits que vous avez adorés</p>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-pink-50/40">
+  <!-- ==================================================================== -->
+  <!-- HERO -->
+  <!-- ==================================================================== -->
+  <section class="relative overflow-hidden bg-gradient-to-br from-rose-600 via-pink-600 to-fuchsia-600 text-white">
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+      <div class="absolute -top-24 -left-24 w-96 h-96 bg-pink-300 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-fuchsia-300 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Search Bar -->
-    <div class="max-w-2xl mx-auto mb-8">
-      <div class="relative">
-        <input
-          type="text"
-          [(ngModel)]="searchQuery"
-          placeholder="Rechercher dans mes favoris..."
-          class="w-full px-4 py-3 pl-12 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-        />
-        <lucide-angular 
-          [img]="Heart" 
-          class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
-        ></lucide-angular>
-      </div>
-    </div>
-
-    <!-- Empty Wishlist -->
-    <div *ngIf="filteredWishlist.length === 0" class="text-center py-20">
-      <div class="max-w-md mx-auto">
-        <div class="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-pink-100 to-red-100 rounded-full flex items-center justify-center">
-          <lucide-angular [img]="Heart" class="w-16 h-16 text-pink-400"></lucide-angular>
+    <div class="relative max-w-7xl mx-auto px-4 py-10 md:py-14">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border border-white/20">
+            <lucide-angular [img]="Heart" class="w-3.5 h-3.5"></lucide-angular>
+            Ma liste d'envies
+          </div>
+          <h1 class="text-3xl md:text-5xl font-extrabold mb-2 leading-tight">Mes Favoris</h1>
+          <p class="text-white/90 text-base md:text-lg max-w-xl">
+            {{ wishlist.length }} produit{{ wishlist.length > 1 ? 's' : '' }} sauvegardé{{ wishlist.length > 1 ? 's' : '' }} ·
+            valeur totale de <span class="font-bold">{{ totalValue | currency:'EUR':'symbol':'1.2-2' }}</span>
+          </p>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 mb-3">
-          {{ searchQuery ? 'Aucun produit trouvé' : 'Votre liste de favoris est vide' }}
-        </h2>
-        <p class="text-gray-600 mb-8">
-          {{ searchQuery ? 'Essayez une autre recherche' : 'Commencez à ajouter des produits que vous aimez' }}
-        </p>
-        <a
-          routerLink="/"
-          class="inline-flex items-center gap-2 bg-gradient-to-r from-pink-600 to-red-600 text-white px-8 py-4 rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all"
-        >
-          Découvrir les Produits
-          <lucide-angular [img]="ArrowRight" class="w-5 h-5"></lucide-angular>
-        </a>
+
+        <div class="flex flex-wrap gap-3">
+          <button
+            *ngIf="wishlist.length > 0"
+            (click)="copyShareLink()"
+            class="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur border border-white/30 text-white px-4 py-2.5 rounded-xl font-semibold transition-all"
+          >
+            <lucide-angular [img]="showCopied ? CheckCircle2 : Share2" class="w-4 h-4"></lucide-angular>
+            {{ showCopied ? 'Lien copié !' : 'Partager ma liste' }}
+          </button>
+          <button
+            *ngIf="wishlist.length > 0"
+            (click)="addAllInStockToCart()"
+            class="inline-flex items-center gap-2 bg-white text-rose-600 hover:bg-rose-50 px-5 py-2.5 rounded-xl font-bold shadow-lg transition-all"
+          >
+            <lucide-angular [img]="ShoppingBag" class="w-4 h-4"></lucide-angular>
+            Tout ajouter au panier
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div *ngIf="wishlist.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-8">
+        <div class="bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] uppercase tracking-wider font-bold opacity-80">Articles</p>
+              <p class="text-2xl md:text-3xl font-extrabold">{{ wishlist.length }}</p>
+            </div>
+            <lucide-angular [img]="Heart" class="w-8 h-8 opacity-50"></lucide-angular>
+          </div>
+        </div>
+        <div class="bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] uppercase tracking-wider font-bold opacity-80">Valeur totale</p>
+              <p class="text-2xl md:text-3xl font-extrabold">{{ totalValue | currency:'EUR':'symbol':'1.0-0' }}</p>
+            </div>
+            <lucide-angular [img]="Tag" class="w-8 h-8 opacity-50"></lucide-angular>
+          </div>
+        </div>
+        <div class="bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] uppercase tracking-wider font-bold opacity-80">Économies possibles</p>
+              <p class="text-2xl md:text-3xl font-extrabold text-yellow-200">{{ potentialSavings | currency:'EUR':'symbol':'1.0-0' }}</p>
+            </div>
+            <lucide-angular [img]="TrendingDown" class="w-8 h-8 opacity-50"></lucide-angular>
+          </div>
+        </div>
+        <div class="bg-white/15 backdrop-blur rounded-2xl p-4 border border-white/20">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] uppercase tracking-wider font-bold opacity-80">En promotion</p>
+              <p class="text-2xl md:text-3xl font-extrabold">{{ onSaleCount }} / {{ wishlist.length }}</p>
+            </div>
+            <lucide-angular [img]="Flame" class="w-8 h-8 opacity-50"></lucide-angular>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================================================================== -->
+  <!-- EMPTY STATE -->
+  <!-- ==================================================================== -->
+  <section *ngIf="wishlist.length === 0" class="max-w-3xl mx-auto px-4 py-16 md:py-24 text-center">
+    <div class="relative inline-block mb-8">
+      <div class="w-40 h-40 mx-auto bg-gradient-to-br from-pink-100 to-rose-100 rounded-full flex items-center justify-center">
+        <lucide-angular [img]="Heart" class="w-20 h-20 text-rose-400"></lucide-angular>
+      </div>
+      <div class="absolute -top-1 -right-2 w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center">
+        <lucide-angular [img]="Sparkles" class="w-6 h-6 text-amber-500"></lucide-angular>
+      </div>
+    </div>
+    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">Votre liste d'envies est vide</h2>
+    <p class="text-gray-600 text-lg mb-8 max-w-lg mx-auto">
+      Parcourez notre catalogue et ajoutez vos coups de cœur en cliquant sur l'icône <span class="inline-flex items-center gap-1 font-bold text-rose-600">cœur</span>. Vous pourrez les retrouver ici à tout moment.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a routerLink="/" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-rose-600 to-fuchsia-600 text-white px-8 py-4 rounded-xl font-bold hover:shadow-xl hover:scale-[1.02] transition-all">
+        <lucide-angular [img]="Sparkles" class="w-5 h-5"></lucide-angular>
+        Découvrir la collection
+        <lucide-angular [img]="ArrowRight" class="w-5 h-5"></lucide-angular>
+      </a>
+      <a routerLink="/search" [queryParams]="{ sort: 'rating' }" class="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 text-gray-900 px-8 py-4 rounded-xl font-bold hover:border-rose-300 hover:bg-rose-50 transition-all">
+        <lucide-angular [img]="Star" class="w-5 h-5 text-amber-500"></lucide-angular>
+        Voir les meilleures ventes
+      </a>
+    </div>
+  </section>
+
+  <!-- ==================================================================== -->
+  <!-- CONTENT -->
+  <!-- ==================================================================== -->
+  <section *ngIf="wishlist.length > 0" class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Toolbar -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-5 mb-6 sticky top-4 z-20 backdrop-blur supports-[backdrop-filter]:bg-white/90">
+      <div class="flex flex-col lg:flex-row lg:items-center gap-3">
+        <!-- Search -->
+        <div class="relative flex-1 min-w-0">
+          <lucide-angular [img]="Search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></lucide-angular>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            placeholder="Rechercher dans mes favoris…"
+            class="w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white text-sm transition-all"
+          />
+        </div>
+
+        <!-- Category -->
+        <select [(ngModel)]="selectedCategory" class="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white font-medium min-w-[160px]">
+          <option value="">Toutes les catégories</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+        </select>
+
+        <!-- Sort -->
+        <select [(ngModel)]="sortBy" class="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white font-medium min-w-[180px]">
+          <option value="recent">Récemment ajoutés</option>
+          <option value="price-asc">Prix croissant</option>
+          <option value="price-desc">Prix décroissant</option>
+          <option value="rating">Meilleures notes</option>
+          <option value="discount">Plus remisés</option>
+          <option value="name">Nom (A-Z)</option>
+        </select>
+
+        <!-- View toggle -->
+        <div class="inline-flex rounded-xl border border-gray-200 overflow-hidden bg-gray-50">
+          <button
+            type="button"
+            (click)="viewMode = 'grid'"
+            [class]="'px-3 py-2.5 text-sm font-semibold flex items-center gap-1.5 transition-colors ' +
+              (viewMode === 'grid' ? 'bg-rose-600 text-white' : 'text-gray-600 hover:bg-gray-100')"
+            aria-label="Vue grille"
+          >
+            <lucide-angular [img]="Grid3x3" class="w-4 h-4"></lucide-angular>
+          </button>
+          <button
+            type="button"
+            (click)="viewMode = 'list'"
+            [class]="'px-3 py-2.5 text-sm font-semibold flex items-center gap-1.5 transition-colors ' +
+              (viewMode === 'list' ? 'bg-rose-600 text-white' : 'text-gray-600 hover:bg-gray-100')"
+            aria-label="Vue liste"
+          >
+            <lucide-angular [img]="List" class="w-4 h-4"></lucide-angular>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider mr-1">Filtres :</span>
+
+        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border-2 cursor-pointer text-sm font-medium transition-colors"
+               [class]="showInStockOnly ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'">
+          <input type="checkbox" [(ngModel)]="showInStockOnly" class="accent-emerald-600">
+          <lucide-angular [img]="CheckCircle2" class="w-3.5 h-3.5"></lucide-angular>
+          En stock
+        </label>
+
+        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border-2 cursor-pointer text-sm font-medium transition-colors"
+               [class]="showPromoOnly ? 'bg-rose-50 border-rose-300 text-rose-700' : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'">
+          <input type="checkbox" [(ngModel)]="showPromoOnly" class="accent-rose-600">
+          <lucide-angular [img]="Flame" class="w-3.5 h-3.5"></lucide-angular>
+          En promotion
+        </label>
+
+        <button *ngIf="searchQuery || selectedCategory || showInStockOnly || showPromoOnly || sortBy !== 'recent'"
+                (click)="clearFilters()"
+                class="ml-auto text-xs text-gray-500 hover:text-rose-600 font-semibold inline-flex items-center gap-1 transition-colors">
+          <lucide-angular [img]="XCircle" class="w-3.5 h-3.5"></lucide-angular>
+          Réinitialiser
+        </button>
       </div>
     </div>
 
-    <!-- Wishlist Grid -->
-    <div *ngIf="filteredWishlist.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-      <div *ngFor="let product of filteredWishlist" class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
-        <!-- Product Image -->
-        <div class="relative overflow-hidden">
-          <img 
-            [src]="product.image" 
-            [alt]="product.name"
-            class="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          
-          <!-- Badge -->
-          <div *ngIf="product.badge" class="absolute top-4 left-4">
-            <span [class]="'px-3 py-1 rounded-full text-xs font-bold ' + getBadgeClass(product.badge)">
+    <!-- Bulk action bar -->
+    <div *ngIf="selectedCount > 0" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl p-4 mb-6 flex flex-wrap items-center justify-between gap-3 shadow-lg animate-fade-in">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+          <lucide-angular [img]="CheckCircle2" class="w-5 h-5"></lucide-angular>
+        </div>
+        <div>
+          <p class="font-bold">{{ selectedCount }} article{{ selectedCount > 1 ? 's' : '' }} sélectionné{{ selectedCount > 1 ? 's' : '' }}</p>
+          <p class="text-xs opacity-90">Appliquer une action groupée</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button (click)="addSelectedToCart()" class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+          <lucide-angular [img]="ShoppingBag" class="w-4 h-4"></lucide-angular>
+          Ajouter au panier
+        </button>
+        <button (click)="removeSelected()" class="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/30 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+          <lucide-angular [img]="Trash2" class="w-4 h-4"></lucide-angular>
+          Retirer
+        </button>
+        <button (click)="selectedIds.clear()" class="text-sm text-white/80 hover:text-white font-medium px-2">
+          Annuler
+        </button>
+      </div>
+    </div>
+
+    <!-- Results header -->
+    <div class="flex items-center justify-between mb-4 px-1">
+      <div class="flex items-center gap-3">
+        <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 cursor-pointer select-none">
+          <input type="checkbox" [checked]="allVisibleSelected" (change)="toggleSelectAll()" class="w-4 h-4 accent-rose-600">
+          Tout sélectionner
+        </label>
+        <span class="text-gray-300">·</span>
+        <p class="text-sm text-gray-600">
+          <span class="font-bold text-gray-900">{{ filteredWishlist.length }}</span> résultat{{ filteredWishlist.length > 1 ? 's' : '' }}
+        </p>
+      </div>
+      <div *ngIf="averageRating" class="hidden md:flex items-center gap-1.5 text-sm text-gray-600">
+        <lucide-angular [img]="Star" class="w-4 h-4 text-amber-500 fill-current"></lucide-angular>
+        <span class="font-bold">{{ averageRating }}</span>
+        <span class="text-gray-400">· note moyenne</span>
+      </div>
+    </div>
+
+    <!-- No results state -->
+    <div *ngIf="filteredWishlist.length === 0" class="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+      <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+        <lucide-angular [img]="Search" class="w-10 h-10 text-gray-400"></lucide-angular>
+      </div>
+      <h3 class="text-xl font-bold text-gray-900 mb-2">Aucun produit ne correspond à vos filtres</h3>
+      <p class="text-gray-600 mb-4">Essayez d'élargir votre recherche ou réinitialisez les filtres.</p>
+      <button (click)="clearFilters()" class="inline-flex items-center gap-2 bg-rose-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-rose-700 transition-colors">
+        <lucide-angular [img]="XCircle" class="w-4 h-4"></lucide-angular>
+        Réinitialiser les filtres
+      </button>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- GRID VIEW -->
+    <!-- ================================================================ -->
+    <div *ngIf="viewMode === 'grid' && filteredWishlist.length > 0"
+         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <article *ngFor="let product of filteredWishlist; trackBy: trackById"
+               class="group relative bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 overflow-hidden flex flex-col">
+
+        <!-- Select checkbox -->
+        <label class="absolute top-3 left-3 z-10 w-7 h-7 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-md cursor-pointer hover:bg-white transition-colors">
+          <input type="checkbox" [checked]="isSelected(product.id)" (change)="toggleSelect(product.id)"
+                 class="w-4 h-4 accent-rose-600 cursor-pointer">
+        </label>
+
+        <!-- Image -->
+        <a [routerLink]="['/product', product.id]" class="relative block aspect-square overflow-hidden bg-gray-50">
+          <img [src]="product.image" [alt]="product.name"
+               class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+               loading="lazy" />
+
+          <!-- Badges overlay -->
+          <div class="absolute top-3 right-3 flex flex-col items-end gap-1.5">
+            <span *ngIf="product.badge" [class]="'px-2.5 py-1 rounded-full text-[10px] font-bold shadow-md ' + getBadgeClass(product.badge)">
               {{ product.badge }}
+            </span>
+            <span *ngIf="discountPct(product) > 0" class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-600 text-white shadow-md">
+              -{{ discountPct(product) }}%
             </span>
           </div>
 
-          <!-- Remove from Wishlist Button -->
-          <button
-            (click)="removeFromWishlist(product.id)"
-            class="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
-          >
-            <lucide-angular [img]="Trash2" class="w-4 h-4"></lucide-angular>
-          </button>
-        </div>
-
-        <!-- Product Info -->
-        <div class="p-6">
-          <div class="mb-3">
-            <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{{ product.name }}</h3>
-            <p class="text-gray-600 text-sm line-clamp-2">{{ product.description }}</p>
+          <!-- Stock badge -->
+          <div *ngIf="!product.inStock" class="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <span class="px-3 py-1.5 bg-white rounded-full text-xs font-bold text-red-600 shadow-lg">Rupture de stock</span>
           </div>
+        </a>
+
+        <!-- Body -->
+        <div class="p-4 flex-1 flex flex-col">
+          <div class="flex items-center justify-between mb-1.5">
+            <p *ngIf="product.brand" class="text-[11px] uppercase tracking-widest font-bold text-indigo-600 truncate">{{ product.brand }}</p>
+            <p class="text-[11px] text-gray-400 truncate">{{ product.category }}</p>
+          </div>
+
+          <a [routerLink]="['/product', product.id]" class="block">
+            <h3 class="text-[15px] font-bold text-gray-900 line-clamp-2 mb-1.5 hover:text-rose-600 transition-colors">{{ product.name }}</h3>
+          </a>
 
           <!-- Rating -->
           <div class="flex items-center gap-1 mb-3">
-            <lucide-angular 
-              *ngFor="let star of getRatingStars(product.rating)" 
-              [img]="Star" 
-              [class]="'w-4 h-4 ' + (star === 1 ? 'text-yellow-400 fill-current' : 'text-gray-300')"
-            ></lucide-angular>
-            <span class="text-sm text-gray-600 ml-1">({{ product.reviews || 0 }})</span>
+            <lucide-angular *ngFor="let s of getRatingStars(product.rating)" [img]="Star"
+                            [class]="'w-3.5 h-3.5 ' + (s ? 'text-amber-400 fill-current' : 'text-gray-200')">
+            </lucide-angular>
+            <span class="text-xs text-gray-500 ml-1">({{ product.reviews || 0 }})</span>
           </div>
 
           <!-- Price -->
-          <div class="flex items-center gap-3 mb-4">
-            <span class="text-2xl font-bold text-gray-900">{{ product.price }}€</span>
-            <span *ngIf="product.originalPrice" class="text-lg text-gray-400 line-through">
-              {{ product.originalPrice }}€
-            </span>
-            <span *ngIf="product.originalPrice" class="bg-red-100 text-red-600 px-2 py-1 rounded-lg text-sm font-bold">
-              -{{ discount }}%
-            </span>
-          </div>
+          <div class="mt-auto">
+            <div class="flex items-baseline gap-2 mb-3">
+              <span class="text-xl font-extrabold text-gray-900">{{ product.price | currency:'EUR':'symbol':'1.2-2' }}</span>
+              <span *ngIf="product.originalPrice && product.originalPrice > product.price" class="text-sm text-gray-400 line-through">
+                {{ product.originalPrice | currency:'EUR':'symbol':'1.2-2' }}
+              </span>
+            </div>
 
-          <!-- Actions -->
-          <div class="flex gap-3">
+            <div class="flex gap-2">
+              <button
+                (click)="addToCart(product)"
+                [disabled]="!product.inStock"
+                class="flex-1 inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-rose-600 to-fuchsia-600 hover:from-rose-700 hover:to-fuchsia-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white py-2.5 rounded-xl text-sm font-bold shadow-sm hover:shadow-md transition-all"
+              >
+                <lucide-angular [img]="ShoppingBag" class="w-4 h-4"></lucide-angular>
+                {{ product.inStock ? 'Ajouter' : 'Indisponible' }}
+              </button>
+              <button
+                (click)="removeFromWishlist(product.id)"
+                title="Retirer des favoris"
+                class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 border border-gray-200 hover:border-red-200 transition-colors"
+              >
+                <lucide-angular [img]="Trash2" class="w-4 h-4"></lucide-angular>
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- LIST VIEW -->
+    <!-- ================================================================ -->
+    <div *ngIf="viewMode === 'list' && filteredWishlist.length > 0" class="space-y-3">
+      <article *ngFor="let product of filteredWishlist; trackBy: trackById"
+               class="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all p-4 flex gap-4 items-center">
+
+        <input type="checkbox" [checked]="isSelected(product.id)" (change)="toggleSelect(product.id)"
+               class="w-4 h-4 accent-rose-600 cursor-pointer flex-shrink-0">
+
+        <a [routerLink]="['/product', product.id]" class="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 bg-gray-50 rounded-xl overflow-hidden">
+          <img [src]="product.image" [alt]="product.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+        </a>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span *ngIf="product.badge" [class]="'px-2 py-0.5 rounded-full text-[10px] font-bold ' + getBadgeClass(product.badge)">{{ product.badge }}</span>
+            <span *ngIf="discountPct(product) > 0" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white">-{{ discountPct(product) }}%</span>
+            <span *ngIf="!product.inStock" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">Rupture</span>
+            <span *ngIf="product.inStock" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">En stock</span>
+          </div>
+          <a [routerLink]="['/product', product.id]">
+            <h3 class="text-base md:text-lg font-bold text-gray-900 line-clamp-1 hover:text-rose-600 transition-colors">{{ product.name }}</h3>
+          </a>
+          <p class="text-sm text-gray-500 line-clamp-1 mt-0.5">{{ product.description }}</p>
+          <div class="flex items-center gap-3 mt-2 flex-wrap">
+            <div class="flex items-center gap-0.5">
+              <lucide-angular *ngFor="let s of getRatingStars(product.rating)" [img]="Star"
+                              [class]="'w-3.5 h-3.5 ' + (s ? 'text-amber-400 fill-current' : 'text-gray-200')">
+              </lucide-angular>
+              <span class="text-xs text-gray-500 ml-1">({{ product.reviews || 0 }})</span>
+            </div>
+            <span *ngIf="product.brand" class="text-xs text-indigo-600 font-semibold">{{ product.brand }}</span>
+            <span class="text-xs text-gray-400">· {{ product.category }}</span>
+          </div>
+        </div>
+
+        <div class="text-right flex-shrink-0">
+          <p class="text-xl font-extrabold text-gray-900">{{ product.price | currency:'EUR':'symbol':'1.2-2' }}</p>
+          <p *ngIf="product.originalPrice && product.originalPrice > product.price" class="text-sm text-gray-400 line-through">
+            {{ product.originalPrice | currency:'EUR':'symbol':'1.2-2' }}
+          </p>
+          <div class="flex gap-1.5 mt-3 justify-end">
             <button
               (click)="addToCart(product)"
-              class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-pink-600 to-red-600 text-white py-3 rounded-xl hover:shadow-xl hover:scale-105 transition-all font-medium"
+              [disabled]="!product.inStock"
+              class="inline-flex items-center gap-1.5 bg-gradient-to-r from-rose-600 to-fuchsia-600 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg text-xs font-bold"
             >
-              <lucide-angular [img]="ShoppingBag" class="w-4 h-4"></lucide-angular>
+              <lucide-angular [img]="ShoppingBag" class="w-3.5 h-3.5"></lucide-angular>
               Ajouter
+            </button>
+            <button
+              (click)="removeFromWishlist(product.id)"
+              class="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+              title="Retirer"
+            >
+              <lucide-angular [img]="Trash2" class="w-3.5 h-3.5"></lucide-angular>
             </button>
           </div>
         </div>
+      </article>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- FOOTER ACTIONS -->
+    <!-- ================================================================ -->
+    <div class="mt-10 grid md:grid-cols-3 gap-4">
+      <!-- Price alert -->
+      <div class="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-5">
+        <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center mb-3">
+          <lucide-angular [img]="Bell" class="w-5 h-5"></lucide-angular>
+        </div>
+        <h4 class="font-bold text-gray-900 mb-1">Alertes de prix</h4>
+        <p class="text-sm text-gray-600 mb-3">Soyez notifié dès qu'un de vos favoris baisse de prix.</p>
+        <button class="text-sm font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1">
+          Activer les alertes
+          <lucide-angular [img]="ArrowRight" class="w-4 h-4"></lucide-angular>
+        </button>
+      </div>
+
+      <!-- Share -->
+      <div class="bg-gradient-to-br from-rose-50 to-pink-50 border border-rose-100 rounded-2xl p-5">
+        <div class="w-10 h-10 bg-rose-600 text-white rounded-xl flex items-center justify-center mb-3">
+          <lucide-angular [img]="Gift" class="w-5 h-5"></lucide-angular>
+        </div>
+        <h4 class="font-bold text-gray-900 mb-1">Partager avec vos proches</h4>
+        <p class="text-sm text-gray-600 mb-3">Transformez votre liste en liste d'idées cadeaux.</p>
+        <button (click)="copyShareLink()" class="text-sm font-bold text-rose-600 hover:text-rose-700 inline-flex items-center gap-1">
+          <lucide-angular [img]="Copy" class="w-4 h-4"></lucide-angular>
+          {{ showCopied ? 'Lien copié !' : 'Copier le lien' }}
+        </button>
+      </div>
+
+      <!-- Clear -->
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-2xl p-5">
+        <div class="w-10 h-10 bg-gray-700 text-white rounded-xl flex items-center justify-center mb-3">
+          <lucide-angular [img]="AlertTriangle" class="w-5 h-5"></lucide-angular>
+        </div>
+        <h4 class="font-bold text-gray-900 mb-1">Vider la liste</h4>
+        <p class="text-sm text-gray-600 mb-3">Supprime définitivement tous les produits de vos favoris.</p>
+        <button (click)="clearWishlist()" class="text-sm font-bold text-red-600 hover:text-red-700 inline-flex items-center gap-1">
+          <lucide-angular [img]="Trash2" class="w-4 h-4"></lucide-angular>
+          Tout supprimer
+        </button>
       </div>
     </div>
 
-    <!-- Clear Wishlist Button -->
-    <div *ngIf="filteredWishlist.length > 0" class="text-center mb-8">
-      <button
-        (click)="clearWishlist()"
-        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-medium transition-colors"
-      >
-        Vider la liste de favoris
-      </button>
-    </div>
-  </div>
+  </section>
 </div>

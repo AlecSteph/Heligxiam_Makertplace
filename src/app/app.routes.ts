@@ -36,6 +36,23 @@ export const routes: Routes = [
     canActivate: [() => import('./guards/auth.guard').then(m => m.AuthGuard)]
   },
   {
+    path: 'sell',
+    loadComponent: () => import('./pages/sell/sell.component').then(m => m.SellComponent)
+  },
+  {
+    path: 'guide',
+    loadComponent: () => import('./pages/guide/guide.component').then(m => m.GuideComponent)
+  },
+  {
+    path: 'legal',
+    loadComponent: () => import('./pages/legal/legal.component').then(m => m.LegalComponent)
+  },
+  {
+    path: 'seller',
+    loadComponent: () => import('./pages/seller-dashboard/seller-dashboard.component').then(m => m.SellerDashboardComponent),
+    canActivate: [() => import('./guards/auth.guard').then(m => m.SellerGuard)]
+  },
+  {
     path: '**',
     redirectTo: ''
   }

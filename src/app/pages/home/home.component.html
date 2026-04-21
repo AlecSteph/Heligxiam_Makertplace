@@ -92,18 +92,65 @@
   </section>
 
   <!-- ========================================= -->
-  <!-- 2. RAIL DE CATÉGORIES (horizontal pills)   -->
+  <!-- 2. SHOWCASE VIDÉO (shopping en ligne live)  -->
   <!-- ========================================= -->
-  <section class="bg-white border-b shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-4">
-      <div class="flex items-center gap-3 overflow-x-auto scrollbar-hide">
-        <a *ngFor="let cat of categoryPills"
-           [routerLink]="cat.route"
-           [queryParams]="cat.queryParams"
-           class="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-full border border-gray-200 hover:border-indigo-200 transition-all whitespace-nowrap">
-          <span class="text-lg">{{ cat.emoji }}</span>
-          <span class="text-sm font-medium">{{ cat.label }}</span>
-        </a>
+  <section class="bg-gradient-to-b from-white to-gray-50 border-b">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="text-center mb-6">
+        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-2">Live shopping</span>
+        <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">L'expérience HELIGXIAM en images</h2>
+        <p class="text-gray-600 mt-1">Des milliers de clients satisfaits achètent en toute confiance</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4 md:gap-6">
+        <!-- Video 1 (YouTube embed - no controls, autoplay, loop, muted) -->
+        <div class="relative rounded-2xl overflow-hidden shadow-xl bg-gray-900 group aspect-video">
+          <iframe
+            class="absolute inset-0 w-full h-full pointer-events-none"
+            [src]="showcaseVideo1Url"
+            title="Shopping en ligne"
+            frameborder="0"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowfullscreen="false"
+            loading="lazy"
+            aria-hidden="true">
+          </iframe>
+          <!-- Invisible click-blocking overlay + gradient + caption -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-5 text-white pointer-events-none">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+              </span>
+              <span class="text-xs font-black uppercase tracking-widest">Live</span>
+            </div>
+            <h3 class="text-xl md:text-2xl font-extrabold leading-tight drop-shadow">Achats en ligne, simplifiés</h3>
+            <p class="text-sm text-white/90 drop-shadow">Commandez en quelques clics depuis chez vous</p>
+          </div>
+        </div>
+
+        <!-- Video 2 (YouTube embed - no controls, autoplay, loop, muted) -->
+        <div class="relative rounded-2xl overflow-hidden shadow-xl bg-gray-900 group aspect-video">
+          <iframe
+            class="absolute inset-0 w-full h-full pointer-events-none"
+            [src]="showcaseVideo2Url"
+            title="Communauté HELIGXIAM"
+            frameborder="0"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowfullscreen="false"
+            loading="lazy"
+            aria-hidden="true">
+          </iframe>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-5 text-white pointer-events-none">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest">Community</span>
+            </div>
+            <h3 class="text-xl md:text-2xl font-extrabold leading-tight drop-shadow">Ils ont adopté HELIGXIAM</h3>
+            <p class="text-sm text-white/90 drop-shadow">Rejoignez plus de 500 000 acheteurs satisfaits</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>

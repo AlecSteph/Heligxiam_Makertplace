@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidationErrors } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { finalize, catchError } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
@@ -10,7 +10,7 @@ import { LoginRequest, RegisterRequest, ChallengeResponse, UserRole } from '../.
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
@@ -35,6 +35,9 @@ export class LoginComponent implements OnInit {
   showRegisterSuccessModal: boolean = false;
   registeredUserName: string = '';
 
+  // Mode vendeur (pré-rempli via query param ?role=seller)
+  sellerMode: boolean = false;
+
   isLoading: boolean = false;
   
   // Proof of Work
@@ -52,7 +55,8 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.initializeForms();
     this.generateCaptcha();
@@ -66,6 +70,23 @@ export class LoginComponent implements OnInit {
         this.registerError = state.error;
       }
     });
+
+    // Lecture des query params : ?mode=register&role=seller
+    this.route.queryParamMap.subscribe(params => {
+      const mode = params.get('mode');
+      const role = params.get('role');
+
+      if (mode === 'register') {
+        this.currentView = 'register';
+      }
+
+      if (role === 'seller' || role === 'vendeur') {
+        this.sellerMode = true;
+        this.currentView = 'register';
+      } else {
+        this.sellerMode = false;
+      }
+    });
   }
 
   initializeForms(): void {
@@ -73,7 +94,6 @@ export class LoginComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       captcha: ['', [Validators.required]],
-      userType: ['', [Validators.required]],
       rememberMe: [false]
     });
 
@@ -82,7 +102,6 @@ export class LoginComponent implements OnInit {
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.pattern('^[0-9]{10}$')]],
-      userType: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d@$!%*?&]{8,}$')]],
       confirmPassword: ['', [Validators.required]],
       captcha: ['', [Validators.required]],
@@ -243,17 +262,16 @@ export class LoginComponent implements OnInit {
         next: () => {
           // Redirection selon le rôle de l'utilisateur
           const userRole = this.authService.currentUserRole;
-          if (userRole === UserRole.CLIENT) {
-            this.router.navigate(['/profile']);
-          } else if (userRole === UserRole.VENDEUR) {
-            this.loginError = 'Espace vendeur en cours de développement';
+          if (userRole === UserRole.VENDEUR) {
+            this.router.navigate(['/seller']);
           } else if (userRole === UserRole.ADMIN) {
-            this.loginError = 'Espace admin en cours de développement';
+            this.router.navigate(['/admin']);
+          } else {
+            this.router.navigate(['/profile']);
           }
         },
         error: (error) => {
           console.error('Erreur de connexion:', error);
-          // L'erreur est déjà gérée par l'AuthService
         }
       });
     } catch (error) {
@@ -290,7 +308,7 @@ export class LoginComponent implements OnInit {
         prenom: this.registerForm.value.firstName,
         email: this.registerForm.value.email,
         password: this.registerForm.value.password,
-        role: (this.registerForm.value.userType === 'vendeur' ? UserRole.VENDEUR : UserRole.CLIENT),
+        role: this.sellerMode ? UserRole.VENDEUR : UserRole.CLIENT,
         challenge: this.currentChallenge,
         nonce: nonce
       };

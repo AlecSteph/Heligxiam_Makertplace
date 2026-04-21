@@ -6,10 +6,14 @@
     <div class="mx-auto px-4 py-12 relative" [ngClass]="currentView === 'register' ? 'max-w-4xl' : 'max-w-md'">
       <!-- Header -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-white mb-2">Mon Compte</h1>
+        <h1 class="text-3xl font-bold text-white mb-2">
+          <span *ngIf="sellerMode && currentView === 'register'">Inscription vendeur</span>
+          <span *ngIf="!(sellerMode && currentView === 'register')">Mon Compte</span>
+        </h1>
         <p class="text-purple-100">
           <span *ngIf="currentView === 'login'">Connectez-vous à votre compte</span>
-          <span *ngIf="currentView === 'register'">Créez votre compte</span>
+          <span *ngIf="currentView === 'register' && !sellerMode">Créez votre compte</span>
+          <span *ngIf="currentView === 'register' && sellerMode">Dernière étape avant de vendre sur HELIGXIAM</span>
           <span *ngIf="currentView === 'forgot-password'">Réinitialisez votre mot de passe</span>
           <span *ngIf="currentView === 'privacy'">Politique de confidentialité</span>
         </p>
@@ -98,25 +102,6 @@
             </div>
           </div>
 
-          <!-- Type d'utilisateur -->
-          <div class="mb-4">
-            <label for="login-user-type" class="block text-sm font-medium text-gray-700 mb-2">
-              Type de compte
-            </label>
-            <select
-              id="login-user-type"
-              formControlName="userType"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-            >
-              <option value="">Sélectionnez un type</option>
-              <option value="client">Client</option>
-              <option value="vendeur">Vendeur</option>
-            </select>
-            <div *ngIf="getErrorMessage(loginForm, 'userType')" class="mt-1 text-sm text-red-600">
-              {{ getErrorMessage(loginForm, 'userType') }}
-            </div>
-          </div>
-
           <!-- Remember Me & Forgot Password -->
           <div class="flex items-center justify-between mb-6">
             <label class="flex items-center">
@@ -166,6 +151,53 @@
 
       <!-- Register Form -->
       <div *ngIf="currentView === 'register'" class="bg-white shadow-lg rounded-lg p-8">
+
+        <!-- Bannière "Mode vendeur" -->
+        <div *ngIf="sellerMode"
+             class="mb-6 rounded-xl overflow-hidden border border-amber-200 bg-gradient-to-r from-amber-50 via-orange-50 to-red-50">
+          <div class="flex items-start gap-4 p-4 md:p-5">
+            <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16l-1 10a2 2 0 01-2 2H7a2 2 0 01-2-2L4 7zm4 0V5a4 4 0 118 0v2"></path>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center flex-wrap gap-2 mb-1">
+                <h3 class="text-lg font-bold text-gray-900">Devenez vendeur partenaire HELIGXIAM</h3>
+                <span class="text-[10px] font-bold uppercase tracking-widest bg-amber-500 text-white px-2 py-0.5 rounded-full">Nouveau</span>
+              </div>
+              <p class="text-sm text-gray-700 mb-3">
+                Complétez ce formulaire pour créer votre compte. Votre activation vendeur sera
+                finalisée après validation de vos documents (Kbis, RIB, pièce d'identité) sous 24-72h.
+              </p>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                <div class="flex items-center gap-1.5 bg-white/70 rounded-md px-2 py-1.5 border border-amber-100">
+                  <svg class="w-3.5 h-3.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                  <span class="font-semibold text-gray-700">47 250€ d'avantages</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-white/70 rounded-md px-2 py-1.5 border border-amber-100">
+                  <svg class="w-3.5 h-3.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                  <span class="font-semibold text-gray-700">800K visiteurs/mois</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-white/70 rounded-md px-2 py-1.5 border border-amber-100">
+                  <svg class="w-3.5 h-3.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                  <span class="font-semibold text-gray-700">Logistique incluse</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-white/70 rounded-md px-2 py-1.5 border border-amber-100">
+                  <svg class="w-3.5 h-3.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                  <span class="font-semibold text-gray-700">Sans engagement</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-white/60 border-t border-amber-200 px-4 md:px-5 py-2 flex items-center justify-between text-xs text-gray-600">
+            <span>Besoin de plus d'infos avant de vous inscrire ?</span>
+            <a routerLink="/sell" class="font-bold text-orange-600 hover:text-orange-700 hover:underline">
+              Revoir les conditions vendeur →
+            </a>
+          </div>
+        </div>
+
         <form [formGroup]="registerForm" (ngSubmit)="onRegister()">
           <!-- Layout 2 colonnes -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -247,23 +279,37 @@
                 </div>
               </div>
 
-              <!-- Type d'utilisateur -->
-              <div>
-                <label for="register-user-type" class="block text-sm font-medium text-gray-700 mb-2">
-                  Type de compte
-                </label>
-                <select
-                  id="register-user-type"
-                  formControlName="userType"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                >
-                  <option value="">Sélectionnez un type</option>
-                  <option value="client">Client</option>
-                  <option value="vendeur">Vendeur</option>
-                </select>
-                <div *ngIf="getErrorMessage(registerForm, 'userType')" class="mt-1 text-sm text-red-600">
-                  {{ getErrorMessage(registerForm, 'userType') }}
+              <!-- Indicateur du rôle choisi (lecture seule, déduit du lien cliqué) -->
+              <div class="rounded-lg border p-3 flex items-center gap-3"
+                   [class.border-amber-200]="sellerMode"
+                   [class.bg-amber-50]="sellerMode"
+                   [class.border-indigo-200]="!sellerMode"
+                   [class.bg-indigo-50]="!sellerMode">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                     [class.bg-gradient-to-br]="true"
+                     [class.from-amber-400]="sellerMode" [class.to-orange-500]="sellerMode"
+                     [class.from-indigo-500]="!sellerMode" [class.to-purple-600]="!sellerMode">
+                  <svg *ngIf="!sellerMode" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  <svg *ngIf="sellerMode" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16l-1 10a2 2 0 01-2 2H7a2 2 0 01-2-2L4 7zm4 0V5a4 4 0 118 0v2"/>
+                  </svg>
                 </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-gray-500 font-medium">Type de compte</p>
+                  <p class="text-sm font-bold text-gray-900">
+                    {{ sellerMode ? 'Vendeur partenaire' : 'Client (acheteur)' }}
+                  </p>
+                </div>
+                <a *ngIf="!sellerMode" routerLink="/sell"
+                   class="text-[11px] font-bold text-indigo-600 hover:underline whitespace-nowrap">
+                  Vendeur ? →
+                </a>
+                <a *ngIf="sellerMode" routerLink="/account" [queryParams]="{ mode: 'register' }"
+                   class="text-[11px] font-bold text-amber-600 hover:underline whitespace-nowrap">
+                  Client ? →
+                </a>
               </div>
             </div>
 
@@ -381,7 +427,10 @@
               />
               <span class="ml-2 text-sm text-gray-600">
                 J'accepte les
-                <button type="button" class="text-blue-600 hover:text-blue-500">conditions d'utilisation</button>
+                <a routerLink="/legal" fragment="terms" target="_blank" rel="noopener"
+                   class="text-blue-600 hover:text-blue-500 underline-offset-2 hover:underline font-semibold">
+                  conditions d'utilisation
+                </a>
               </span>
             </label>
             <label class="flex items-start">
@@ -392,9 +441,10 @@
               />
               <span class="ml-2 text-sm text-gray-600">
                 J'accepte la
-                <button type="button" (click)="switchView('privacy')" class="text-blue-600 hover:text-blue-500">
+                <a routerLink="/legal" fragment="privacy" target="_blank" rel="noopener"
+                   class="text-blue-600 hover:text-blue-500 underline-offset-2 hover:underline font-semibold">
                   politique de confidentialité
-                </button>
+                </a>
               </span>
             </label>
           </div>
@@ -602,19 +652,35 @@
       (click)="$event.stopPropagation()"
     >
       <!-- Icône de succès -->
-      <div class="mx-auto mb-5 flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 shadow-lg">
-        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+      <div [class]="'mx-auto mb-5 flex items-center justify-center w-20 h-20 rounded-full shadow-lg ' +
+                    (sellerMode
+                      ? 'bg-gradient-to-br from-amber-400 to-orange-600'
+                      : 'bg-gradient-to-br from-green-400 to-emerald-600')">
+        <svg *ngIf="!sellerMode" class="w-12 h-12 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <svg *ngIf="sellerMode" class="w-11 h-11 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16l-1 10a2 2 0 01-2 2H7a2 2 0 01-2-2L4 7zm4 0V5a4 4 0 118 0v2"></path>
         </svg>
       </div>
 
       <h2 id="register-success-title" class="text-2xl font-bold text-gray-900 mb-2">
-        Bienvenue{{ registeredUserName ? ', ' + registeredUserName : '' }} !
+        <span *ngIf="!sellerMode">Bienvenue{{ registeredUserName ? ', ' + registeredUserName : '' }} !</span>
+        <span *ngIf="sellerMode">Candidature vendeur envoyée{{ registeredUserName ? ', ' + registeredUserName : '' }} !</span>
       </h2>
-      <p class="text-gray-600 mb-6">
+      <p *ngIf="!sellerMode" class="text-gray-600 mb-6">
         Votre compte a été créé avec succès.<br />
         Vous pouvez maintenant vous connecter pour accéder à votre espace.
       </p>
+      <div *ngIf="sellerMode" class="text-left bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-2">
+        <p class="font-semibold text-gray-900">Prochaines étapes :</p>
+        <ol class="space-y-1.5">
+          <li class="flex gap-2"><span class="font-bold text-amber-600">1.</span> Connectez-vous à votre espace vendeur.</li>
+          <li class="flex gap-2"><span class="font-bold text-amber-600">2.</span> Téléversez vos documents (Kbis, RIB, pièce d'identité).</li>
+          <li class="flex gap-2"><span class="font-bold text-amber-600">3.</span> Activation sous 24-72h ouvrées.</li>
+          <li class="flex gap-2"><span class="font-bold text-amber-600">4.</span> Listez vos premiers produits et recevez vos primes !</li>
+        </ol>
+      </div>
 
       <div class="flex flex-col sm:flex-row gap-3">
         <button

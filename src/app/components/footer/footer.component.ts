@@ -26,6 +26,7 @@ interface FooterLink {
   route?: string;
   url?: string;
   queryParams?: any;
+  fragment?: string;
 }
 
 interface FooterColumn {
@@ -131,12 +132,12 @@ export class FooterComponent {
   ];
 
   readonly legalLinks: FooterLink[] = [
-    { label: 'Conditions générales', route: '/terms' },
-    { label: 'Politique de confidentialité', route: '/privacy' },
-    { label: 'Cookies', route: '/cookies' },
-    { label: 'Mentions légales', route: '/legal' },
-    { label: 'Accessibilité', route: '/accessibility' },
-    { label: 'Plan du site', route: '/sitemap' }
+    { label: 'Conditions générales', route: '/legal', fragment: 'terms' },
+    { label: 'Politique de confidentialité', route: '/legal', fragment: 'privacy' },
+    { label: 'Cookies', route: '/legal', fragment: 'cookies' },
+    { label: 'Mentions légales', route: '/legal', fragment: 'legal' },
+    { label: 'Accessibilité', route: '/guide', fragment: 'aide' },
+    { label: 'Plan du site', route: '/guide' }
   ];
 
   readonly socialLinks = [
