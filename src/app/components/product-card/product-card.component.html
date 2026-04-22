@@ -80,10 +80,10 @@
     <!-- Price -->
     <div class="flex items-baseline gap-2 mb-4">
       <span class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-        {{ product.price.toFixed(2) }}€
+        {{ product.price | localizedPrice }}
       </span>
       <span *ngIf="product.originalPrice" class="text-sm text-gray-400 line-through">
-        {{ product.originalPrice.toFixed(2) }}€
+        {{ product.originalPrice | localizedPrice }}
       </span>
     </div>
 

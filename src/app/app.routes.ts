@@ -48,6 +48,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/legal/legal.component').then(m => m.LegalComponent)
   },
   {
+    path: 'offres',
+    loadComponent: () => import('./pages/offers/offers.component').then(m => m.OffersComponent)
+  },
+  {
     path: 'seller',
     loadComponent: () => import('./pages/seller-dashboard/seller-dashboard.component').then(m => m.SellerDashboardComponent),
     canActivate: [() => import('./guards/auth.guard').then(m => m.SellerGuard)]

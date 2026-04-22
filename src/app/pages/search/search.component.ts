@@ -150,6 +150,116 @@ export class SearchComponent implements OnInit, OnDestroy {
   // View mode
   viewMode: 'grid' | 'list' = 'grid';
 
+  // Catalog tiles (Amazon-like browse-by-category grid for default view)
+  readonly catalogTiles: Array<{
+    label: string;
+    image: string;
+    route: any[];
+    queryParams?: any;
+    tone?: 'deal' | 'new' | 'hot' | 'premium';
+  }> = [
+    {
+      label: 'Prix cassés',
+      image: 'https://images.unsplash.com/photo-1607082349566-187342175e2f?w=600&q=80',
+      route: ['/search'],
+      queryParams: { collection: 'promotions' },
+      tone: 'deal'
+    },
+    {
+      label: 'Électronique',
+      image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80',
+      route: ['/category', 'electronique']
+    },
+    {
+      label: 'Livres & Médias',
+      image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&q=80',
+      route: ['/search'],
+      queryParams: { q: 'livre' }
+    },
+    {
+      label: 'Mode',
+      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80',
+      route: ['/category', 'mode']
+    },
+    {
+      label: 'Animalerie',
+      image: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=600&q=80',
+      route: ['/search'],
+      queryParams: { q: 'animal' }
+    },
+    {
+      label: 'Beauté & Parfum',
+      image: 'https://images.unsplash.com/photo-1522335789203-aaa686ef3fb4?w=600&q=80',
+      route: ['/category', 'beaute']
+    },
+    {
+      label: 'Auto & Moto',
+      image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&q=80',
+      route: ['/category', 'auto']
+    },
+    {
+      label: 'Cuisine & Maison',
+      image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
+      route: ['/category', 'maison']
+    },
+    {
+      label: 'Bricolage',
+      image: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&q=80',
+      route: ['/search'],
+      queryParams: { q: 'outil' }
+    },
+    {
+      label: 'Informatique',
+      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&q=80',
+      route: ['/search'],
+      queryParams: { q: 'ordinateur' }
+    },
+    {
+      label: 'Sport & Fitness',
+      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80',
+      route: ['/category', 'sport']
+    },
+    {
+      label: 'Meilleures ventes',
+      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80',
+      route: ['/search'],
+      queryParams: { collection: 'bestsellers' },
+      tone: 'hot'
+    },
+    {
+      label: 'Nouveautés',
+      image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
+      route: ['/search'],
+      queryParams: { collection: 'new' },
+      tone: 'new'
+    },
+    {
+      label: 'Marques Premium',
+      image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=600&q=80',
+      route: ['/search'],
+      queryParams: { collection: 'premium' },
+      tone: 'premium'
+    },
+    {
+      label: 'Ventes Flash',
+      image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=80',
+      route: ['/search'],
+      queryParams: { collection: 'flash' },
+      tone: 'deal'
+    }
+  ];
+
+  get showCatalogTiles(): boolean {
+    return this.collection.type === 'default'
+      && !this.queryParam
+      && !this.selectedCategory
+      && !this.selectedBrand
+      && this.minRating === 0
+      && !this.showInStockOnly
+      && this.priceRange[0] === 0
+      && this.priceRange[1] === 4000;
+  }
+
   constructor(
     private route: ActivatedRoute,
     private zone: NgZone,

@@ -466,6 +466,286 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
     { code: 'UK' as const, label: 'Royaume-Uni', domain: 'heligxiam.co.uk', flag: '🇬🇧' }
   ];
 
+  // =========== Page headers (per nav id) ===========
+  readonly pageHeaders: Record<string, { title: string; subtitle: string; }> = {
+    'dashboard':        { title: 'Tableau de bord',         subtitle: 'Aperçu global de votre activité' },
+    'catalog':          { title: 'Produits',                subtitle: 'Gérez, modifiez et suivez vos références' },
+    'add-product':      { title: 'Ajouter un produit',      subtitle: 'Créez une nouvelle fiche produit' },
+    'brand-registry':   { title: 'Registre des marques',    subtitle: 'Protégez vos marques et combattez la contrefaçon' },
+    'bulk-upload':      { title: 'Import en masse (CSV)',   subtitle: 'Créez ou modifiez des centaines de produits en un fichier' },
+    'inventory':        { title: 'Gestion du stock',        subtitle: 'Niveaux, alertes et prévisions de réapprovisionnement' },
+    'fba-shipments':    { title: 'Expéditions Logistique HX', subtitle: 'Envois vers les entrepôts HELIGXIAM Fulfillment' },
+    'returns':          { title: 'Retours & remboursements', subtitle: 'Gérez les demandes de retour et les remboursements' },
+    'pricing':          { title: 'Tarification',            subtitle: 'Prix, marges et alertes concurrentielles' },
+    'auto-pricing':     { title: 'Retarification automatique', subtitle: 'Gardez la Buy Box avec des règles de prix automatiques' },
+    'promotions':       { title: 'Promotions & coupons',    subtitle: 'Créez des remises, coupons, lots et code promo' },
+    'orders':           { title: 'Gérer les commandes',     subtitle: 'Toutes vos commandes, filtres, impression d\'étiquettes' },
+    'unshipped':        { title: 'À expédier',              subtitle: 'Commandes en attente d\'expédition' },
+    'messages':         { title: 'Messagerie acheteurs',    subtitle: 'Répondez en moins de 24h pour rester en bonne santé' },
+    'campaigns':        { title: 'Campagnes publicitaires', subtitle: 'Sponsored Products, Brands, Display — en temps réel' },
+    'sponsored-brands': { title: 'Sponsored Brands',        subtitle: 'Créativités vidéo et catalogue pour promouvoir votre marque' },
+    'deals':            { title: 'Ventes flash & Deals',    subtitle: 'Lightning Deals, 7-day Deals, Outlet — boostez la visibilité' },
+    'coach':            { title: 'Growth Coach',            subtitle: 'Recommandations personnalisées par IA' },
+    'programs':         { title: 'Programmes HELIGXIAM',    subtitle: 'Vine, Marque enregistrée, A+ Contenu, Climate Pledge…' },
+    'global-selling':   { title: 'Vendre à l\'international', subtitle: 'Ouvrez votre boutique sur 5 marchés européens' },
+    'analytics':        { title: 'Statistiques de ventes',  subtitle: 'Chiffre d\'affaires, unités, tendances' },
+    'traffic':          { title: 'Trafic & conversion',     subtitle: 'Sessions, pages vues, taux de conversion' },
+    'search-terms':     { title: 'Termes de recherche',     subtitle: 'Les mots-clés qui génèrent vos ventes' },
+    'account-health':   { title: 'Santé du compte',         subtitle: 'Indicateurs de performance et conformité' },
+    'feedback':         { title: 'Évaluations & avis',      subtitle: 'Notes boutique et avis produits' },
+    'cases':            { title: 'Cas & réclamations',      subtitle: 'Dossiers ouverts avec le support HELIGXIAM' },
+    'payouts':          { title: 'Paiements & versements',  subtitle: 'Historique, disponible, en attente' },
+    'invoices':         { title: 'Factures & fiscalité',    subtitle: 'Documents comptables et TVA' },
+    'settings':         { title: 'Paramètres boutique',     subtitle: 'Informations, logo, politiques, collaborateurs' }
+  };
+
+  // =========== Shipments (FBA-like) ===========
+  readonly shipments = [
+    { id: 'FBA-2204-001', items: 340, destination: 'Centre HX Lyon (LY-01)', status: 'in-transit', expected: '22 avr. 2026', units: 340 },
+    { id: 'FBA-2204-002', items: 128, destination: 'Centre HX Paris (PA-03)', status: 'received', expected: '19 avr. 2026', units: 128 },
+    { id: 'FBA-2204-003', items: 76,  destination: 'Centre HX Lille (LI-02)', status: 'pending',   expected: '28 avr. 2026', units: 76 }
+  ];
+
+  // =========== Returns ===========
+  readonly returnsList = [
+    { id: 'RET-7712', order: '#HX-83987', product: 'Webcam 4K StreamPro', reason: 'Ne correspond pas à la description', status: 'awaiting', refund: 149.00, created: 'Il y a 2j' },
+    { id: 'RET-7703', order: '#HX-83950', product: 'Casque Audio Aurora', reason: 'Défectueux',                        status: 'refunded', refund: 159.00, created: 'Il y a 5j' },
+    { id: 'RET-7688', order: '#HX-83912', product: 'Clavier Mécanique RGB', reason: 'Changement d\'avis',              status: 'transit',  refund: 129.90, created: 'Il y a 6j' }
+  ];
+
+  // =========== Messages acheteurs ===========
+  readonly buyerMessages = [
+    { id: 'msg-01', buyer: 'Tom Roussel',    subject: 'Délai de livraison',           preview: 'Bonjour, je voulais savoir si la commande #HX-84014 peut arriver avant samedi…', time: '12 min', unread: true,  sla: '23h48' },
+    { id: 'msg-02', buyer: 'Claire Martin',  subject: 'Produit compatible ?',          preview: 'Est-ce que le chargeur est compatible iPhone 15 Pro Max ?',                       time: '1h',     unread: true,  sla: '22h58' },
+    { id: 'msg-03', buyer: 'Karim Benzarti', subject: 'Facture',                       preview: 'Pourriez-vous m\'envoyer la facture au format PDF s\'il vous plaît ?',             time: '3h',     unread: true,  sla: '20h45' },
+    { id: 'msg-04', buyer: 'Léa Bernard',    subject: 'Merci !',                        preview: 'Livraison rapide, emballage nickel. Merci !',                                     time: '1j',     unread: false, sla: '—' }
+  ];
+
+  // =========== Ad Campaigns ===========
+  readonly adCampaigns = [
+    { id: 'c-sp-01',  name: 'Auto — Catalogue général',       type: 'Sponsored Products', status: 'active',   budget: 25,  spent: 18.42, impressions: 12450, clicks: 246, acos: 18.4, sales: 412.30 },
+    { id: 'c-sp-02',  name: 'Manuel — Casques audio',         type: 'Sponsored Products', status: 'active',   budget: 40,  spent: 32.18, impressions: 24120, clicks: 512, acos: 14.7, sales: 918.70 },
+    { id: 'c-sb-01',  name: 'Bannière — Accessoires tech',    type: 'Sponsored Brands',   status: 'active',   budget: 60,  spent: 48.90, impressions: 54800, clicks: 980, acos: 22.1, sales: 1240.00 },
+    { id: 'c-sp-03',  name: 'Défensif — Marque',              type: 'Sponsored Products', status: 'paused',   budget: 15,  spent:  0.00, impressions:     0, clicks:   0, acos: 0.0,  sales:    0.00 },
+    { id: 'c-sd-01',  name: 'Display — Retargeting',          type: 'Sponsored Display',  status: 'active',   budget: 30,  spent: 21.75, impressions: 18900, clicks: 210, acos: 19.8, sales: 487.60 }
+  ];
+
+  // =========== Sponsored Brands (creatives) ===========
+  readonly sbCreatives = [
+    { id: 'sb-1', headline: 'Découvrez la collection Aurora',      format: 'Bannière catalogue', status: 'live',     ctr: 2.8, acos: 21.3, reach: '54 800' },
+    { id: 'sb-2', headline: 'Travaillez en Pro avec Pulse X2',     format: 'Vidéo 15s',          status: 'in-review', ctr: 0.0, acos: 0.0,  reach: '—' },
+    { id: 'sb-3', headline: 'Offrez un son haut de gamme',         format: 'Spotlight produit',  status: 'live',     ctr: 3.4, acos: 17.8, reach: '28 340' }
+  ];
+
+  // =========== Flash deals (côté vendeur) ===========
+  readonly sellerDeals = [
+    { id: 'd1', product: 'Montre connectée Pulse X2', discount: 25, startsIn: '12h14', units: 120, sold: 47, status: 'scheduled', fee: 200 },
+    { id: 'd2', product: 'Casque Audio Aurora',       discount: 30, startsIn: 'En cours', units: 80, sold: 64, status: 'live',     fee: 150 },
+    { id: 'd3', product: 'Enceinte Bluetooth Waveform', discount: 20, startsIn: 'Dans 3j', units: 150, sold: 0, status: 'draft',   fee: 120 }
+  ];
+
+  // =========== HELIGXIAM Programs ===========
+  readonly programs = [
+    { id: 'vine',    name: 'Programme Vine',               desc: 'Obtenez des avis authentiques auprès de clients vérifiés.',        badge: 'Boostez vos avis',            eligible: true,  enrolled: false, icon: this.Star },
+    { id: 'brand',   name: 'Marque enregistrée (Brand)',   desc: 'Protégez votre marque et débloquez le contenu A+.',                badge: 'Protection',                  eligible: true,  enrolled: true,  icon: this.ShieldCheck },
+    { id: 'aplus',   name: 'Contenu A+',                   desc: 'Enrichissez vos fiches avec des visuels premium (+20% conv.).',    badge: '+20% de conversion',          eligible: true,  enrolled: true,  icon: this.Sparkles },
+    { id: 'climate', name: 'Climate Pledge Friendly',      desc: 'Affichez un label écologique vérifié sur vos fiches.',             badge: 'Éco-responsable',             eligible: true,  enrolled: false, icon: this.Award },
+    { id: 'subs',    name: 'Abonnez et économisez',        desc: 'Fidélisez avec des abonnements récurrents (-5% à -15%).',          badge: 'Fidélisation',                eligible: true,  enrolled: false, icon: this.RefreshCw },
+    { id: 'hxprime', name: 'HELIGXIAM Prime',              desc: 'Accédez aux clients Prime — livraison 1j et badge Prime.',         badge: 'Clients premium',             eligible: true,  enrolled: true,  icon: this.Rocket }
+  ];
+
+  // =========== Marchés internationaux ===========
+  readonly internationalMarkets = [
+    { code: 'DE', label: 'Allemagne',      flag: '🇩🇪', status: 'active',   sales: 3420,  growth: 24 },
+    { code: 'IT', label: 'Italie',         flag: '🇮🇹', status: 'active',   sales: 1820,  growth: 18 },
+    { code: 'ES', label: 'Espagne',        flag: '🇪🇸', status: 'eligible', sales: 0,     growth: 0 },
+    { code: 'UK', label: 'Royaume-Uni',    flag: '🇬🇧', status: 'eligible', sales: 0,     growth: 0 },
+    { code: 'NL', label: 'Pays-Bas',       flag: '🇳🇱', status: 'coming',   sales: 0,     growth: 0 }
+  ];
+
+  // =========== Termes de recherche ===========
+  readonly searchTerms = [
+    { term: 'casque bluetooth sans fil',    impressions: 12450, clicks: 384, conv: 6.8, sales: 1248.50 },
+    { term: 'montre connectée sport',        impressions: 9820,  clicks: 260, conv: 5.4, sales: 892.00 },
+    { term: 'clavier mécanique rgb silencieux', impressions: 7430, clicks: 198, conv: 4.1, sales: 512.30 },
+    { term: 'webcam 4k télétravail',         impressions: 5120,  clicks: 142, conv: 3.2, sales: 298.40 },
+    { term: 'chargeur sans fil rapide',      impressions: 4380,  clicks: 120, conv: 2.8, sales: 212.00 }
+  ];
+
+  // =========== Évaluations & avis ===========
+  readonly sellerFeedback = [
+    { id: 'f1', rating: 5, author: 'Pauline R.',   comment: 'Livraison ultra rapide, produit conforme, emballage soigné.',        date: 'Il y a 3j',  product: 'Casque Audio Aurora' },
+    { id: 'f2', rating: 5, author: 'Mathieu D.',   comment: 'Excellent vendeur, très réactif sur les messages.',                   date: 'Il y a 5j',  product: 'Montre Pulse X2' },
+    { id: 'f3', rating: 4, author: 'Julie L.',     comment: 'Bon produit mais légèrement en retard (2 jours).',                    date: 'Il y a 6j',  product: 'Enceinte Waveform' },
+    { id: 'f4', rating: 2, author: 'Karim B.',     comment: 'Produit ok mais le colis est arrivé abîmé.',                         date: 'Il y a 10j', product: 'Clavier RGB' }
+  ];
+
+  readonly feedbackDistribution = [
+    { stars: 5, percent: 78, count: 115 },
+    { stars: 4, percent: 14, count: 21 },
+    { stars: 3, percent:  5, count:  7 },
+    { stars: 2, percent:  2, count:  3 },
+    { stars: 1, percent:  1, count:  1 }
+  ];
+
+  // =========== Payouts history ===========
+  readonly payoutsHistory = [
+    { id: 'pay-2604', date: '12 avr. 2026', amount: 1248.00, status: 'paid',     method: 'Virement SEPA', ref: 'SEPA-202604' },
+    { id: 'pay-2603', date: '05 avr. 2026', amount: 1894.20, status: 'paid',     method: 'Virement SEPA', ref: 'SEPA-202603' },
+    { id: 'pay-2602', date: '29 mars 2026', amount: 2140.50, status: 'paid',     method: 'Virement SEPA', ref: 'SEPA-202602' },
+    { id: 'pay-next', date: '19 avr. 2026', amount: 2487.50, status: 'pending',  method: 'Virement SEPA', ref: '—' }
+  ];
+
+  // =========== Factures ===========
+  readonly invoices = [
+    { id: 'INV-2026-0048', type: 'Commission HX',      period: 'Mars 2026', amount: 342.80, status: 'paid',    download: true },
+    { id: 'INV-2026-0047', type: 'Logistique HX',      period: 'Mars 2026', amount: 128.40, status: 'paid',    download: true },
+    { id: 'INV-2026-0046', type: 'Publicité',          period: 'Mars 2026', amount: 221.25, status: 'paid',    download: true },
+    { id: 'INV-2026-0049', type: 'Commission HX',      period: 'Avril 2026', amount: 189.50, status: 'pending', download: false }
+  ];
+
+  // =========== Paramètres boutique ===========
+  storeSettings = {
+    name: 'Ma boutique HELIGXIAM',
+    displayName: 'HXstore',
+    language: 'fr',
+    currency: 'EUR',
+    vat: 'FR12345678901',
+    siret: '12345678900012',
+    email: 'vendeur@heligxiam.fr',
+    phone: '+33 1 23 45 67 89',
+    autoAcceptReturns: true,
+    lowStockAlerts: true,
+    weeklyReport: true,
+    smsNotifications: false
+  };
+
+  // =========== Bulk upload templates ===========
+  readonly csvTemplates = [
+    { id: 'cat-elec', label: 'Électronique', cols: 42, samples: 5, updated: '10 avr. 2026' },
+    { id: 'cat-mode', label: 'Mode & Accessoires', cols: 38, samples: 5, updated: '10 avr. 2026' },
+    { id: 'cat-maison', label: 'Maison & Déco', cols: 36, samples: 5, updated: '10 avr. 2026' },
+    { id: 'cat-beaute', label: 'Beauté & Santé', cols: 34, samples: 5, updated: '10 avr. 2026' }
+  ];
+
+  readonly bulkHistory = [
+    { id: 'u-0812', file: 'catalogue_avril.csv',     items: 142, success: 140, errors: 2,  date: 'Il y a 2h',  status: 'completed' },
+    { id: 'u-0811', file: 'prix_mai_2026.csv',        items: 78,  success: 78,  errors: 0,  date: 'Hier',       status: 'completed' },
+    { id: 'u-0810', file: 'stock_hebdo.csv',          items: 310, success: 287, errors: 23, date: 'Il y a 3j',  status: 'warning' }
+  ];
+
+  // =========== Coupons (promotions page) ===========
+  readonly sellerCoupons = [
+    { id: 'cp-01', code: 'PRINTEMPS25',  discount: '25%',  scope: 'Catégorie : Audio',      used: 184, max: 500, expires: '30 avr. 2026', status: 'active' },
+    { id: 'cp-02', code: 'NEW10',        discount: '10€',  scope: 'Nouveaux clients',       used: 47,  max: 200, expires: '31 mai 2026',  status: 'active' },
+    { id: 'cp-03', code: 'FLASH50',      discount: '50%',  scope: '3 produits ciblés',      used: 0,   max: 100, expires: '22 avr. 2026', status: 'scheduled' },
+    { id: 'cp-04', code: 'WELCOME5',     discount: '5€',   scope: 'Toute la boutique',      used: 820, max: 820, expires: '15 avr. 2026', status: 'expired' }
+  ];
+
+  // =========== Règles de retarification ===========
+  readonly pricingRules = [
+    { id: 'r1', name: 'Suivre la Buy Box à -1c',   scope: '12 produits',  minMargin: 15, active: true,  last: 'Il y a 12 min' },
+    { id: 'r2', name: 'Plancher prix coûtant +10%', scope: '5 produits',   minMargin: 10, active: true,  last: 'Il y a 1h' },
+    { id: 'r3', name: 'Match concurrent meilleure note', scope: '3 produits', minMargin: 20, active: false, last: 'Désactivée' }
+  ];
+
+  // =========== Helpers for templates ===========
+  getPageHeader(id: string): { title: string; subtitle: string } {
+    return this.pageHeaders[id] ?? { title: id, subtitle: '' };
+  }
+
+  getShipmentStatusClass(s: string): string {
+    switch (s) {
+      case 'received':   return 'bg-green-100 text-green-700';
+      case 'in-transit': return 'bg-blue-100 text-blue-700';
+      case 'pending':    return 'bg-amber-100 text-amber-700';
+      default:           return 'bg-slate-100 text-slate-700';
+    }
+  }
+
+  getShipmentStatusLabel(s: string): string {
+    switch (s) {
+      case 'received':   return 'Reçu';
+      case 'in-transit': return 'En transit';
+      case 'pending':    return 'À envoyer';
+      default:           return s;
+    }
+  }
+
+  getReturnStatusClass(s: string): string {
+    switch (s) {
+      case 'refunded': return 'bg-green-100 text-green-700';
+      case 'transit':  return 'bg-blue-100 text-blue-700';
+      case 'awaiting': return 'bg-amber-100 text-amber-700';
+      default:         return 'bg-slate-100 text-slate-700';
+    }
+  }
+
+  getReturnStatusLabel(s: string): string {
+    switch (s) {
+      case 'refunded': return 'Remboursé';
+      case 'transit':  return 'En retour';
+      case 'awaiting': return 'À traiter';
+      default:         return s;
+    }
+  }
+
+  getCampaignStatusClass(s: string): string {
+    switch (s) {
+      case 'active':   return 'bg-green-100 text-green-700';
+      case 'paused':   return 'bg-slate-100 text-slate-700';
+      case 'ended':    return 'bg-red-100 text-red-700';
+      default:         return 'bg-slate-100 text-slate-700';
+    }
+  }
+
+  getCouponStatusClass(s: string): string {
+    switch (s) {
+      case 'active':    return 'bg-green-100 text-green-700';
+      case 'scheduled': return 'bg-blue-100 text-blue-700';
+      case 'expired':   return 'bg-slate-100 text-slate-500';
+      default:          return 'bg-slate-100 text-slate-700';
+    }
+  }
+
+  getInvoiceStatusClass(s: string): string {
+    switch (s) {
+      case 'paid':    return 'bg-green-100 text-green-700';
+      case 'pending': return 'bg-amber-100 text-amber-700';
+      case 'overdue': return 'bg-red-100 text-red-700';
+      default:        return 'bg-slate-100 text-slate-700';
+    }
+  }
+
+  getPayoutStatusClass(s: string): string {
+    switch (s) {
+      case 'paid':    return 'bg-green-100 text-green-700';
+      case 'pending': return 'bg-amber-100 text-amber-700';
+      default:        return 'bg-slate-100 text-slate-700';
+    }
+  }
+
+  // Action methods for new sections
+  toggleCampaignStatus(c: any): void {
+    c.status = c.status === 'active' ? 'paused' : 'active';
+  }
+
+  togglePricingRule(r: any): void {
+    r.active = !r.active;
+  }
+
+  toggleProgramEnrollment(p: any): void {
+    if (p.eligible) p.enrolled = !p.enrolled;
+  }
+
+  markAllMessagesRead(): void {
+    this.buyerMessages.forEach(m => m.unread = false);
+  }
+
+  getOrderTotalPending(): number {
+    return this.orders.filter(o => o.status === 'pending').reduce((s, o) => s + o.total, 0);
+  }
+
   constructor(
     private authService: AuthService,
     private router: Router

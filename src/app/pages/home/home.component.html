@@ -1,24 +1,28 @@
 <div class="min-h-screen bg-gray-50">
 
   <!-- ========================================= -->
-  <!-- 1. HERO COMPACT (slim, ~320px)             -->
+  <!-- 1. HERO (impactant, plus grand)            -->
   <!-- ========================================= -->
   <section class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white overflow-hidden">
     <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnptLTEyIDEyYzMuMzE0IDAgNiAyLjY4NiA2IDZzLTIuNjg2IDYtNiA2LTYtMi42ODYtNi02IDIuNjg2LTYgNi02eiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMDUiLz48L2c+PC9zdmc+')] opacity-30"></div>
-    <div class="max-w-7xl mx-auto px-4 py-8 relative">
+    <!-- Decorative glows -->
+    <div class="absolute -top-20 -left-20 w-72 h-72 bg-pink-400/25 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-20 -right-20 w-80 h-80 bg-indigo-400/25 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 py-10 md:py-12 relative w-full">
       <div class="grid md:grid-cols-5 gap-6 items-center">
         <div class="md:col-span-3">
-          <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full mb-3">
+          <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full mb-3 border border-white/20">
             <lucide-angular [img]="Crown" class="w-3.5 h-3.5"></lucide-angular>
             <span class="text-xs font-medium">Marketplace Premium #1 en France</span>
           </div>
-          <h1 class="text-3xl md:text-4xl font-bold leading-tight mb-3">
+          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-3">
             Découvrez l'Excellence
             <span class="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
               HELIGXIAM
             </span>
           </h1>
-          <p class="text-indigo-100 mb-4 text-sm md:text-base">
+          <p class="text-indigo-100 mb-4 text-sm md:text-base max-w-xl">
             15 000+ produits premium • Livraison express gratuite dès 99€ • Garantie 2 ans
           </p>
           <div class="flex flex-wrap gap-3">
@@ -33,9 +37,25 @@
               Premium
             </a>
           </div>
+
+          <!-- Trust indicators (compact) -->
+          <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11px] md:text-xs text-white/85">
+            <div class="flex items-center gap-1.5">
+              <lucide-angular [img]="ShieldCheck" class="w-3.5 h-3.5"></lucide-angular>
+              <span>Paiement sécurisé</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <lucide-angular [img]="Truck" class="w-3.5 h-3.5"></lucide-angular>
+              <span>Livraison 24h</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <lucide-angular [img]="Star" class="w-3.5 h-3.5"></lucide-angular>
+              <span>4,8/5 • 12 400 avis</span>
+            </div>
+          </div>
         </div>
         <div class="md:col-span-2">
-          <div class="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] md:aspect-auto md:h-64 group"
+          <div class="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 aspect-[4/3] md:aspect-auto md:h-72 group"
                (mouseenter)="pauseAutoPlay()"
                (mouseleave)="resumeAutoPlay()">
             <!-- Slides -->

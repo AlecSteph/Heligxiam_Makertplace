@@ -1,0 +1,136 @@
+<div *ngIf="visible"
+     class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="wp-title"
+     (click)="close()">
+
+  <!-- Backdrop -->
+  <div class="wp-overlay absolute inset-0 bg-gradient-to-br from-slate-900/90 via-indigo-900/80 to-purple-900/90 backdrop-blur-md"></div>
+
+  <!-- Modal -->
+  <div class="wp-modal relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden"
+       (click)="$event.stopPropagation()">
+
+    <!-- Flying stars layer -->
+    <div class="pointer-events-none absolute inset-0 overflow-hidden">
+      <svg *ngFor="let s of stars"
+           class="wp-star"
+           [style.left.%]="s.left"
+           [style.top.%]="s.top"
+           [style.width.px]="s.size"
+           [style.height.px]="s.size"
+           [style.animation-delay.s]="s.delay"
+           viewBox="0 0 24 24"
+           fill="currentColor">
+        <path d="M12 2l2.39 6.96L22 10l-5.5 4.02L18.54 22 12 17.77 5.46 22l2.04-7.98L2 10l7.61-1.04L12 2z"/>
+      </svg>
+    </div>
+
+    <!-- Header -->
+    <div class="relative px-6 pt-8 pb-5 bg-gradient-to-br from-rose-500 via-pink-500 to-fuchsia-600 text-white">
+      <!-- Top bar -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="wp-halo w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+            <lucide-angular [img]="PartyPopper" class="w-5 h-5 wp-pop"></lucide-angular>
+          </div>
+          <div class="flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest bg-white/15 backdrop-blur px-2 py-0.5 rounded-full border border-white/20">
+            <span class="inline-flex items-center gap-0.5 text-amber-200" *ngIf="!muted" aria-hidden="true">
+              <span class="wp-bar"></span><span class="wp-bar"></span><span class="wp-bar"></span>
+            </span>
+            Bienvenue
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1">
+          <button type="button"
+                  (click)="toggleMute()"
+                  [attr.aria-label]="muted ? 'Activer le son' : 'Couper le son'"
+                  [attr.title]="muted ? 'Activer le son' : 'Couper le son'"
+                  class="w-9 h-9 rounded-lg hover:bg-white/15 flex items-center justify-center transition">
+            <lucide-angular [img]="muted ? VolumeX : Volume2" class="w-4 h-4"></lucide-angular>
+          </button>
+          <button type="button"
+                  (click)="close()"
+                  aria-label="Fermer"
+                  class="w-9 h-9 rounded-lg hover:bg-white/15 flex items-center justify-center transition">
+            <lucide-angular [img]="X" class="w-4 h-4"></lucide-angular>
+          </button>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <div class="mt-3">
+        <h2 id="wp-title" class="text-3xl md:text-4xl font-black leading-tight">
+          🎉 Cadeau de bienvenue !
+        </h2>
+        <p class="text-white/90 text-sm md:text-base mt-1">
+          Des <span class="font-bold text-amber-200">offres exclusives</span> ont été déverrouillées pour votre compte. Profitez-en avant la fin du compte à rebours.
+        </p>
+      </div>
+
+      <!-- Countdown + cta -->
+      <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-black/30 backdrop-blur rounded-lg border border-white/10 font-mono text-sm">
+          <lucide-angular [img]="Timer" class="w-4 h-4 text-amber-300"></lucide-angular>
+          <span class="tracking-wider font-bold">{{ countdownLabel }}</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-white/85">
+          <lucide-angular [img]="Flame" class="w-3.5 h-3.5 text-amber-300"></lucide-angular>
+          +128 offres actives • <span class="font-bold text-amber-200">jusqu'à -70%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promos grid -->
+    <div class="relative p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div *ngFor="let p of promos"
+           [class]="'wp-card relative rounded-2xl p-4 text-white shadow-md bg-gradient-to-br ' + p.gradient">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 bg-white/20 backdrop-blur text-[10px] font-bold uppercase tracking-widest rounded-full border border-white/20">
+              {{ p.badge }}
+            </span>
+            <lucide-angular [img]="p.icon" class="w-5 h-5 opacity-90"></lucide-angular>
+          </div>
+          <p class="mt-3 text-lg font-black leading-tight">{{ p.title }}</p>
+          <p class="text-xs text-white/85 mt-1 leading-snug">{{ p.subtitle }}</p>
+
+          <!-- Code block for coupon -->
+          <div *ngIf="p.code" class="mt-3 flex items-center gap-2">
+            <div class="flex-1 px-3 py-1.5 bg-black/40 backdrop-blur font-mono text-sm tracking-widest rounded-lg border border-white/10">
+              {{ p.code }}
+            </div>
+            <button type="button"
+                    (click)="copyCode(p.code!)"
+                    [class]="'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition ' +
+                      (copiedCode === p.code
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-white text-gray-900 hover:bg-gray-100')">
+              <lucide-angular [img]="copiedCode === p.code ? CheckCircle2 : Copy" class="w-3 h-3"></lucide-angular>
+              {{ copiedCode === p.code ? 'Copié' : 'Copier' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="px-5 pb-5 flex flex-col sm:flex-row items-center gap-3">
+      <button type="button"
+              (click)="goToPromotions()"
+              class="w-full sm:flex-1 px-4 py-3 rounded-xl font-bold text-sm text-white shadow-lg hover:shadow-xl hover:scale-[1.01] transition bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-600 flex items-center justify-center gap-2">
+        <lucide-angular [img]="Gift" class="w-4 h-4"></lucide-angular>
+        <span class="wp-title-gradient"></span>
+        Voir toutes les promotions
+        <lucide-angular [img]="ArrowRight" class="w-4 h-4"></lucide-angular>
+      </button>
+      <button type="button"
+              (click)="close()"
+              class="w-full sm:w-auto px-4 py-3 rounded-xl font-semibold text-sm text-gray-700 hover:bg-gray-100 transition">
+        Plus tard
+      </button>
+    </div>
+  </div>
+</div>

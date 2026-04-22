@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError, timer } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, throwError, timer } from 'rxjs';
 import { map, catchError, tap, finalize } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { 
@@ -39,6 +39,10 @@ export class AuthService {
   });
 
   public authState$ = this.authStateSubject.asObservable();
+
+  // Evenement emis uniquement lors d'un VRAI login/register (pas sur restauration session)
+  private loginSuccessSubject = new Subject<User>();
+  public loginSuccess$ = this.loginSuccessSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -277,6 +281,10 @@ export class AuthService {
     });
 
     localStorage.setItem(this.USER_KEY, JSON.stringify(authData.user));
+
+    // Emettre l'evenement de login/register reussi (uniquement sur action utilisateur,
+    // pas sur restauration depuis localStorage)
+    this.loginSuccessSubject.next(authData.user);
   }
 
   // Mettre à jour les tokens

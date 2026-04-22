@@ -5,11 +5,12 @@ import { LucideAngularModule, Star, ShoppingCart, Heart, Eye, TrendingUp } from 
 import { Product } from '../../models/product.model';
 import { CartService } from '../../services/cart.service';
 import { WishlistService } from '../../services/wishlist.service';
+import { LocalizedPricePipe } from '../../pipes/localized-price.pipe';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule, LocalizedPricePipe],
   templateUrl: './product-card.component.html',
   styleUrls: ['./product-card.component.css']
 })
