@@ -11,7 +11,12 @@ const database = require('./config/database');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+
+app.use((req, res, next) => {
+  req.requestId = req.headers['x-request-id'] || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  res.setHeader('x-request-id', req.requestId);
+  next();
+});
 
 // ========================================
 // SÉCURITÉ ET MIDDLEWARES GLOBAUX
@@ -78,6 +83,7 @@ app.use((req, res, next) => {
   res.on('finish', () => {
     const duration = Date.now() - start;
     secureLog('info', 'Request completed', {
+      requestId: req.requestId,
       method: req.method,
       url: req.url,
       status: res.statusCode,
@@ -121,6 +127,8 @@ app.use('*', (req, res) => {
 
   res.status(404).json({
     success: false,
+    code: 'NOT_FOUND',
+    requestId: req.requestId,
     message: 'Route non trouvée'
   });
 });
@@ -132,12 +140,12 @@ app.use('*', (req, res) => {
 // Middleware de gestion d'erreurs
 app.use((error, req, res, next) => {
   secureLog('error', 'Unhandled error', {
+    requestId: req.requestId,
     error: error.message,
     stack: error.stack,
     method: req.method,
     url: req.url,
-    ip: req.ip,
-    body: req.body
+    ip: req.ip
   });
 
   // Ne pas exposer les détails d'erreur en production
@@ -145,6 +153,8 @@ app.use((error, req, res, next) => {
 
   res.status(error.status || 500).json({
     success: false,
+    code: error.code || 'INTERNAL_ERROR',
+    requestId: req.requestId,
     message: isDevelopment ? error.message : 'Erreur interne du serveur',
     ...(isDevelopment && { stack: error.stack })
   });
@@ -167,19 +177,13 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-// ========================================
-// DÉMARRAGE DU SERVEUR
-// ========================================
-
-// Test de connexion à la base de données avant le démarrage
 const startServer = async () => {
+  const PORT = process.env.PORT || 3002;
   try {
-    // Tester la connexion à la base de données
     await database.testConnection();
     secureLog('info', 'Database connection established successfully');
 
-    // Démarrer le serveur
-    app.listen(PORT, () => {
+    return app.listen(PORT, () => {
       secureLog('info', `Product service started successfully`, {
         port: PORT,
         environment: process.env.NODE_ENV || 'development',
@@ -190,7 +194,6 @@ const startServer = async () => {
       console.log(`Health check: http://localhost:${PORT}/health`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
-
   } catch (error) {
     secureLog('error', 'Failed to start server', {
       error: error.message,
@@ -229,7 +232,7 @@ process.on('SIGINT', async () => {
   }
 });
 
-// Démarrer le serveur
-startServer();
-
-module.exports = app;
+module.exports = {
+  app,
+  startServer
+};

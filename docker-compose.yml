@@ -1,0 +1,41 @@
+# Base PostgreSQL alignée sur les valeurs par défaut des microservices
+# (cart-service et product-service : DB marketplace, user postgres, mot de passe password).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: heligxiam_postgres
+    environment:
+      POSTGRES_DB: marketplace
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - marketplace_pg_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d marketplace"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mongodb:
+    image: mongo:7
+    container_name: heligxiam_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: marketplace_nosql
+    ports:
+      - "27018:27017"
+    volumes:
+      - marketplace_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  marketplace_pg_data:
+  marketplace_mongo_data:

@@ -1,0 +1,93 @@
+openapi: 3.0.3
+info:
+  title: Product Service API
+  version: 1.0.0
+  description: API produits et categories.
+servers:
+  - url: http://localhost:3002
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Service up
+  /api/products:
+    get:
+      summary: Lister les produits
+      responses:
+        "200":
+          description: Liste retournee
+    post:
+      summary: Creer un produit
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: Produit cree
+  /api/products/{id}:
+    get:
+      summary: Recuperer un produit
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Produit retourne
+    put:
+      summary: Mettre a jour un produit
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Produit modifie
+    delete:
+      summary: Supprimer un produit
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Produit supprime
+  /api/categories:
+    get:
+      summary: Lister les categories
+      responses:
+        "200":
+          description: Categories retournees
+  /api/categories/{id}:
+    get:
+      summary: Recuperer une categorie
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Categorie retournee
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

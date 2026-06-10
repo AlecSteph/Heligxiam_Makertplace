@@ -6,7 +6,10 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:backend": "npm --prefix auth-service test -- --runInBand && npm --prefix product-service test -- --runInBand && npm --prefix cart-service test -- --runInBand",
+    "lint:backend": "npm --prefix auth-service run lint --if-present && npm --prefix product-service run lint --if-present && npm --prefix cart-service run lint --if-present",
+    "start:all:back": "start cmd /k \"cd /d auth-service && npm start\" && start cmd /k \"cd /d product-service && npm start\" && start cmd /k \"cd /d cart-service && npm start\""
   },
   "prettier": {
     "printWidth": 100,

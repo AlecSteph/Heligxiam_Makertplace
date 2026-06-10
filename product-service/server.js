@@ -1,9 +1,8 @@
-const app = require('./app');
-const PORT = process.env.PORT || 3002;
+const { app, startServer } = require('./app');
 
-app.listen(PORT, () => {
-  console.log(`Product service running on port ${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
+startServer().catch((error) => {
+  console.error('Failed to bootstrap product service:', error.message);
+  process.exit(1);
 });
 
 module.exports = app;

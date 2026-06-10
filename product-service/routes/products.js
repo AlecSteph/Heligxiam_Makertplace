@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { secureLog } = require('../utils/security');
+const { requireAuth, requireRoles } = require('../middlewares/auth');
 const {
   validateProduct,
   getAllProducts,
@@ -54,12 +55,12 @@ router.get('/', getAllProducts);
 router.get('/:id', getProductById);
 
 // POST /api/products - Créer un nouveau produit
-router.post('/', writeLimiter, validateProduct, createProduct);
+router.post('/', requireAuth, requireRoles('vendeur', 'admin'), writeLimiter, validateProduct, createProduct);
 
 // PUT /api/products/:id - Mettre à jour un produit
-router.put('/:id', writeLimiter, validateProduct, updateProduct);
+router.put('/:id', requireAuth, requireRoles('vendeur', 'admin'), writeLimiter, validateProduct, updateProduct);
 
 // DELETE /api/products/:id - Supprimer un produit
-router.delete('/:id', writeLimiter, deleteProduct);
+router.delete('/:id', requireAuth, requireRoles('vendeur', 'admin'), writeLimiter, deleteProduct);
 
 module.exports = router;

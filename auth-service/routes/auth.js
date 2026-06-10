@@ -1,13 +1,14 @@
+const crypto = require('crypto');
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
+const db = require('../config/database');
+const mongo = require('../config/mongo');
+const { requireAuth } = require('../middlewares/auth');
 
 const router = express.Router();
-
-// Base de données simulée (en production, utilisez PostgreSQL)
-const users = new Map();
 
 // Validation middleware
 const handleValidationErrors = (req, res, next) => {
@@ -55,6 +56,45 @@ const hashPassword = async (password) => {
 // Vérifier mot de passe
 const verifyPassword = async (password, hashedPassword) => {
   return await bcrypt.compare(password, hashedPassword);
+};
+
+const toPublicUser = (user) => ({
+  id_user: user.id_user,
+  nom: user.nom,
+  prenom: user.prenom,
+  email: user.email,
+  role: user.role,
+  created_at: user.created_at,
+  updated_at: user.updated_at
+});
+
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
+const storeRefreshToken = async (userId, refreshToken) => {
+  const tokenId = uuidv4();
+  await db.query(
+    `INSERT INTO auth_refresh_tokens (id, user_id, token_hash, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL '7 days')`,
+    [tokenId, userId, hashToken(refreshToken)]
+  );
+};
+
+const rotateRefreshToken = async (userId, oldToken, newToken) => {
+  await db.query(
+    `UPDATE auth_refresh_tokens
+     SET revoked = TRUE
+     WHERE user_id = $1 AND token_hash = $2 AND revoked = FALSE`,
+    [userId, hashToken(oldToken)]
+  );
+  await storeRefreshToken(userId, newToken);
+};
+
+const safeLogAuthEvent = async (payload) => {
+  try {
+    await mongo.logAuthEvent(payload);
+  } catch (error) {
+    // Do not block auth flow if MongoDB is transiently unavailable.
+    console.warn('Mongo auth event logging failed:', error.message);
+  }
 };
 
 // Générer tokens JWT
@@ -105,49 +145,43 @@ router.post('/register', [
       });
     }
 
-    // Vérifier si l'utilisateur existe déjà
-    for (const [id, user] of users) {
-      if (user.email === email) {
-        return res.status(409).json({
-          success: false,
-          message: 'Cet email est déjà utilisé'
-        });
-      }
+    const existing = await db.query(
+      `SELECT id_user FROM "UTILISATEUR" WHERE email = $1 LIMIT 1`,
+      [email.toLowerCase()]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Cet email est déjà utilisé'
+      });
     }
 
-    // Créer l'utilisateur
     const id_user = uuidv4();
     const hashedPassword = await hashPassword(password);
-    
-    const newUser = {
-      id_user,
-      nom,
-      prenom,
-      email,
-      password: hashedPassword,
-      role,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
 
-    users.set(id_user, newUser);
+    const inserted = await db.query(
+      `INSERT INTO "UTILISATEUR" (id_user, nom, prenom, role, email, password_hash)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id_user, nom, prenom, role, email, created_at, updated_at`,
+      [id_user, nom, prenom, role, email.toLowerCase(), hashedPassword]
+    );
+    const newUser = inserted.rows[0];
 
-    // Générer les tokens
     const { token, refreshToken } = generateTokens(newUser);
+    await storeRefreshToken(newUser.id_user, refreshToken);
+    await safeLogAuthEvent({
+      type: 'register_success',
+      userId: newUser.id_user,
+      email: newUser.email,
+      ip: req.ip,
+      userAgent: req.get('User-Agent') || ''
+    });
 
     res.status(201).json({
       success: true,
       message: 'Inscription réussie',
       data: {
-        user: {
-          id_user: newUser.id_user,
-          nom: newUser.nom,
-          prenom: newUser.prenom,
-          email: newUser.email,
-          role: newUser.role,
-          created_at: newUser.created_at,
-          updated_at: newUser.updated_at
-        },
+        user: toPublicUser(newUser),
         token,
         refreshToken
       }
@@ -178,14 +212,14 @@ router.post('/login', [
       });
     }
 
-    // Trouver l'utilisateur
-    let user = null;
-    for (const [id, userData] of users) {
-      if (userData.email === email) {
-        user = userData;
-        break;
-      }
-    }
+    const result = await db.query(
+      `SELECT id_user, nom, prenom, role, email, password_hash, created_at, updated_at
+       FROM "UTILISATEUR"
+       WHERE email = $1
+       LIMIT 1`,
+      [email.toLowerCase()]
+    );
+    const user = result.rows[0];
 
     if (!user) {
       return res.status(401).json({
@@ -195,7 +229,7 @@ router.post('/login', [
     }
 
     // Vérifier le mot de passe
-    const isValidPassword = await verifyPassword(password, user.password);
+    const isValidPassword = await verifyPassword(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(401).json({
         success: false,
@@ -203,22 +237,21 @@ router.post('/login', [
       });
     }
 
-    // Générer les tokens
     const { token, refreshToken } = generateTokens(user);
+    await storeRefreshToken(user.id_user, refreshToken);
+    await safeLogAuthEvent({
+      type: 'login_success',
+      userId: user.id_user,
+      email: user.email,
+      ip: req.ip,
+      userAgent: req.get('User-Agent') || ''
+    });
 
     res.json({
       success: true,
       message: 'Connexion réussie',
       data: {
-        user: {
-          id_user: user.id_user,
-          nom: user.nom,
-          prenom: user.prenom,
-          email: user.email,
-          role: user.role,
-          created_at: user.created_at,
-          updated_at: user.updated_at
-        },
+        user: toPublicUser(user),
         token,
         refreshToken
       }
@@ -236,21 +269,36 @@ router.post('/login', [
 // Rafraîchir le token
 router.post('/refresh-token', [
   body('refreshToken').notEmpty().withMessage('Refresh token requis')
-], handleValidationErrors, (req, res) => {
+], handleValidationErrors, async (req, res) => {
   try {
     const { refreshToken } = req.body;
-
-    // Vérifier le refresh token
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    
-    // Trouver l'utilisateur
-    let user = null;
-    for (const [id, userData] of users) {
-      if (userData.id_user === decoded.id_user) {
-        user = userData;
-        break;
-      }
+
+    const tokenRow = await db.query(
+      `SELECT id FROM auth_refresh_tokens
+       WHERE user_id = $1
+         AND token_hash = $2
+         AND revoked = FALSE
+         AND expires_at > NOW()
+       LIMIT 1`,
+      [decoded.id_user, hashToken(refreshToken)]
+    );
+
+    if (tokenRow.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token invalide'
+      });
     }
+
+    const userResult = await db.query(
+      `SELECT id_user, nom, prenom, role, email, created_at, updated_at
+       FROM "UTILISATEUR"
+       WHERE id_user = $1
+       LIMIT 1`,
+      [decoded.id_user]
+    );
+    const user = userResult.rows[0];
 
     if (!user) {
       return res.status(401).json({
@@ -259,8 +307,14 @@ router.post('/refresh-token', [
       });
     }
 
-    // Générer nouveaux tokens
     const { token, refreshToken: newRefreshToken } = generateTokens(user);
+    await rotateRefreshToken(user.id_user, refreshToken, newRefreshToken);
+    await safeLogAuthEvent({
+      type: 'refresh_success',
+      userId: user.id_user,
+      ip: req.ip,
+      userAgent: req.get('User-Agent') || ''
+    });
 
     res.json({
       success: true,
@@ -279,21 +333,178 @@ router.post('/refresh-token', [
   }
 });
 
+router.post('/logout', requireAuth, async (req, res) => {
+  try {
+    const { refreshToken } = req.body || {};
+    if (refreshToken) {
+      await db.query(
+        `UPDATE auth_refresh_tokens
+         SET revoked = TRUE
+         WHERE user_id = $1 AND token_hash = $2 AND revoked = FALSE`,
+        [req.user.id_user, hashToken(refreshToken)]
+      );
+    } else {
+      await db.query(
+        `UPDATE auth_refresh_tokens
+         SET revoked = TRUE
+         WHERE user_id = $1 AND revoked = FALSE`,
+        [req.user.id_user]
+      );
+    }
+
+    return res.json({
+      success: true,
+      message: 'Déconnexion réussie'
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la déconnexion'
+    });
+  }
+});
+
 // Obtenir le profil utilisateur
-router.get('/me', (req, res) => {
-  // En production, vérifier le token JWT ici
+router.get('/me', requireAuth, async (req, res) => {
+  const result = await db.query(
+    `SELECT id_user, nom, prenom, role, email, created_at, updated_at
+     FROM "UTILISATEUR"
+     WHERE id_user = $1
+     LIMIT 1`,
+    [req.user.id_user]
+  );
+  if (result.rows.length === 0) {
+    return res.status(404).json({
+      success: false,
+      message: 'Utilisateur introuvable'
+    });
+  }
+
   res.json({
     success: true,
-    data: {
-      id_user: 'demo-user',
-      nom: 'Demo',
-      prenom: 'User',
-      email: 'demo@example.com',
-      role: 'client',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
+    data: toPublicUser(result.rows[0])
   });
+});
+
+router.put('/user/:id', requireAuth, [
+  body('nom').optional().trim().isLength({ min: 2, max: 50 }).withMessage('Nom invalide'),
+  body('prenom').optional().trim().isLength({ min: 2, max: 50 }).withMessage('Prénom invalide'),
+  body('email').optional().isEmail().withMessage('Email invalide')
+], handleValidationErrors, async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    if (!targetId) {
+      return res.status(400).json({ success: false, message: 'ID utilisateur requis' });
+    }
+
+    if (req.user.id_user !== targetId && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Action non autorisée' });
+    }
+
+    const { nom, prenom, email } = req.body;
+    const fields = [];
+    const values = [];
+    let idx = 1;
+
+    if (nom !== undefined) {
+      fields.push(`nom = $${idx++}`);
+      values.push(nom);
+    }
+    if (prenom !== undefined) {
+      fields.push(`prenom = $${idx++}`);
+      values.push(prenom);
+    }
+    if (email !== undefined) {
+      fields.push(`email = $${idx++}`);
+      values.push(email.toLowerCase());
+    }
+    if (fields.length === 0) {
+      return res.status(400).json({ success: false, message: 'Aucune donnée à mettre à jour' });
+    }
+
+    fields.push(`updated_at = NOW()`);
+    values.push(targetId);
+    const updated = await db.query(
+      `UPDATE "UTILISATEUR"
+       SET ${fields.join(', ')}
+       WHERE id_user = $${idx}
+       RETURNING id_user, nom, prenom, role, email, created_at, updated_at`,
+      values
+    );
+
+    if (updated.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Utilisateur introuvable' });
+    }
+
+    return res.json({
+      success: true,
+      message: 'Profil mis à jour',
+      data: toPublicUser(updated.rows[0])
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la mise à jour du profil'
+    });
+  }
+});
+
+router.put('/change-password', requireAuth, [
+  body('currentPassword').notEmpty().withMessage('Mot de passe actuel requis'),
+  body('newPassword').isLength({ min: 8 }).withMessage('Nouveau mot de passe trop court')
+], handleValidationErrors, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!validatePassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Le nouveau mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre'
+      });
+    }
+
+    const userResult = await db.query(
+      `SELECT id_user, password_hash
+       FROM "UTILISATEUR"
+       WHERE id_user = $1
+       LIMIT 1`,
+      [req.user.id_user]
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Utilisateur introuvable' });
+    }
+
+    const user = userResult.rows[0];
+    const ok = await verifyPassword(currentPassword, user.password_hash);
+    if (!ok) {
+      return res.status(401).json({ success: false, message: 'Mot de passe actuel incorrect' });
+    }
+
+    const newHash = await hashPassword(newPassword);
+    await db.query(
+      `UPDATE "UTILISATEUR" SET password_hash = $1, updated_at = NOW() WHERE id_user = $2`,
+      [newHash, req.user.id_user]
+    );
+    await db.query(
+      `UPDATE auth_refresh_tokens SET revoked = TRUE WHERE user_id = $1 AND revoked = FALSE`,
+      [req.user.id_user]
+    );
+    await safeLogAuthEvent({
+      type: 'password_changed',
+      userId: req.user.id_user,
+      ip: req.ip,
+      userAgent: req.get('User-Agent') || ''
+    });
+
+    return res.json({
+      success: true,
+      message: 'Mot de passe mis à jour'
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors du changement de mot de passe'
+    });
+  }
 });
 
 module.exports = router;

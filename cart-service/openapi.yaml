@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: Cart Service API
+  version: 1.0.0
+  description: API de gestion du panier.
+servers:
+  - url: http://localhost:3003
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Service up
+  /api/cart/{userId}:
+    get:
+      summary: Recuperer le panier utilisateur
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Panier retourne
+    delete:
+      summary: Vider le panier utilisateur
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Panier vide
+  /api/cart/{userId}/items:
+    post:
+      summary: Ajouter un item au panier
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "201":
+          description: Item ajoute
+  /api/cart/{userId}/items/{articleId}:
+    put:
+      summary: Modifier la quantite d'un item
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: articleId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Item modifie
+    delete:
+      summary: Supprimer un item du panier
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: articleId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Item supprime
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

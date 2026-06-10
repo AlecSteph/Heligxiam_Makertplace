@@ -1,50 +1,31 @@
 # Cart Microservice
 
-Microservice de gestion des paniers pour la marketplace Heligxiam.
+Service panier (`:3003`) pour operations utilisateur panier/article.
 
-## Fonctionnalités
+## Responsabilites
 
-- **Gestion des paniers** : CRUD complet avec validation
-- **Gestion des articles** : Ajout, modification, suppression
-- **Vérification des stocks** : Empêche les dépassements de stock
-- **Calculs automatiques** : Sous-totaux, totaux, nombre d'articles
-- **Transactions sécurisées** : Cohérence des données garantie
-- **Rate limiting** : Protection contre les abus
-- **Logs complets** : Traçabilité de toutes les opérations
+- gestion des articles panier,
+- controle d'acces (meme utilisateur ou admin),
+- verification produit/stock en appelant `product-service` (`PRODUCT_SERVICE_URL`),
+- conservation transactionnelle du panier en SQL.
 
-## API Endpoints
+## Decouplage inter-service
 
-- `GET /api/cart/:userId` - Récupérer le panier d'un utilisateur
-- `POST /api/cart/:userId/items` - Ajouter un article au panier
-- `PUT /api/cart/:userId/items/:articleId` - Mettre à jour la quantité
-- `DELETE /api/cart/:userId/items/:articleId` - Supprimer un article
-- `DELETE /api/cart/:userId` - Vider le panier
+Le service utilise `cart-service/clients/productClient.js` pour recuperer les informations produit critiques via API (`product-service`) plutot que de reposer uniquement sur des jointures cross-domain.
 
-## Installation
+## Lancement
 
 ```bash
-cd cart-service
 npm install
-cp .env.example .env
-# Configurer les variables d'environnement
-npm run dev
+npm start
 ```
 
-## Exemples d'utilisation
+## Endpoints principaux
 
-### Ajouter un article au panier
-```bash
-POST /api/cart/user-uuid/items
-{
-  "id_produit": "product-uuid",
-  "quantite": 2
-}
-```
+- `GET /api/cart/:userId`
+- `POST /api/cart/:userId/items`
+- `PUT /api/cart/:userId/items/:articleId`
+- `DELETE /api/cart/:userId/items/:articleId`
+- `DELETE /api/cart/:userId`
 
-### Mettre à jour la quantité
-```bash
-PUT /api/cart/user-uuid/items/article-uuid
-{
-  "quantite": 5
-}
-```
+Contrat complet: `cart-service/openapi.yaml`.

@@ -1,6 +1,7 @@
 const { body, validationResult } = require('express-validator');
 const { secureLog, sanitizeInput, isValidUUID } = require('../utils/security');
 const database = require('../config/database');
+const productClient = require('../clients/productClient');
 
 // Validation middleware
 const validateCartItem = [
@@ -11,6 +12,13 @@ const validateCartItem = [
     .isInt({ min: 1, max: 999 })
     .withMessage('La quantité doit être entre 1 et 999')
 ];
+
+const handleDbError = (res, error, fallbackMessage) => {
+  if (error.code === '23503') {
+    return res.status(400).json({ success: false, message: 'Référence invalide dans la base de données' });
+  }
+  return res.status(500).json({ success: false, message: fallbackMessage });
+};
 
 // Récupérer le panier d'un utilisateur
 const getCartByUser = async (req, res) => {
@@ -25,34 +33,38 @@ const getCartByUser = async (req, res) => {
     }
 
     const query = `
-      SELECT 
+      SELECT
         p.id_panier,
         a.id_article,
         a.quantite,
         a.prix_unitaire,
-        pr.id_produit,
-        pr.nom_produit,
-        pr.image_produit,
-        pr.attribut,
-        s.quantite as stock_disponible,
-        c.libelle as categorie,
-        b.nom_boutique,
+        a.id_produit,
         (a.quantite * a.prix_unitaire) as sous_total
       FROM PANIER p
       LEFT JOIN ARTICLE a ON p.id_panier = a.id_panier
-      LEFT JOIN PRODUIT pr ON a.id_produit = pr.id_produit
-      LEFT JOIN STOCK s ON pr.id_stock = s.id_stock
-      LEFT JOIN CATEGORIE c ON pr.id_categorie = c.id_categorie
-      LEFT JOIN BOUTIQUE b ON pr.id_boutique = b.id_boutique
       WHERE p.id_user = $1 AND a.id_article IS NOT NULL
-      ORDER BY pr.nom_produit
+      ORDER BY a.id_article
     `;
 
     const result = await database.query(query, [userId]);
+    const enrichedItems = await Promise.all(
+      result.rows.map(async (item) => {
+        const product = await productClient.getProductById(item.id_produit, req.requestId);
+        return {
+          ...item,
+          nom_produit: product?.nom_produit || 'Produit indisponible',
+          image_produit: product?.image_produit || null,
+          attribut: product?.attribut || null,
+          stock_disponible: product?.stock_quantite ?? null,
+          categorie: product?.categorie_nom || null,
+          nom_boutique: product?.nom_boutique || null
+        };
+      })
+    );
 
     // Calculer le total
-    const total = result.rows.reduce((sum, item) => sum + parseFloat(item.sous_total), 0);
-    const itemCount = result.rows.reduce((sum, item) => sum + item.quantite, 0);
+    const total = enrichedItems.reduce((sum, item) => sum + parseFloat(item.sous_total), 0);
+    const itemCount = enrichedItems.reduce((sum, item) => sum + item.quantite, 0);
 
     secureLog('info', 'Cart retrieved successfully', {
       userId,
@@ -63,7 +75,7 @@ const getCartByUser = async (req, res) => {
     res.json({
       success: true,
       data: {
-        items: result.rows,
+        items: enrichedItems,
         summary: {
           itemCount,
           total: parseFloat(total.toFixed(2)),
@@ -103,39 +115,22 @@ const addToCart = async (req, res) => {
       });
     }
 
-    // Vérifier que le produit existe et récupérer son prix
-    const productQuery = `
-      SELECT 
-        pr.id_produit, 
-        pr.prix, 
-        pr.nom_produit,
-        s.quantite as stock_disponible
-      FROM PRODUIT pr
-      LEFT JOIN STOCK s ON pr.id_stock = s.id_stock
-      WHERE pr.id_produit = $1
-    `;
-
-    const productResult = await database.query(productQuery, [id_produit]);
-
-    if (productResult.rows.length === 0) {
+    const product = await productClient.getProductById(id_produit, req.requestId);
+    if (!product) {
       return res.status(404).json({
         success: false,
         message: 'Produit non trouvé'
       });
     }
-
-    const product = productResult.rows[0];
-
-    if (product.stock_disponible < quantite) {
+    if ((product.stock_quantite ?? 0) < quantite) {
       return res.status(400).json({
         success: false,
-        message: 'Stock insuffisant',
-        available: product.stock_disponible
+        message: 'Stock insuffisant'
       });
     }
 
-    // Utiliser une transaction pour garantir la cohérence
     const result = await database.transaction(async (client) => {
+
       // Récupérer ou créer le panier
       let panierQuery = 'SELECT id_panier FROM PANIER WHERE id_user = $1';
       let panierResult = await client.query(panierQuery, [userId]);
@@ -162,7 +157,7 @@ const addToCart = async (req, res) => {
         // Mettre à jour la quantité
         const newQuantite = existingResult.rows[0].quantite + quantite;
         
-        if (product.stock_disponible < newQuantite) {
+        if ((product.stock_quantite ?? 0) < newQuantite) {
           throw new Error('Stock insuffisant pour cette quantité');
         }
 
@@ -205,17 +200,19 @@ const addToCart = async (req, res) => {
       userId: req.params.userId 
     });
 
+    if (error.message === 'Produit non trouvé') {
+      return res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    }
     if (error.message.includes('Stock insuffisant')) {
       return res.status(400).json({
         success: false,
         message: error.message
       });
     }
-
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de l\'ajout au panier'
-    });
+    return handleDbError(res, error, 'Erreur lors de l\'ajout au panier');
   }
 };
 
@@ -241,41 +238,36 @@ const updateCartItem = async (req, res) => {
       });
     }
 
-    // Vérifier le stock disponible
-    const stockQuery = `
-      SELECT s.quantite as stock_disponible
-      FROM ARTICLE a
-      LEFT JOIN PRODUIT pr ON a.id_produit = pr.id_produit
-      LEFT JOIN STOCK s ON pr.id_stock = s.id_stock
-      LEFT JOIN PANIER p ON a.id_panier = p.id_panier
-      WHERE a.id_article = $1 AND p.id_user = $2
-    `;
+    const result = await database.transaction(async (client) => {
+      const articleQuery = `
+        SELECT a.id_article, a.id_produit
+        FROM ARTICLE a
+        LEFT JOIN PANIER p ON a.id_panier = p.id_panier
+        WHERE a.id_article = $1 AND p.id_user = $2
+      `;
+      const articleResult = await client.query(articleQuery, [articleId, userId]);
+      if (articleResult.rows.length === 0) {
+        throw new Error('Article non trouvé dans le panier');
+      }
 
-    const stockResult = await database.query(stockQuery, [articleId, userId]);
+      const product = await productClient.getProductById(articleResult.rows[0].id_produit, req.requestId);
+      if (!product) {
+        throw new Error('Produit non trouvé');
+      }
+      if ((product.stock_quantite ?? 0) < quantite) {
+        throw new Error('Stock insuffisant');
+      }
 
-    if (stockResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Article non trouvé dans le panier'
-      });
-    }
+      const query = `
+        UPDATE ARTICLE 
+        SET quantite = $1 
+        WHERE id_article = $2 
+        RETURNING *
+      `;
 
-    if (stockResult.rows[0].stock_disponible < quantite) {
-      return res.status(400).json({
-        success: false,
-        message: 'Stock insuffisant',
-        available: stockResult.rows[0].stock_disponible
-      });
-    }
-
-    const query = `
-      UPDATE ARTICLE 
-      SET quantite = $1 
-      WHERE id_article = $2 
-      RETURNING *
-    `;
-
-    const result = await database.query(query, [quantite, articleId]);
+      const updateResult = await client.query(query, [quantite, articleId]);
+      return updateResult.rows[0];
+    });
 
     secureLog('info', 'Cart item updated successfully', {
       userId,
@@ -286,7 +278,7 @@ const updateCartItem = async (req, res) => {
     res.json({
       success: true,
       message: 'Quantité mise à jour',
-      data: result.rows[0]
+      data: result
     });
 
   } catch (error) {
@@ -295,10 +287,16 @@ const updateCartItem = async (req, res) => {
       userId: req.params.userId,
       articleId: req.params.articleId
     });
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de la mise à jour de l\'article'
-    });
+    if (error.message === 'Article non trouvé dans le panier') {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    if (error.message === 'Produit non trouvé') {
+      return res.status(404).json({ success: false, message: error.message });
+    }
+    if (error.message === 'Stock insuffisant') {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    return handleDbError(res, error, 'Erreur lors de la mise à jour de l\'article');
   }
 };
 
@@ -348,10 +346,7 @@ const removeFromCart = async (req, res) => {
       userId: req.params.userId,
       articleId: req.params.articleId
     });
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de la suppression de l\'article'
-    });
+    return handleDbError(res, error, 'Erreur lors de la suppression de l\'article');
   }
 };
 
@@ -392,10 +387,7 @@ const clearCart = async (req, res) => {
       error: error.message, 
       userId: req.params.userId
     });
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors du vidage du panier'
-    });
+    return handleDbError(res, error, 'Erreur lors du vidage du panier');
   }
 };
 

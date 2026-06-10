@@ -1,6 +1,8 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const { body } = require('express-validator');
 const { secureLog } = require('../utils/security');
+const { requireAuth, requireSameUserOrAdmin } = require('../middlewares/auth');
 const {
   validateCartItem,
   getCartByUser,
@@ -37,20 +39,27 @@ const writeLimiter = rateLimit({
 });
 
 router.use(cartLimiter);
+router.use(requireAuth);
+
+const validateUpdateQuantity = [
+  body('quantite')
+    .isInt({ min: 1, max: 999 })
+    .withMessage('La quantité doit être entre 1 et 999')
+];
 
 // GET /api/cart/:userId - Récupérer le panier d'un utilisateur
-router.get('/:userId', getCartByUser);
+router.get('/:userId', requireSameUserOrAdmin, getCartByUser);
 
 // POST /api/cart/:userId/items - Ajouter un article au panier
-router.post('/:userId/items', writeLimiter, validateCartItem, addToCart);
+router.post('/:userId/items', requireSameUserOrAdmin, writeLimiter, validateCartItem, addToCart);
 
 // PUT /api/cart/:userId/items/:articleId - Mettre à jour la quantité d'un article
-router.put('/:userId/items/:articleId', writeLimiter, validateCartItem, updateCartItem);
+router.put('/:userId/items/:articleId', requireSameUserOrAdmin, writeLimiter, validateUpdateQuantity, updateCartItem);
 
 // DELETE /api/cart/:userId/items/:articleId - Supprimer un article du panier
-router.delete('/:userId/items/:articleId', writeLimiter, removeFromCart);
+router.delete('/:userId/items/:articleId', requireSameUserOrAdmin, writeLimiter, removeFromCart);
 
 // DELETE /api/cart/:userId - Vider le panier
-router.delete('/:userId', writeLimiter, clearCart);
+router.delete('/:userId', requireSameUserOrAdmin, writeLimiter, clearCart);
 
 module.exports = router;

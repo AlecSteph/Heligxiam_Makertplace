@@ -1,16 +1,65 @@
-HeligxiamMarketplace
+# Heligxiam Marketplace
 
-Ce projet a été généré avec Angular CLI version 21.1.1. Il s’agit d’une application Angular qui peut être exécutée localement pour le développement, compilée pour la production et testée à l’aide d’outils intégrés.
+Plateforme marketplace en architecture microservices avec frontend Angular.
 
-Pour démarrer un serveur de développement local, il suffit d’exécuter la commande ng serve dans le terminal. Une fois le serveur lancé, vous pouvez ouvrir votre navigateur et accéder à l’adresse http://localhost:4200/
-. L’application se rechargera automatiquement chaque fois que vous modifierez les fichiers source, ce qui facilite le développement et les tests en temps réel.
+## Services
 
-Angular CLI propose également des outils puissants pour générer automatiquement du code. Par exemple, pour créer un nouveau composant, vous pouvez utiliser la commande ng generate component nom-du-composant. Si vous souhaitez voir la liste complète des générateurs disponibles, comme les composants, les directives ou les pipes, vous pouvez utiliser la commande ng generate --help.
+- `auth-service` (`:3001`) - authentification, JWT, refresh token, gestion profil.
+- `product-service` (`:3002`) - catalogue produits et categories.
+- `cart-service` (`:3003`) - gestion de panier.
+- Frontend Angular (`:4200`).
 
-Pour compiler le projet, vous pouvez exécuter la commande ng build. Cette opération va compiler l’application et placer les fichiers générés dans le dossier dist/. Par défaut, la compilation en mode production optimise l’application afin d’améliorer ses performances et sa rapidité d’exécution.
+## Bases de donnees
 
-Pour exécuter les tests unitaires du projet, la commande ng test permet de lancer les tests avec le framework Vitest. Cela permet de vérifier que les différentes parties de l’application fonctionnent correctement.
+- SQL: PostgreSQL (`:5432`)
+- NoSQL: MongoDB (`:27017`) utilise pour les evenements d'authentification.
 
-Enfin, pour les tests de bout en bout (end-to-end), la commande ng e2e peut être utilisée. Angular CLI ne fournit pas de framework de tests E2E par défaut, il est donc possible d’en choisir un selon les besoins du projet.
+## Demarrage rapide
 
-Pour obtenir davantage d’informations sur l’utilisation d’Angular CLI et consulter la liste complète des commandes disponibles, vous pouvez consulter la documentation officielle sur le site
+1. Lancer les bases:
+
+```bash
+docker compose up -d
+```
+
+2. Installer les dependances:
+
+```bash
+npm install
+npm --prefix auth-service install
+npm --prefix product-service install
+npm --prefix cart-service install
+```
+
+3. Lancer les services backend:
+
+```bash
+npm --prefix auth-service start
+npm --prefix product-service start
+npm --prefix cart-service start
+```
+
+4. Lancer le frontend:
+
+```bash
+npm start
+```
+
+## OpenAPI
+
+- `auth-service/openapi.yaml`
+- `product-service/openapi.yaml`
+- `cart-service/openapi.yaml`
+
+## Tests backend
+
+```bash
+npm --prefix auth-service test
+npm --prefix product-service test
+npm --prefix cart-service test
+```
+
+## Documentation d'audit et soutenance
+
+- `RAPPORT_AUDIT_COMPLET_BACKEND_MICROSERVICES_FR.md`
+- `DOSSIER_SOUTENANCE_TECHNIQUE_FR.md`

@@ -1,72 +1,45 @@
 # Auth Microservice
 
-Microservice d'authentification pour la marketplace Heligxiam.
+Service d'authentification (`:3001`) pour la marketplace.
 
-## Fonctionnalités
+## Responsabilites
 
-- ✅ Inscription d'utilisateurs
-- ✅ Connexion sécurisée
-- ✅ JWT tokens
-- ✅ Refresh tokens
-- ✅ Validation des données
-- ✅ Rate limiting
-- ✅ Sécurité (helmet, cors)
-- ✅ Proof of Work (challenge)
+- inscription et connexion utilisateur,
+- emission JWT + refresh token,
+- gestion profil (`/me`, update, changement mot de passe),
+- journalisation NoSQL des evenements d'authentification.
 
-## Installation
+## Donnees et persistance
+
+- SQL (PostgreSQL): table `UTILISATEUR`, table `auth_refresh_tokens`.
+- NoSQL (MongoDB): collection `auth_events` (register/login/refresh/password_changed).
+
+## Lancement
 
 ```bash
-# Installer les dépendances
 npm install
-
-# Créer le fichier .env
-cp .env.example .env
-
-# Démarrer le serveur
 npm start
 ```
 
-## Configuration
+## Variables d'environnement principales
 
-Variables d'environnement dans `.env`:
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+- `JWT_SECRET`, `JWT_REFRESH_SECRET`
+- `MONGO_HOST`, `MONGO_PORT`, `MONGO_USER`, `MONGO_PASSWORD`, `MONGO_DB_NAME`
+- `ALLOWED_ORIGINS`
 
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=heligxiam_marketplace
-DB_USER=postgres
-DB_PASSWORD=password
+Voir `auth-service/.env.example`.
 
-JWT_SECRET=votre_secret_jwt
-JWT_REFRESH_SECRET=votre_secret_refresh
+## Endpoints principaux
 
-PORT=3001
-NODE_ENV=development
-```
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh-token`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+- `PUT /api/auth/user/:id`
+- `PUT /api/auth/change-password`
+- `GET /health`
+- `GET /ready`
 
-## API Endpoints
-
-### Authentification
-
-- `POST /api/auth/register` - Inscription
-- `POST /api/auth/login` - Connexion
-- `POST /api/auth/refresh-token` - Rafraîchir le token
-- `GET /api/auth/me` - Profil utilisateur
-- `GET /api/auth/challenge` - Challenge Proof of Work
-
-### Santé
-
-- `GET /health` - Health check
-
-## Sécurité
-
-- **Rate limiting**: 100 requêtes / 15 minutes
-- **Validation**: Express-validator pour toutes les entrées
-- **Hashage**: Bcrypt pour les mots de passe
-- **JWT**: Tokens avec expiration
-- **CORS**: Origines autorisées uniquement
-- **Helmet**: Sécurité des headers HTTP
-
-## Port par défaut
-
-Le service tourne sur le port **3001**.
+Contrat complet: `auth-service/openapi.yaml`.

@@ -2,6 +2,22 @@ const { body, validationResult } = require('express-validator');
 const { secureLog, sanitizeInput, isValidPrice, isValidUUID } = require('../utils/security');
 const database = require('../config/database');
 
+const ensureBoutiqueOwnership = async (idBoutique, user) => {
+  const result = await database.query(
+    'SELECT id_boutique, id_user FROM BOUTIQUE WHERE id_boutique = $1 LIMIT 1',
+    [idBoutique]
+  );
+  if (result.rows.length === 0) {
+    return { ok: false, status: 400, message: 'Boutique non trouvée' };
+  }
+
+  if (user.role !== 'admin' && result.rows[0].id_user !== user.id_user) {
+    return { ok: false, status: 403, message: 'Vous ne pouvez gérer que vos propres boutiques' };
+  }
+
+  return { ok: true };
+};
+
 // Validation middleware
 const validateProduct = [
   body('nom_produit')
@@ -244,14 +260,11 @@ const createProduct = async (req, res) => {
       image_produit
     } = req.body;
 
-    // Vérifier que la boutique existe
-    const boutiqueQuery = 'SELECT id_boutique FROM BOUTIQUE WHERE id_boutique = $1';
-    const boutiqueResult = await database.query(boutiqueQuery, [id_boutique]);
-
-    if (boutiqueResult.rows.length === 0) {
-      return res.status(400).json({
+    const ownership = await ensureBoutiqueOwnership(id_boutique, req.user);
+    if (!ownership.ok) {
+      return res.status(ownership.status).json({
         success: false,
-        message: 'Boutique non trouvée'
+        message: ownership.message
       });
     }
 
@@ -332,15 +345,41 @@ const updateProduct = async (req, res) => {
       description,
       prix,
       id_categorie,
+      id_boutique,
       attribut,
       image_produit
     } = req.body;
 
+    const productOwnerResult = await database.query(
+      'SELECT b.id_user, p.id_boutique FROM PRODUIT p LEFT JOIN BOUTIQUE b ON p.id_boutique = b.id_boutique WHERE p.id_produit = $1 LIMIT 1',
+      [id]
+    );
+    if (productOwnerResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Produit non trouvé'
+      });
+    }
+    if (req.user.role !== 'admin' && productOwnerResult.rows[0].id_user !== req.user.id_user) {
+      return res.status(403).json({
+        success: false,
+        message: 'Vous ne pouvez modifier que vos propres produits'
+      });
+    }
+    const targetBoutique = id_boutique || productOwnerResult.rows[0].id_boutique;
+    const ownership = await ensureBoutiqueOwnership(targetBoutique, req.user);
+    if (!ownership.ok) {
+      return res.status(ownership.status).json({
+        success: false,
+        message: ownership.message
+      });
+    }
+
     const query = `
       UPDATE PRODUIT 
       SET nom_produit = $1, description = $2, image_produit = $3, 
-          attribut = $4, prix = $5, id_categorie = $6, updated_at = NOW()
-      WHERE id_produit = $7
+          attribut = $4, prix = $5, id_categorie = $6, id_boutique = $7, updated_at = NOW()
+      WHERE id_produit = $8
       RETURNING *
     `;
 
@@ -351,6 +390,7 @@ const updateProduct = async (req, res) => {
       sanitizeInput(attribut) || null,
       prix,
       id_categorie,
+      targetBoutique,
       id
     ]);
 
@@ -390,7 +430,24 @@ const deleteProduct = async (req, res) => {
       });
     }
 
-    const result = await database.transaction(async (client) => {
+    const productOwnerResult = await database.query(
+      'SELECT b.id_user FROM PRODUIT p LEFT JOIN BOUTIQUE b ON p.id_boutique = b.id_boutique WHERE p.id_produit = $1 LIMIT 1',
+      [id]
+    );
+    if (productOwnerResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Produit non trouvé'
+      });
+    }
+    if (req.user.role !== 'admin' && productOwnerResult.rows[0].id_user !== req.user.id_user) {
+      return res.status(403).json({
+        success: false,
+        message: 'Vous ne pouvez supprimer que vos propres produits'
+      });
+    }
+
+    await database.transaction(async (client) => {
       // Récupérer l'ID du stock
       const stockQuery = 'SELECT id_stock FROM PRODUIT WHERE id_produit = $1';
       const stockResult = await client.query(stockQuery, [id]);
@@ -408,8 +465,6 @@ const deleteProduct = async (req, res) => {
       // Supprimer le stock
       const deleteStockQuery = 'DELETE FROM STOCK WHERE id_stock = $1';
       await client.query(deleteStockQuery, [id_stock]);
-
-      return true;
     });
 
     secureLog('info', 'Product deleted successfully', { productId: id });

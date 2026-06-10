@@ -1,0 +1,24 @@
+{"timestamp":"2026-04-21T21:56:25.692Z","level":"INFO","message":"Database connection test successful"}
+{"timestamp":"2026-04-21T21:56:25.696Z","level":"INFO","message":"Database connection established successfully"}
+{"timestamp":"2026-04-29T10:46:41.174Z","level":"INFO","message":"Database connection test successful"}
+{"timestamp":"2026-04-29T10:46:41.181Z","level":"INFO","message":"Database connection established successfully"}
+{"timestamp":"2026-04-29T10:46:41.189Z","level":"INFO","message":"Product service started successfully","port":3002,"environment":"development","version":"1.0.0"}
+{"timestamp":"2026-04-29T10:46:47.589Z","level":"INFO","message":"Request completed","method":"GET","url":"/health","status":200,"duration":"9ms","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-CA) WindowsPowerShell/5.1.26100.7920"}
+{"timestamp":"2026-04-29T15:59:08.221Z","level":"INFO","message":"Database connection test successful"}
+{"timestamp":"2026-04-29T15:59:08.227Z","level":"INFO","message":"Database connection established successfully"}
+{"timestamp":"2026-04-29T15:59:08.232Z","level":"INFO","message":"Product service started successfully","port":"3002","environment":"development","version":"1.0.0"}
+{"timestamp":"2026-04-29T15:59:22.667Z","level":"INFO","message":"Request completed","requestId":"1777478362614-mb3umrm5","method":"POST","url":"/","status":401,"duration":"6ms","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-CA) WindowsPowerShell/5.1.26100.7920"}
+{"timestamp":"2026-04-29T15:59:22.689Z","level":"INFO","message":"Request completed","requestId":"1777478362687-j6dtyohp","method":"POST","url":"/","status":401,"duration":"1ms","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-CA) WindowsPowerShell/5.1.26100.7920"}
+{"timestamp":"2026-04-29T16:00:44.535Z","level":"INFO","message":"Request completed","requestId":"1777478444532-6rxfsdbi","method":"POST","url":"/","status":401,"duration":"1ms","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-CA) WindowsPowerShell/5.1.26100.7920"}
+{"timestamp":"2026-04-29T16:00:44.575Z","level":"INFO","message":"Request completed","requestId":"1777478444566-dxl95rso","method":"POST","url":"/","status":403,"duration":"7ms","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-CA) WindowsPowerShell/5.1.26100.7920"}
+{"timestamp":"2026-04-29T16:02:35.317Z","level":"INFO","message":"Request completed","requestId":"1777478555314-oq69sgj3","method":"POST","url":"/","status":401,"duration":"1ms","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-CA) WindowsPowerShell/5.1.26100.7920"}
+{"timestamp":"2026-04-29T16:02:35.334Z","level":"INFO","message":"Request completed","requestId":"1777478555331-ieoyje52","method":"POST","url":"/","status":403,"duration":"2ms","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-CA) WindowsPowerShell/5.1.26100.7920"}
+{"timestamp":"2026-04-30T12:22:29.902Z","level":"INFO","message":"Request completed","requestId":"1777551749789-tml49ci7","method":"GET","url":"/health","status":200,"duration":"62ms","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-CA) WindowsPowerShell/5.1.26100.7920"}
+{"timestamp":"2026-04-30T13:31:25.003Z","level":"INFO","message":"Request completed","requestId":"1777555884928-nymn5e5k","method":"POST","url":"/","status":401,"duration":"12ms","ip":"::ffff:127.0.0.1"}
+{"timestamp":"2026-04-30T13:31:25.044Z","level":"INFO","message":"Request completed","requestId":"1777555885040-f6s5g5zf","method":"POST","url":"/","status":403,"duration":"3ms","ip":"::ffff:127.0.0.1"}
+{"timestamp":"2026-04-30T14:22:45.495Z","level":"INFO","message":"Request completed","requestId":"1777558965446-smbtuppf","method":"POST","url":"/","status":401,"duration":"6ms","ip":"::ffff:127.0.0.1"}
+{"timestamp":"2026-04-30T14:22:45.527Z","level":"INFO","message":"Request completed","requestId":"1777558965524-ftn2lhb1","method":"POST","url":"/","status":403,"duration":"2ms","ip":"::ffff:127.0.0.1"}
+{"timestamp":"2026-05-07T09:59:18.142Z","level":"INFO","message":"Database connection test successful"}
+{"timestamp":"2026-05-07T09:59:18.151Z","level":"INFO","message":"Database connection established successfully"}
+{"timestamp":"2026-05-07T09:59:18.160Z","level":"INFO","message":"Product service started successfully","port":"3002","environment":"development","version":"1.0.0"}
+{"timestamp":"2026-05-07T10:05:25.527Z","level":"INFO","message":"Request completed","requestId":"1778148325436-lxpsw4qq","method":"GET","url":"/health","status":200,"duration":"50ms","ip":"::1","userAgent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-CA) WindowsPowerShell/5.1.26100.7920"}
