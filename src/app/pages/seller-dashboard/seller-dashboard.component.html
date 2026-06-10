@@ -247,6 +247,36 @@
     <!-- Page content -->
     <main class="flex-1 p-4 lg:p-6 space-y-5">
 
+      <!-- Page header (for non-dashboard sections) -->
+      <div *ngIf="activeNav !== 'dashboard'" class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2 text-[11px] text-slate-500 mb-1">
+            <button (click)="setActiveNav('dashboard')" class="hover:text-indigo-600 transition">Tableau de bord</button>
+            <lucide-angular [img]="ChevronRight" class="w-3 h-3"></lucide-angular>
+            <span class="text-slate-700 font-semibold">{{ getPageHeader(activeNav).title }}</span>
+          </div>
+          <h1 class="text-xl lg:text-2xl font-bold text-slate-900">
+            {{ getPageHeader(activeNav).title }}
+          </h1>
+          <p class="text-xs text-slate-500 mt-0.5">{{ getPageHeader(activeNav).subtitle }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
+            <lucide-angular [img]="HelpCircle" class="w-3.5 h-3.5"></lucide-angular>
+            Aide
+          </button>
+          <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
+            <lucide-angular [img]="Download" class="w-3.5 h-3.5"></lucide-angular>
+            Exporter
+          </button>
+        </div>
+      </div>
+
+    <!-- ================================================================= -->
+    <!-- ============= DASHBOARD HOME (activeNav === 'dashboard') ========= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'dashboard'">
+
       <!-- Welcome row -->
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
@@ -748,6 +778,1464 @@
           </button>
         </div>
       </div>
+    </ng-container>
+    <!-- ================= END DASHBOARD HOME ================= -->
+
+    <!-- ================================================================= -->
+    <!-- ============= CATALOG — Produits ================================ -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'catalog'">
+      <!-- Filters & actions -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2">
+          <lucide-angular [img]="Search" class="w-4 h-4 text-slate-400"></lucide-angular>
+          <input type="text" placeholder="Rechercher un produit, SKU, ASIN…"
+                 class="text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 w-64" />
+        </div>
+        <select class="text-xs font-semibold px-3 py-2 border border-slate-200 rounded-lg bg-white">
+          <option>Tous les statuts</option>
+          <option>En ligne</option>
+          <option>Brouillon</option>
+          <option>Rupture</option>
+        </select>
+        <select class="text-xs font-semibold px-3 py-2 border border-slate-200 rounded-lg bg-white">
+          <option>Toutes catégories</option>
+          <option>Électronique</option>
+          <option>Mode & Accessoires</option>
+        </select>
+        <div class="ml-auto flex items-center gap-2">
+          <button class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50">
+            <lucide-angular [img]="Upload" class="w-3.5 h-3.5"></lucide-angular> Import
+          </button>
+          <button (click)="setActiveNav('add-product')"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-lg hover:shadow-lg">
+            <lucide-angular [img]="Plus" class="w-3.5 h-3.5"></lucide-angular> Ajouter un produit
+          </button>
+        </div>
+      </div>
+
+      <!-- Product stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div *ngFor="let b of inventoryBreakdown" class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-600">{{ b.label }}</span>
+            <span class="w-2 h-2 rounded-full" [ngClass]="b.color"></span>
+          </div>
+          <div class="text-2xl font-bold text-slate-900">{{ b.value }}</div>
+        </div>
+      </div>
+
+      <!-- Product table -->
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Catalogue — 12 références</h3>
+            <p class="text-[11px] text-slate-500">Mise à jour il y a 2 min</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="text-[11px] px-2 py-1 bg-slate-100 rounded-md hover:bg-slate-200">Actions groupées</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200">
+              <tr class="text-left text-slate-600">
+                <th class="p-3"><input type="checkbox" class="rounded" /></th>
+                <th class="p-3">Produit</th>
+                <th class="p-3">Prix</th>
+                <th class="p-3">Stock</th>
+                <th class="p-3">Ventes (30j)</th>
+                <th class="p-3">Note</th>
+                <th class="p-3">Buy Box</th>
+                <th class="p-3">Statut</th>
+                <th class="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of topProducts" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3"><input type="checkbox" class="rounded" /></td>
+                <td class="p-3">
+                  <div class="flex items-center gap-2">
+                    <img [src]="p.image" [alt]="p.name" class="w-10 h-10 rounded-lg object-cover" />
+                    <div>
+                      <p class="font-semibold text-slate-900">{{ p.name }}</p>
+                      <p class="text-[10px] text-slate-500">SKU • {{ p.id }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-3 font-semibold text-slate-900">{{ p.price }} €</td>
+                <td class="p-3">
+                  <span [ngClass]="p.stock === 0 ? 'text-red-600 font-bold' : p.stock < 10 ? 'text-amber-600 font-semibold' : 'text-slate-700'">
+                    {{ p.stock }}
+                  </span>
+                </td>
+                <td class="p-3 text-slate-700">{{ p.sales }}</td>
+                <td class="p-3">
+                  <span class="inline-flex items-center gap-1">
+                    <lucide-angular [img]="Star" class="w-3 h-3 text-amber-500"></lucide-angular>
+                    {{ p.rating || '—' }}
+                  </span>
+                </td>
+                <td class="p-3">{{ p.buyBox ? p.buyBox + '%' : '—' }}</td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getProductStatusClass(p.status)">
+                    {{ getProductStatusLabel(p.status) }}
+                  </span>
+                </td>
+                <td class="p-3 text-right">
+                  <button class="text-[10px] px-2 py-1 bg-slate-100 rounded-md hover:bg-slate-200">Éditer</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= ADD PRODUCT ======================================= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'add-product'">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-4">Informations essentielles</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nom du produit *</label>
+                <input type="text" placeholder="Ex : Casque Audio sans fil Aurora Pro"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Marque</label>
+                  <input type="text" value="HXstore"
+                         class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Catégorie *</label>
+                  <select class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg bg-white">
+                    <option>Électronique</option>
+                    <option>Mode & Accessoires</option>
+                    <option>Maison & Déco</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Description</label>
+                <textarea rows="4" placeholder="Décrivez votre produit en détail…"
+                          class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-4">Prix & Stock</h3>
+            <div class="grid grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Prix HT (€) *</label>
+                <input type="number" placeholder="0.00" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">TVA</label>
+                <select class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg bg-white">
+                  <option>20 %</option>
+                  <option>10 %</option>
+                  <option>5,5 %</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Stock</label>
+                <input type="number" placeholder="0" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-4">Photos du produit</h3>
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center">
+              <lucide-angular [img]="Upload" class="w-8 h-8 text-slate-400 mx-auto mb-2"></lucide-angular>
+              <p class="text-sm font-semibold text-slate-700">Glissez vos images ici ou cliquez pour téléverser</p>
+              <p class="text-[11px] text-slate-500 mt-1">JPG / PNG — jusqu'à 8 images — 2000×2000 px minimum</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 justify-end">
+            <button class="px-4 py-2 bg-white border border-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50">Enregistrer brouillon</button>
+            <button class="px-5 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-bold rounded-lg hover:shadow-lg">Publier le produit</button>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-5">
+            <div class="flex items-center gap-2 mb-2">
+              <lucide-angular [img]="Lightbulb" class="w-4 h-4 text-indigo-600"></lucide-angular>
+              <h4 class="text-sm font-bold text-indigo-900">Conseils pour maximiser vos ventes</h4>
+            </div>
+            <ul class="space-y-2 text-xs text-indigo-900">
+              <li class="flex gap-2"><lucide-angular [img]="CheckCircle2" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5"></lucide-angular> Utilisez au moins 5 images haute qualité</li>
+              <li class="flex gap-2"><lucide-angular [img]="CheckCircle2" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5"></lucide-angular> Rédigez un titre clair avec mots-clés</li>
+              <li class="flex gap-2"><lucide-angular [img]="CheckCircle2" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5"></lucide-angular> Remplissez tous les attributs produit</li>
+              <li class="flex gap-2"><lucide-angular [img]="CheckCircle2" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5"></lucide-angular> Activez le contenu A+ pour +20% de conv.</li>
+            </ul>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h4 class="text-sm font-bold text-slate-900 mb-3">Complétion de la fiche</h4>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-600">Informations</span>
+                <span class="text-green-600 font-bold">40 %</span>
+              </div>
+              <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-emerald-500 to-green-600" style="width: 40%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= BRAND REGISTRY ==================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'brand-registry'">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl p-6 lg:col-span-2">
+          <div class="flex items-center gap-2 mb-3">
+            <lucide-angular [img]="ShieldCheck" class="w-6 h-6"></lucide-angular>
+            <span class="text-[11px] uppercase tracking-wider font-bold bg-white/20 px-2 py-0.5 rounded">Marque enregistrée</span>
+          </div>
+          <h2 class="text-2xl font-bold mb-2">Protégez votre marque HXstore</h2>
+          <p class="text-sm text-white/90 max-w-xl">Accès aux outils anti-contrefaçon, contenu A+, Stores, analyses Marque et vidéo Sponsored Brands.</p>
+          <div class="mt-5 flex gap-3">
+            <button class="px-5 py-2 bg-white text-indigo-700 text-sm font-bold rounded-lg hover:scale-105 transition">Enregistrer ma marque</button>
+            <button class="px-5 py-2 bg-white/20 text-white text-sm font-bold rounded-lg hover:bg-white/30">En savoir plus</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <h4 class="text-sm font-bold text-slate-900 mb-3">Votre statut</h4>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+            <span class="text-sm font-semibold text-green-700">Marque enregistrée</span>
+          </div>
+          <dl class="space-y-2 text-xs">
+            <div class="flex justify-between"><dt class="text-slate-600">Marque</dt><dd class="font-semibold">HXstore</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-600">INPI</dt><dd class="font-semibold">FR-4738192</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-600">Classes</dt><dd class="font-semibold">9, 28, 35</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-600">Enregistrée le</dt><dd class="font-semibold">12 janv. 2025</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center mb-3">
+            <lucide-angular [img]="Shield" class="w-5 h-5 text-red-600"></lucide-angular>
+          </div>
+          <h4 class="text-sm font-bold text-slate-900 mb-1">Signaler une contrefaçon</h4>
+          <p class="text-xs text-slate-500 mb-3">Protection proactive contre les listings non autorisés.</p>
+          <button class="text-xs font-bold text-indigo-600 hover:underline">Ouvrir un signalement →</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center mb-3">
+            <lucide-angular [img]="Sparkles" class="w-5 h-5 text-indigo-600"></lucide-angular>
+          </div>
+          <h4 class="text-sm font-bold text-slate-900 mb-1">Contenu A+</h4>
+          <p class="text-xs text-slate-500 mb-3">Enrichissez vos fiches avec des visuels premium.</p>
+          <button class="text-xs font-bold text-indigo-600 hover:underline">Créer du contenu A+ →</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center mb-3">
+            <lucide-angular [img]="Store" class="w-5 h-5 text-emerald-600"></lucide-angular>
+          </div>
+          <h4 class="text-sm font-bold text-slate-900 mb-1">Vitrine de marque</h4>
+          <p class="text-xs text-slate-500 mb-3">Personnalisez votre page boutique HELIGXIAM.</p>
+          <button class="text-xs font-bold text-indigo-600 hover:underline">Construire ma vitrine →</button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= BULK UPLOAD ======================================= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'bulk-upload'">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <div class="border-2 border-dashed border-indigo-300 rounded-xl p-10 text-center bg-gradient-to-br from-indigo-50 to-white">
+          <lucide-angular [img]="Upload" class="w-12 h-12 text-indigo-500 mx-auto mb-3"></lucide-angular>
+          <h3 class="text-lg font-bold text-slate-900 mb-1">Téléversez votre fichier CSV</h3>
+          <p class="text-xs text-slate-500 mb-4">Format UTF-8 — virgule comme séparateur — taille max 10 Mo</p>
+          <button class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg hover:shadow-lg">
+            Sélectionner un fichier
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <h3 class="text-sm font-bold text-slate-900 mb-3">Modèles CSV pré-remplis</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div *ngFor="let t of csvTemplates" class="border border-slate-200 rounded-xl p-4 hover:border-indigo-300 hover:bg-indigo-50/30 transition cursor-pointer">
+            <lucide-angular [img]="FileText" class="w-6 h-6 text-indigo-600 mb-2"></lucide-angular>
+            <p class="text-sm font-bold text-slate-900">{{ t.label }}</p>
+            <p class="text-[11px] text-slate-500 mt-1">{{ t.cols }} colonnes • {{ t.samples }} exemples</p>
+            <button class="mt-2 text-[11px] font-bold text-indigo-600 hover:underline">Télécharger →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200">
+          <h3 class="text-sm font-bold text-slate-900">Historique des imports</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Fichier</th><th class="p-3">Éléments</th><th class="p-3">Succès</th>
+              <th class="p-3">Erreurs</th><th class="p-3">Date</th><th class="p-3">Statut</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let h of bulkHistory" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 font-semibold">{{ h.file }}</td>
+                <td class="p-3">{{ h.items }}</td>
+                <td class="p-3 text-green-700 font-semibold">{{ h.success }}</td>
+                <td class="p-3" [class.text-red-600]="h.errors > 0">{{ h.errors }}</td>
+                <td class="p-3 text-slate-500">{{ h.date }}</td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                        [ngClass]="h.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'">
+                    {{ h.status === 'completed' ? 'Terminé' : 'Avec avertissements' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= INVENTORY ========================================= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'inventory'">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div *ngFor="let b of inventoryBreakdown" class="bg-white rounded-2xl border border-slate-200 p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-600">{{ b.label }}</span>
+            <span class="w-2 h-2 rounded-full" [ngClass]="b.color"></span>
+          </div>
+          <div class="text-2xl font-bold text-slate-900">{{ b.value }}</div>
+          <div class="mt-2 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full" [ngClass]="b.color" [style.width.%]="b.percent"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Niveaux de stock</h3>
+          <button class="text-xs px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-lg">
+            Créer un réapprovisionnement
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Produit</th><th class="p-3">SKU</th><th class="p-3">Disponible</th>
+              <th class="p-3">Réservé</th><th class="p-3">À réappro.</th><th class="p-3">Statut</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let p of topProducts" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3">
+                  <div class="flex items-center gap-2">
+                    <img [src]="p.image" [alt]="p.name" class="w-8 h-8 rounded object-cover" />
+                    <span class="font-semibold">{{ p.name }}</span>
+                  </div>
+                </td>
+                <td class="p-3 font-mono text-slate-600">{{ p.id }}</td>
+                <td class="p-3 font-bold" [ngClass]="p.stock === 0 ? 'text-red-600' : p.stock < 10 ? 'text-amber-600' : 'text-green-700'">
+                  {{ p.stock }}
+                </td>
+                <td class="p-3">3</td>
+                <td class="p-3 text-indigo-600 font-bold">{{ p.stock < 10 ? (50 - p.stock) : 0 }}</td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                        [ngClass]="p.stock === 0 ? 'bg-red-100 text-red-700' : p.stock < 10 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'">
+                    {{ p.stock === 0 ? 'Rupture' : p.stock < 10 ? 'Stock faible' : 'OK' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= FBA SHIPMENTS ===================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'fba-shipments'">
+      <div class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-2xl p-5 flex items-center justify-between gap-4">
+        <div>
+          <h3 class="text-lg font-bold mb-1">Logistique HELIGXIAM (HX Fulfillment)</h3>
+          <p class="text-xs text-white/90">Stockez, emballez et expédiez depuis nos centres. Livraison Prime automatique.</p>
+        </div>
+        <button class="px-5 py-2 bg-white text-blue-700 text-sm font-bold rounded-lg whitespace-nowrap hover:scale-105 transition">
+          Créer une expédition
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200">
+          <h3 class="text-sm font-bold text-slate-900">Expéditions en cours</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">ID</th><th class="p-3">Destination</th><th class="p-3">Unités</th>
+              <th class="p-3">Statut</th><th class="p-3">Date prévue</th><th class="p-3">Action</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let s of shipments" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 font-mono font-semibold">{{ s.id }}</td>
+                <td class="p-3">{{ s.destination }}</td>
+                <td class="p-3 font-semibold">{{ s.units }}</td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getShipmentStatusClass(s.status)">
+                    {{ getShipmentStatusLabel(s.status) }}
+                  </span>
+                </td>
+                <td class="p-3 text-slate-500">{{ s.expected }}</td>
+                <td class="p-3"><button class="text-[11px] text-indigo-600 font-bold hover:underline">Suivre →</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= RETURNS & REFUNDS ================================= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'returns'">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Retours en attente</p>
+          <p class="text-2xl font-bold text-amber-600">1</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Taux de retours</p>
+          <p class="text-2xl font-bold text-slate-900">3,1 %</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Remboursé (30j)</p>
+          <p class="text-2xl font-bold text-slate-900">418 €</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Délai moyen</p>
+          <p class="text-2xl font-bold text-slate-900">1,8 j</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Demandes de retour</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Retour</th><th class="p-3">Commande</th><th class="p-3">Produit</th>
+              <th class="p-3">Motif</th><th class="p-3">Remboursement</th><th class="p-3">Statut</th><th class="p-3">Action</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let r of returnsList" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 font-mono font-semibold">{{ r.id }}</td>
+                <td class="p-3">{{ r.order }}</td>
+                <td class="p-3">{{ r.product }}</td>
+                <td class="p-3 text-slate-600">{{ r.reason }}</td>
+                <td class="p-3 font-semibold">{{ r.refund }} €</td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getReturnStatusClass(r.status)">
+                    {{ getReturnStatusLabel(r.status) }}
+                  </span>
+                </td>
+                <td class="p-3">
+                  <button class="text-[11px] text-indigo-600 font-bold hover:underline">Traiter →</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= PRICING =========================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'pricing'">
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Tarification catalogue</h3>
+          <button (click)="setActiveNav('auto-pricing')" class="text-xs px-3 py-1.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700">
+            Activer la retarification auto
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Produit</th><th class="p-3">Votre prix</th><th class="p-3">Buy Box</th>
+              <th class="p-3">Prix concurrent</th><th class="p-3">Marge</th><th class="p-3">Recommandation</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let p of topProducts" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3">
+                  <div class="flex items-center gap-2">
+                    <img [src]="p.image" [alt]="p.name" class="w-8 h-8 rounded object-cover" />
+                    <span class="font-semibold">{{ p.name }}</span>
+                  </div>
+                </td>
+                <td class="p-3 font-bold text-slate-900">{{ p.price }} €</td>
+                <td class="p-3">
+                  <span *ngIf="p.buyBox > 0" class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">
+                    {{ p.buyBox }}%
+                  </span>
+                  <span *ngIf="p.buyBox === 0" class="text-slate-400">—</span>
+                </td>
+                <td class="p-3 text-slate-600">{{ (p.price - 2).toFixed(2) }} €</td>
+                <td class="p-3 text-green-700 font-semibold">24 %</td>
+                <td class="p-3 text-[11px] text-amber-700 font-semibold">Baisser de 1,50 €</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= AUTO PRICING ====================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'auto-pricing'">
+      <div class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl p-5 flex items-center justify-between gap-4">
+        <div>
+          <span class="text-[11px] uppercase tracking-wider font-bold bg-white/20 px-2 py-0.5 rounded">Nouveau</span>
+          <h3 class="text-lg font-bold mt-2 mb-1">Retarification automatique</h3>
+          <p class="text-xs text-white/90">Gagnez la Buy Box 24/7 avec des règles intelligentes — +18% de ventes en moyenne.</p>
+        </div>
+        <button class="px-5 py-2 bg-white text-teal-700 text-sm font-bold rounded-lg whitespace-nowrap">Créer une règle</button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200">
+          <h3 class="text-sm font-bold text-slate-900">Mes règles de retarification</h3>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <div *ngFor="let r of pricingRules" class="p-4 flex items-center justify-between hover:bg-slate-50">
+            <div>
+              <p class="font-bold text-slate-900 text-sm">{{ r.name }}</p>
+              <p class="text-[11px] text-slate-500 mt-1">{{ r.scope }} • Marge min. {{ r.minMargin }}% • {{ r.last }}</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                    [ngClass]="r.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'">
+                {{ r.active ? 'Active' : 'Inactive' }}
+              </span>
+              <button (click)="togglePricingRule(r)"
+                      class="relative w-10 h-5 rounded-full transition"
+                      [ngClass]="r.active ? 'bg-green-500' : 'bg-slate-300'">
+                <span class="absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all"
+                      [ngClass]="r.active ? 'left-5' : 'left-0.5'"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= PROMOTIONS & COUPONS ============================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'promotions'">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Coupons actifs</p>
+          <p class="text-2xl font-bold text-slate-900">2</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Utilisations (30j)</p>
+          <p class="text-2xl font-bold text-slate-900">1 051</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">CA généré</p>
+          <p class="text-2xl font-bold text-green-600">4 218 €</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">ROI moyen</p>
+          <p class="text-2xl font-bold text-slate-900">3,4×</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Mes promotions</h3>
+          <button class="text-xs px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold rounded-lg">+ Créer une promotion</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Code</th><th class="p-3">Remise</th><th class="p-3">Portée</th>
+              <th class="p-3">Utilisations</th><th class="p-3">Expire</th><th class="p-3">Statut</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let c of sellerCoupons" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3"><span class="px-2 py-1 bg-slate-900 text-white font-mono font-bold rounded">{{ c.code }}</span></td>
+                <td class="p-3 font-bold text-rose-600">{{ c.discount }}</td>
+                <td class="p-3 text-slate-600">{{ c.scope }}</td>
+                <td class="p-3">{{ c.used }} / {{ c.max }}</td>
+                <td class="p-3 text-slate-500">{{ c.expires }}</td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getCouponStatusClass(c.status)">
+                    {{ c.status === 'active' ? 'Active' : c.status === 'scheduled' ? 'Programmée' : 'Expirée' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= ORDERS ============================================ -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'orders'">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Total commandes</p>
+          <p class="text-2xl font-bold text-slate-900">{{ orders.length }}</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">À préparer</p>
+          <p class="text-2xl font-bold text-amber-600">{{ unshippedCount }}</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">CA en attente</p>
+          <p class="text-2xl font-bold text-slate-900">{{ getOrderTotalPending().toFixed(2) }} €</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Livrées</p>
+          <p class="text-2xl font-bold text-green-600">{{ orders.length - unshippedCount }}</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-sm font-bold text-slate-900">Toutes les commandes</h3>
+          <div class="flex items-center gap-2">
+            <select class="text-xs px-2 py-1 border border-slate-200 rounded">
+              <option>Tous statuts</option><option>À préparer</option><option>Expédiées</option><option>Livrées</option>
+            </select>
+            <button class="text-[11px] px-3 py-1.5 bg-slate-900 text-white font-bold rounded">Imprimer étiquettes</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Commande</th><th class="p-3">Client</th><th class="p-3">Produit</th>
+              <th class="p-3">Qté</th><th class="p-3">Total</th><th class="p-3">SLA</th><th class="p-3">Statut</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let o of orders" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 font-mono font-semibold">{{ o.id }}</td>
+                <td class="p-3">{{ o.customer }}</td>
+                <td class="p-3">
+                  <div class="flex items-center gap-2">
+                    <img [src]="o.image" [alt]="o.product" class="w-8 h-8 rounded object-cover" />
+                    <span class="truncate max-w-[180px]">{{ o.product }}</span>
+                  </div>
+                </td>
+                <td class="p-3">{{ o.qty }}</td>
+                <td class="p-3 font-bold">{{ o.total.toFixed(2) }} €</td>
+                <td class="p-3">
+                  <span *ngIf="o.sla" class="px-2 py-0.5 rounded bg-red-100 text-red-700 text-[10px] font-bold">{{ o.sla }}</span>
+                  <span *ngIf="!o.sla" class="text-slate-400">—</span>
+                </td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border" [ngClass]="getOrderStatusClass(o.status)">
+                    {{ getOrderStatusLabel(o.status) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= UNSHIPPED ========================================= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'unshipped'">
+      <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3">
+        <lucide-angular [img]="AlertTriangle" class="w-5 h-5 text-amber-600"></lucide-angular>
+        <div class="flex-1">
+          <p class="text-sm font-bold text-amber-900">{{ unshippedCount }} commandes à expédier</p>
+          <p class="text-xs text-amber-800">Expédiez avant la fin du SLA pour éviter toute pénalité sur la santé du compte.</p>
+        </div>
+        <button class="px-4 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700">Expédier toutes</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div *ngFor="let o of orders" [hidden]="o.status !== 'pending'"
+             class="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-md transition">
+          <div class="flex items-start gap-3">
+            <img [src]="o.image" [alt]="o.product" class="w-16 h-16 rounded-lg object-cover" />
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-mono text-[11px] font-bold text-slate-500">{{ o.id }}</span>
+                <span *ngIf="o.priority === 'high'" class="px-1.5 py-0.5 bg-red-100 text-red-700 text-[9px] font-bold rounded">URGENT</span>
+              </div>
+              <p class="font-bold text-slate-900 text-sm truncate">{{ o.product }}</p>
+              <p class="text-xs text-slate-600 mt-0.5">{{ o.customer }} • Qté {{ o.qty }} • {{ o.total.toFixed(2) }} €</p>
+              <div class="flex items-center gap-2 mt-2">
+                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-red-600">
+                  <lucide-angular [img]="Clock" class="w-3 h-3"></lucide-angular> SLA {{ o.sla }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button class="flex-1 text-xs py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800">Acheter étiquette</button>
+            <button class="text-xs py-2 px-3 bg-slate-100 font-semibold rounded-lg hover:bg-slate-200">Imprimer</button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= BUYER MESSAGES ==================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'messages'">
+      <div class="bg-white rounded-2xl border border-slate-200 flex items-center justify-between p-4">
+        <div class="flex gap-4 text-xs">
+          <div><span class="font-bold text-slate-900">3</span> <span class="text-slate-500">non lus</span></div>
+          <div><span class="font-bold text-slate-900">14h</span> <span class="text-slate-500">temps de réponse moyen</span></div>
+          <div><span class="font-bold text-green-600">100%</span> <span class="text-slate-500">sous 24h</span></div>
+        </div>
+        <button (click)="markAllMessagesRead()" class="text-xs font-bold text-indigo-600 hover:underline">Tout marquer lu</button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="divide-y divide-slate-100">
+          <div *ngFor="let m of buyerMessages" class="p-4 hover:bg-slate-50 cursor-pointer flex items-start gap-3"
+               [class.bg-indigo-50]="m.unread">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-white flex items-center justify-center font-bold text-sm">
+              {{ m.buyer.charAt(0) }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <p class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                  {{ m.buyer }}
+                  <span *ngIf="m.unread" class="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                </p>
+                <span class="text-[11px] text-slate-500">{{ m.time }}</span>
+              </div>
+              <p class="text-xs font-semibold text-slate-700 mt-0.5">{{ m.subject }}</p>
+              <p class="text-xs text-slate-500 truncate mt-0.5">{{ m.preview }}</p>
+              <span *ngIf="m.sla !== '—'" class="inline-block mt-1.5 px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded">
+                SLA {{ m.sla }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= CAMPAIGNS ========================================= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'campaigns'">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Dépenses (30j)</p>
+          <p class="text-2xl font-bold text-slate-900">121,25 €</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Ventes pub</p>
+          <p class="text-2xl font-bold text-green-600">3 058 €</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">ACOS moyen</p>
+          <p class="text-2xl font-bold text-slate-900">18,4 %</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">ROAS</p>
+          <p class="text-2xl font-bold text-indigo-600">5,4×</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Mes campagnes</h3>
+          <button class="text-xs px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-lg">+ Nouvelle campagne</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Nom</th><th class="p-3">Type</th><th class="p-3">Budget</th>
+              <th class="p-3">Dépensé</th><th class="p-3">Impressions</th><th class="p-3">Clics</th>
+              <th class="p-3">ACOS</th><th class="p-3">Ventes</th><th class="p-3">Statut</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let c of adCampaigns" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 font-semibold">{{ c.name }}</td>
+                <td class="p-3 text-slate-600">{{ c.type }}</td>
+                <td class="p-3">{{ c.budget }} €/j</td>
+                <td class="p-3">{{ c.spent.toFixed(2) }} €</td>
+                <td class="p-3">{{ c.impressions.toLocaleString() }}</td>
+                <td class="p-3">{{ c.clicks }}</td>
+                <td class="p-3 font-semibold" [class.text-green-600]="c.acos > 0 && c.acos < 20" [class.text-amber-600]="c.acos >= 20">
+                  {{ c.acos }}%
+                </td>
+                <td class="p-3 font-bold text-green-700">{{ c.sales.toFixed(2) }} €</td>
+                <td class="p-3">
+                  <button (click)="toggleCampaignStatus(c)" class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getCampaignStatusClass(c.status)">
+                    {{ c.status === 'active' ? 'Active' : 'En pause' }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= SPONSORED BRANDS ================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'sponsored-brands'">
+      <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl p-5 flex items-center justify-between gap-4">
+        <div>
+          <h3 class="text-lg font-bold mb-1">Sponsored Brands — boostez votre marque</h3>
+          <p class="text-xs text-white/90">Bannières vidéo et catalogue en haut des résultats de recherche.</p>
+        </div>
+        <button class="px-5 py-2 bg-white text-purple-700 text-sm font-bold rounded-lg whitespace-nowrap">Créer une créativité</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div *ngFor="let s of sbCreatives" class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div class="h-32 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 flex items-center justify-center">
+            <lucide-angular [img]="Megaphone" class="w-12 h-12 text-purple-500 opacity-50"></lucide-angular>
+          </div>
+          <div class="p-4">
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                    [ngClass]="s.status === 'live' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'">
+                {{ s.status === 'live' ? 'En ligne' : 'En révision' }}
+              </span>
+              <span class="text-[11px] text-slate-500">{{ s.format }}</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm mb-2">{{ s.headline }}</h4>
+            <div class="grid grid-cols-3 gap-2 text-center text-[11px] border-t border-slate-100 pt-2">
+              <div><p class="text-slate-500">CTR</p><p class="font-bold">{{ s.ctr }}%</p></div>
+              <div><p class="text-slate-500">ACOS</p><p class="font-bold">{{ s.acos }}%</p></div>
+              <div><p class="text-slate-500">Portée</p><p class="font-bold">{{ s.reach }}</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= DEALS (VENTES FLASH) ============================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'deals'">
+      <div class="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-2xl p-5 flex items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <lucide-angular [img]="Flame" class="w-5 h-5"></lucide-angular>
+            <h3 class="text-lg font-bold">Ventes flash & Deals</h3>
+          </div>
+          <p class="text-xs text-white/90">Augmentez la visibilité et le volume avec des deals limités dans le temps.</p>
+        </div>
+        <button class="px-5 py-2 bg-white text-red-700 text-sm font-bold rounded-lg whitespace-nowrap">+ Soumettre un deal</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div *ngFor="let d of sellerDeals" class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-3xl font-black text-red-600">-{{ d.discount }}%</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  [ngClass]="d.status === 'live' ? 'bg-red-100 text-red-700' : d.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'">
+              {{ d.status === 'live' ? '● En cours' : d.status === 'scheduled' ? 'Programmé' : 'Brouillon' }}
+            </span>
+          </div>
+          <p class="font-bold text-slate-900 text-sm mb-2">{{ d.product }}</p>
+          <p class="text-xs text-slate-500 mb-3">Début : {{ d.startsIn }}</p>
+          <div class="mb-2">
+            <div class="flex items-center justify-between text-[11px] mb-1">
+              <span class="text-slate-600">{{ d.sold }} / {{ d.units }} vendus</span>
+              <span class="font-bold">{{ (d.sold / d.units * 100).toFixed(0) }}%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-red-500 to-orange-500"
+                   [style.width.%]="(d.sold / d.units) * 100"></div>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500">Frais de deal : <strong class="text-slate-700">{{ d.fee }} €</strong></p>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= GROWTH COACH ====================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'coach'">
+      <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl p-6">
+        <div class="flex items-center gap-2 mb-2">
+          <lucide-angular [img]="Lightbulb" class="w-5 h-5"></lucide-angular>
+          <span class="text-[11px] uppercase tracking-wider font-bold bg-white/20 px-2 py-0.5 rounded">Intelligence artificielle</span>
+        </div>
+        <h2 class="text-2xl font-bold mb-2">Votre coach de croissance personnalisé</h2>
+        <p class="text-sm text-white/90">4 opportunités détectées ce mois-ci. Appliquez-les pour gagner jusqu'à <strong class="bg-white/20 px-1.5 py-0.5 rounded">+2 400 € de CA</strong>.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div *ngFor="let tip of coachTips" class="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md transition">
+          <div class="h-1 bg-gradient-to-r" [ngClass]="tip.color"></div>
+          <div class="p-5">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br flex-shrink-0" [ngClass]="tip.color">
+                <lucide-angular [img]="tip.icon" class="w-5 h-5 text-white"></lucide-angular>
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getImpactColor(tip.impact)">
+                    {{ getImpactLabel(tip.impact) }}
+                  </span>
+                </div>
+                <h4 class="font-bold text-slate-900 text-sm mb-1">{{ tip.title }}</h4>
+                <p class="text-xs text-slate-600 mb-3">{{ tip.text }}</p>
+                <button class="text-xs font-bold text-indigo-600 hover:underline">{{ tip.ctaLabel }} →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= PROGRAMS ========================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'programs'">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngFor="let p of programs" class="bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-md transition">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center">
+              <lucide-angular [img]="p.icon" class="w-6 h-6"></lucide-angular>
+            </div>
+            <span *ngIf="p.enrolled" class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Activé</span>
+          </div>
+          <h4 class="font-bold text-slate-900 text-sm mb-1">{{ p.name }}</h4>
+          <p class="text-xs text-slate-600 mb-3">{{ p.desc }}</p>
+          <span class="inline-block px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-semibold mb-3">{{ p.badge }}</span>
+          <button (click)="toggleProgramEnrollment(p)"
+                  class="w-full py-2 text-xs font-bold rounded-lg transition"
+                  [ngClass]="p.enrolled ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg'">
+            {{ p.enrolled ? 'Se désinscrire' : 'S\'inscrire' }}
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= GLOBAL SELLING ==================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'global-selling'">
+      <div class="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl p-6 flex items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <lucide-angular [img]="Globe" class="w-5 h-5"></lucide-angular>
+            <span class="text-[11px] uppercase tracking-wider font-bold bg-white/20 px-2 py-0.5 rounded">Europe</span>
+          </div>
+          <h2 class="text-2xl font-bold mb-1">Vendez dans 5 pays européens</h2>
+          <p class="text-sm text-white/90">Traduction automatique, TVA centralisée, livraison paneuropéenne.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngFor="let m of internationalMarkets" class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-3xl">{{ m.flag }}</span>
+              <h4 class="font-bold text-slate-900">{{ m.label }}</h4>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  [ngClass]="m.status === 'active' ? 'bg-green-100 text-green-700' : m.status === 'eligible' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'">
+              {{ m.status === 'active' ? 'Actif' : m.status === 'eligible' ? 'Éligible' : 'Bientôt' }}
+            </span>
+          </div>
+          <div *ngIf="m.status === 'active'" class="space-y-2 text-xs">
+            <div class="flex justify-between"><span class="text-slate-600">Ventes 30j</span><span class="font-bold">{{ m.sales }} €</span></div>
+            <div class="flex justify-between"><span class="text-slate-600">Croissance</span><span class="font-bold text-green-600">+{{ m.growth }}%</span></div>
+          </div>
+          <button *ngIf="m.status === 'eligible'"
+                  class="mt-3 w-full py-2 text-xs font-bold bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-lg">
+            Ouvrir mon magasin
+          </button>
+          <button *ngIf="m.status === 'coming'" disabled class="mt-3 w-full py-2 text-xs font-bold bg-slate-100 text-slate-400 rounded-lg">
+            Disponible bientôt
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= ANALYTICS ========================================= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'analytics'">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div *ngFor="let k of kpis | slice:0:3" class="bg-white rounded-2xl border border-slate-200 p-5">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs text-slate-600">{{ k.label }}</span>
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br text-white flex items-center justify-center" [ngClass]="k.color">
+              <lucide-angular [img]="k.icon" class="w-4 h-4"></lucide-angular>
+            </div>
+          </div>
+          <p class="text-2xl font-bold text-slate-900">{{ k.value }}</p>
+          <p class="text-[11px] mt-1" [class.text-green-600]="k.trend > 0" [class.text-red-600]="k.trend < 0">
+            {{ k.trend > 0 ? '+' : '' }}{{ k.trend }}% • {{ k.trendLabel }}
+          </p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-slate-900">Ventes des 7 derniers jours</h3>
+          <select class="text-xs px-2 py-1 border border-slate-200 rounded bg-white">
+            <option>7 derniers jours</option><option>30 derniers jours</option><option>Cette année</option>
+          </select>
+        </div>
+        <div class="flex items-end gap-2 h-48">
+          <div *ngFor="let d of chartData" class="flex-1 flex flex-col items-center gap-2">
+            <div class="w-full bg-gradient-to-t from-indigo-500 to-purple-500 rounded-t-md relative group"
+                 [style.height.%]="d.value">
+              <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold text-slate-700 opacity-0 group-hover:opacity-100 whitespace-nowrap">
+                {{ d.amount }} €
+              </span>
+            </div>
+            <span class="text-[11px] text-slate-600 font-semibold">{{ d.day }}</span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= TRAFFIC =========================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'traffic'">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Sessions (30j)</p>
+          <p class="text-2xl font-bold text-slate-900">8 420</p>
+          <p class="text-[11px] text-green-600">+12%</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Pages vues</p>
+          <p class="text-2xl font-bold text-slate-900">12 480</p>
+          <p class="text-[11px] text-green-600">+8%</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Taux de conversion</p>
+          <p class="text-2xl font-bold text-indigo-600">4,26 %</p>
+          <p class="text-[11px] text-green-600">+0,8%</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-4">
+          <p class="text-xs text-slate-600 mb-1">Taux Buy Box</p>
+          <p class="text-2xl font-bold text-slate-900">87 %</p>
+          <p class="text-[11px] text-green-600">+2,3%</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <h3 class="text-sm font-bold text-slate-900 mb-3">Sources de trafic</h3>
+        <div class="space-y-3">
+          <div *ngFor="let src of [
+            {name:'Recherche organique', value: 52, color: 'bg-green-500'},
+            {name:'Publicité Sponsored', value: 28, color: 'bg-indigo-500'},
+            {name:'Recommandations', value: 12, color: 'bg-amber-500'},
+            {name:'Direct', value: 8, color: 'bg-slate-500'}
+          ]" class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="font-semibold">{{ src.name }}</span>
+              <span class="text-slate-600">{{ src.value }}%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full" [ngClass]="src.color" [style.width.%]="src.value"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= SEARCH TERMS ====================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'search-terms'">
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Top termes de recherche</h3>
+          <div class="flex items-center gap-2">
+            <input type="text" placeholder="Filtrer…" class="text-xs px-3 py-1.5 border border-slate-200 rounded" />
+            <button class="text-xs px-3 py-1.5 bg-slate-100 font-bold rounded hover:bg-slate-200">Exporter</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Terme</th><th class="p-3">Impressions</th><th class="p-3">Clics</th>
+              <th class="p-3">Conversion</th><th class="p-3">Ventes</th><th class="p-3">Action</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let t of searchTerms" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 font-semibold text-slate-900">« {{ t.term }} »</td>
+                <td class="p-3">{{ t.impressions.toLocaleString() }}</td>
+                <td class="p-3">{{ t.clicks }}</td>
+                <td class="p-3 font-semibold" [class.text-green-600]="t.conv >= 5">{{ t.conv }}%</td>
+                <td class="p-3 font-bold">{{ t.sales.toFixed(2) }} €</td>
+                <td class="p-3">
+                  <button class="text-[11px] text-indigo-600 font-bold hover:underline">Ajouter à une campagne →</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= ACCOUNT HEALTH ==================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'account-health'">
+      <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl p-6">
+        <div class="flex items-center gap-3 mb-2">
+          <lucide-angular [img]="ShieldCheck" class="w-7 h-7"></lucide-angular>
+          <h2 class="text-2xl font-bold">Santé du compte : Excellente</h2>
+        </div>
+        <p class="text-sm text-white/90">Score : <strong class="text-2xl">248 / 250</strong> — tous les indicateurs sont au vert.</p>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 p-5">
+        <h3 class="text-sm font-bold text-slate-900 mb-4">Indicateurs de performance</h3>
+        <div class="space-y-3">
+          <div *ngFor="let h of healthMetrics" class="flex items-center justify-between gap-3 p-3 hover:bg-slate-50 rounded-lg">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full" [ngClass]="getHealthDot(h.status)"></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-slate-900 truncate">{{ h.label }}</p>
+                <p class="text-[11px] text-slate-500">Objectif : {{ h.target }}</p>
+              </div>
+            </div>
+            <span class="font-bold text-slate-900">{{ h.value }}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getHealthColor(h.status)">
+              {{ h.status === 'good' ? 'Bon' : h.status === 'warning' ? 'Attention' : 'Critique' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= FEEDBACK ========================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'feedback'">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 text-center">
+          <p class="text-xs text-slate-600 mb-2">Note globale</p>
+          <p class="text-5xl font-black text-slate-900">4,7</p>
+          <div class="flex items-center justify-center gap-0.5 mt-2">
+            <lucide-angular *ngFor="let s of [1,2,3,4,5]" [img]="Star" class="w-4 h-4 text-amber-500"></lucide-angular>
+          </div>
+          <p class="text-xs text-slate-500 mt-2">147 avis au total</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 lg:col-span-2">
+          <h3 class="text-sm font-bold text-slate-900 mb-3">Répartition des notes</h3>
+          <div class="space-y-2">
+            <div *ngFor="let d of feedbackDistribution" class="flex items-center gap-3">
+              <span class="text-xs font-semibold w-8">{{ d.stars }} ★</span>
+              <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-amber-400 to-orange-500" [style.width.%]="d.percent"></div>
+              </div>
+              <span class="text-[11px] text-slate-500 w-12 text-right">{{ d.count }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200">
+          <h3 class="text-sm font-bold text-slate-900">Avis récents</h3>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <div *ngFor="let f of sellerFeedback" class="p-4 hover:bg-slate-50">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-sm">{{ f.author }}</span>
+                <span class="flex gap-0.5">
+                  <lucide-angular *ngFor="let s of [1,2,3,4,5]" [img]="Star"
+                    [class.text-amber-500]="s <= f.rating" [class.text-slate-200]="s > f.rating" class="w-3 h-3"></lucide-angular>
+                </span>
+              </div>
+              <span class="text-[11px] text-slate-500">{{ f.date }}</span>
+            </div>
+            <p class="text-xs text-slate-700">{{ f.comment }}</p>
+            <p class="text-[11px] text-slate-500 mt-1">Sur : <span class="font-semibold">{{ f.product }}</span></p>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= CASES ============================================= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'cases'">
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Cas ouverts avec le support</h3>
+          <button class="text-xs px-3 py-1.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700">+ Ouvrir un nouveau cas</button>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <div *ngFor="let c of cases" class="p-4 hover:bg-slate-50 flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center">
+              <lucide-angular [img]="Headphones" class="w-5 h-5"></lucide-angular>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-mono text-[11px] font-bold text-slate-500">{{ c.id }}</span>
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold" [ngClass]="getCasePriorityClass(c.priority)">
+                  {{ c.priority | uppercase }}
+                </span>
+              </div>
+              <p class="font-semibold text-sm text-slate-900">{{ c.subject }}</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">{{ c.type }} • Mis à jour {{ c.updated }}</p>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  [ngClass]="c.status === 'open' ? 'bg-red-100 text-red-700' : c.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'">
+              {{ c.status === 'open' ? 'Ouvert' : c.status === 'pending' ? 'En attente' : 'Résolu' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= PAYOUTS =========================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'payouts'">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-2xl p-5">
+          <p class="text-xs text-white/80 mb-1">Disponible maintenant</p>
+          <p class="text-3xl font-bold">{{ payoutSummary.available.toFixed(2) }} €</p>
+          <button class="mt-3 w-full py-2 bg-white text-emerald-700 text-xs font-bold rounded-lg">Demander un versement</button>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <p class="text-xs text-slate-600 mb-1">En attente (J+14)</p>
+          <p class="text-3xl font-bold text-slate-900">{{ payoutSummary.pending.toFixed(2) }} €</p>
+          <p class="text-[11px] text-slate-500 mt-2">Prochain versement : {{ payoutSummary.nextPayoutDate }}</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <p class="text-xs text-slate-600 mb-1">Dernier versement</p>
+          <p class="text-3xl font-bold text-slate-900">{{ payoutSummary.lastPayout.toFixed(2) }} €</p>
+          <p class="text-[11px] text-green-600 mt-2">✓ Reçu le 12 avr. 2026</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200">
+          <h3 class="text-sm font-bold text-slate-900">Historique des versements</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">ID</th><th class="p-3">Date</th><th class="p-3">Montant</th>
+              <th class="p-3">Méthode</th><th class="p-3">Référence</th><th class="p-3">Statut</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let p of payoutsHistory" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 font-mono font-semibold">{{ p.id }}</td>
+                <td class="p-3">{{ p.date }}</td>
+                <td class="p-3 font-bold">{{ p.amount.toFixed(2) }} €</td>
+                <td class="p-3">{{ p.method }}</td>
+                <td class="p-3 font-mono text-slate-500">{{ p.ref }}</td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getPayoutStatusClass(p.status)">
+                    {{ p.status === 'paid' ? 'Payé' : 'En attente' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= INVOICES ========================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'invoices'">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <p class="text-xs text-slate-600 mb-1">Total facturé (YTD)</p>
+          <p class="text-2xl font-bold text-slate-900">2 184,55 €</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <p class="text-xs text-slate-600 mb-1">TVA collectée</p>
+          <p class="text-2xl font-bold text-slate-900">4 287,10 €</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-5">
+          <p class="text-xs text-slate-600 mb-1">Prochaine déclaration</p>
+          <p class="text-2xl font-bold text-amber-600">15 mai 2026</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-900">Factures HELIGXIAM</h3>
+          <button class="text-xs px-3 py-1.5 bg-slate-100 font-bold rounded hover:bg-slate-200">Télécharger rapport TVA</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Numéro</th><th class="p-3">Type</th><th class="p-3">Période</th>
+              <th class="p-3">Montant</th><th class="p-3">Statut</th><th class="p-3">Télécharger</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let i of invoices" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3 font-mono font-semibold">{{ i.id }}</td>
+                <td class="p-3">{{ i.type }}</td>
+                <td class="p-3 text-slate-600">{{ i.period }}</td>
+                <td class="p-3 font-bold">{{ i.amount.toFixed(2) }} €</td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getInvoiceStatusClass(i.status)">
+                    {{ i.status === 'paid' ? 'Payée' : 'En attente' }}
+                  </span>
+                </td>
+                <td class="p-3">
+                  <button *ngIf="i.download" class="inline-flex items-center gap-1 text-[11px] text-indigo-600 font-bold hover:underline">
+                    <lucide-angular [img]="Download" class="w-3 h-3"></lucide-angular> PDF
+                  </button>
+                  <span *ngIf="!i.download" class="text-slate-400 text-[11px]">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= SETTINGS ========================================== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'settings'">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-4">Informations boutique</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nom boutique</label>
+                <input [(ngModel)]="storeSettings.name" type="text"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nom d'affichage</label>
+                <input [(ngModel)]="storeSettings.displayName" type="text"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Email de contact</label>
+                <input [(ngModel)]="storeSettings.email" type="email"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Téléphone</label>
+                <input [(ngModel)]="storeSettings.phone" type="tel"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">SIRET</label>
+                <input [(ngModel)]="storeSettings.siret" type="text"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">N° TVA</label>
+                <input [(ngModel)]="storeSettings.vat" type="text"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-4">Préférences</h3>
+            <div class="space-y-3">
+              <label class="flex items-center justify-between p-3 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-50">
+                <div>
+                  <p class="text-sm font-semibold text-slate-900">Accepter les retours automatiquement</p>
+                  <p class="text-[11px] text-slate-500">Sans intervention manuelle pour les retours sous 30j</p>
+                </div>
+                <input type="checkbox" [(ngModel)]="storeSettings.autoAcceptReturns" class="w-5 h-5 rounded" />
+              </label>
+              <label class="flex items-center justify-between p-3 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-50">
+                <div>
+                  <p class="text-sm font-semibold text-slate-900">Alertes stock faible</p>
+                  <p class="text-[11px] text-slate-500">Notification email si stock &lt; 10 unités</p>
+                </div>
+                <input type="checkbox" [(ngModel)]="storeSettings.lowStockAlerts" class="w-5 h-5 rounded" />
+              </label>
+              <label class="flex items-center justify-between p-3 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-50">
+                <div>
+                  <p class="text-sm font-semibold text-slate-900">Rapport hebdomadaire</p>
+                  <p class="text-[11px] text-slate-500">Récapitulatif de votre activité tous les lundis</p>
+                </div>
+                <input type="checkbox" [(ngModel)]="storeSettings.weeklyReport" class="w-5 h-5 rounded" />
+              </label>
+              <label class="flex items-center justify-between p-3 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-50">
+                <div>
+                  <p class="text-sm font-semibold text-slate-900">Notifications SMS</p>
+                  <p class="text-[11px] text-slate-500">Pour les commandes urgentes</p>
+                </div>
+                <input type="checkbox" [(ngModel)]="storeSettings.smsNotifications" class="w-5 h-5 rounded" />
+              </label>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button class="px-4 py-2 bg-white border border-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50">Annuler</button>
+            <button class="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg hover:shadow-lg">
+              Enregistrer les modifications
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 text-center">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 mx-auto flex items-center justify-center text-white text-2xl font-bold mb-3">
+              {{ userInitials }}
+            </div>
+            <p class="font-bold text-slate-900">{{ storeSettings.displayName }}</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">Boutique vérifiée</p>
+            <button class="mt-3 w-full py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-lg">Changer le logo</button>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h4 class="text-sm font-bold text-slate-900 mb-3">Collaborateurs</h4>
+            <p class="text-xs text-slate-500 mb-3">Donnez accès à votre équipe avec des permissions fines.</p>
+            <button class="w-full py-2 text-xs font-bold text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50">
+              + Inviter un collaborateur
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
 
     </main>
 

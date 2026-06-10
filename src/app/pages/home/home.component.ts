@@ -18,7 +18,9 @@ import {
   Tag,
   Gift,
   Truck,
-  Headphones
+  Headphones,
+  ShieldCheck,
+  Star
 } from 'lucide-angular';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
 import { PRODUCTS } from '../../data/products.data';
@@ -94,6 +96,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   readonly Gift = Gift;
   readonly Truck = Truck;
   readonly Headphones = Headphones;
+  readonly ShieldCheck = ShieldCheck;
+  readonly Star = Star;
 
   // Cartes "Univers" (4 tuiles 2x2) - style Amazon
   universesTop: Universe[] = [

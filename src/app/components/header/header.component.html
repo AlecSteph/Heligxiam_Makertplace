@@ -130,6 +130,126 @@
 
       <!-- Actions -->
       <div class="flex items-center gap-2">
+        <!-- Language / Country selector (data-locale-menu : exclusion du document:click) -->
+        <div
+          data-locale-menu
+          class="relative flex-shrink-0"
+          (click)="$event.stopPropagation()"
+        >
+          <button
+            type="button"
+            (click)="toggleLanguageMenu($event)"
+            [attr.aria-expanded]="showLanguageMenu"
+            aria-haspopup="true"
+            class="flex items-center gap-1.5 px-3 py-2 hover:bg-gray-50 rounded-xl transition-all group border border-transparent hover:border-gray-200"
+            title="Choisir la langue et le pays"
+          >
+            <span class="text-lg leading-none">{{ selectedCountry.flag }}</span>
+            <div class="text-left leading-tight hidden xl:block">
+              <div class="text-[11px] text-gray-500">Livrer en {{ selectedCountry.label }}</div>
+              <div class="text-sm font-semibold text-gray-900 flex items-center gap-1">
+                {{ selectedLanguage.short }}
+                <svg class="w-3.5 h-3.5 text-gray-500 transition-transform" [class.rotate-180]="showLanguageMenu" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+            <span class="xl:hidden text-sm font-semibold text-gray-800">{{ selectedLanguage.short }}</span>
+            <svg class="xl:hidden w-3.5 h-3.5 text-gray-500 transition-transform" [class.rotate-180]="showLanguageMenu" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown -->
+          <div
+            *ngIf="showLanguageMenu"
+            class="absolute right-0 mt-2 w-[360px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[60] animate-fade-in"
+          >
+            <!-- Arrow -->
+            <div class="absolute -top-1.5 right-8 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45"></div>
+
+            <!-- Header -->
+            <div class="px-4 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-100">
+              <p class="text-xs font-bold text-gray-900 uppercase tracking-wide flex items-center gap-1.5">
+                <lucide-angular [img]="Globe" class="w-3.5 h-3.5 text-indigo-600"></lucide-angular>
+                Préférences régionales
+              </p>
+              <p class="text-[11px] text-gray-600 mt-0.5">
+                Langue, pays et devise de livraison
+              </p>
+            </div>
+
+            <div class="max-h-[70vh] overflow-y-auto">
+              <!-- Languages -->
+              <div class="p-3">
+                <p class="px-1 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1">
+                  <lucide-angular [img]="Languages" class="w-3 h-3"></lucide-angular>
+                  Langue
+                </p>
+                <div class="grid grid-cols-2 gap-1">
+                  <button *ngFor="let lang of languages"
+                          type="button"
+                          (click)="selectLanguage(lang)"
+                          [class]="'flex items-center justify-between px-2.5 py-1.5 text-sm rounded-lg transition-colors ' +
+                            (selectedLanguage.code === lang.code
+                              ? 'bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200'
+                              : 'text-gray-700 hover:bg-gray-50 border border-transparent')">
+                    <span class="truncate">{{ lang.label }}</span>
+                    <lucide-angular *ngIf="selectedLanguage.code === lang.code" [img]="CheckCircle2" class="w-3.5 h-3.5 text-indigo-600 flex-shrink-0 ml-1"></lucide-angular>
+                  </button>
+                </div>
+              </div>
+
+              <div class="border-t border-gray-100"></div>
+
+              <!-- Countries -->
+              <div class="p-3">
+                <p class="px-1 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1">
+                  <lucide-angular [img]="Globe" class="w-3 h-3"></lucide-angular>
+                  Pays / Marché
+                </p>
+                <div class="space-y-0.5">
+                  <button *ngFor="let c of countries"
+                          type="button"
+                          (click)="selectCountry(c)"
+                          [class]="'w-full flex items-center gap-2.5 px-2.5 py-1.5 text-sm rounded-lg transition-colors ' +
+                            (selectedCountry.code === c.code
+                              ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                              : 'text-gray-700 hover:bg-gray-50')">
+                    <span class="text-lg leading-none">{{ c.flag }}</span>
+                    <span class="flex-1 text-left truncate">{{ c.label }}</span>
+                    <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{{ c.currency }}</span>
+                    <lucide-angular *ngIf="selectedCountry.code === c.code" [img]="CheckCircle2" class="w-3.5 h-3.5 text-indigo-600 flex-shrink-0"></lucide-angular>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer action -->
+            <div class="p-3 bg-gray-50 border-t border-gray-100">
+              <!-- Résumé de la sélection -->
+              <div class="flex items-center justify-between mb-2 px-1 text-xs">
+                <span class="text-gray-500">Sélection :</span>
+                <span class="font-bold text-gray-800 flex items-center gap-1.5">
+                  {{ selectedLanguage.short }}
+                  <span class="text-gray-300">•</span>
+                  <span>{{ selectedCountry.flag }}</span>
+                  <span class="text-gray-300">•</span>
+                  <span class="text-indigo-600">{{ selectedCountry.currency }}</span>
+                </span>
+              </div>
+              <button
+                type="button"
+                (click)="confirmLanguageChange($event)"
+                class="w-full px-3 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold rounded-lg hover:shadow-md hover:scale-[1.01] transition-all inline-flex items-center justify-center gap-1.5"
+              >
+                <lucide-angular [img]="CheckCircle2" class="w-4 h-4"></lucide-angular>
+                {{ savePreferencesButtonLabel }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <a
           routerLink="/wishlist"
           class="hidden lg:flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 rounded-xl transition-all group"
@@ -369,89 +489,365 @@
   </div>
 
   <!-- Categories Navigation -->
-  <div class="border-t bg-gray-50/50">
-    <div class="max-w-7xl mx-auto px-4">
-      <nav class="flex items-center gap-6 py-3 overflow-x-auto scrollbar-hide text-sm">
-        <a routerLink="/category/electronique"
-           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
-          Électronique
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
-        </a>
-        <a routerLink="/category/mode"
-           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
-          Mode & Accessoires
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
-        </a>
-        <a routerLink="/category/maison"
-           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
-          Maison & Déco
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
-        </a>
-        <a routerLink="/category/beaute"
-           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
-          Beauté & Santé
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
-        </a>
-        <a routerLink="/category/sport"
-           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
-          Sport & Fitness
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
-        </a>
-        <a routerLink="/category/auto"
-           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
-          Automobile
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
-        </a>
+  <div class="border-t bg-gray-50/50 relative">
+    <div class="w-full pl-0 pr-4 flex items-stretch">
+      <!-- Fixed : Hamburger "Autre" collé à gauche de l'écran -->
+      <button
+        type="button"
+        (click)="toggleSideMenu($event)"
+        [attr.aria-expanded]="showSideMenu"
+        aria-haspopup="true"
+        aria-label="Ouvrir le menu Autre"
+        class="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 my-1.5 ml-0 mr-2 rounded-r-full text-xs font-bold uppercase tracking-wide text-white bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black shadow-lg transition-all border-l-0"
+        title="Plus de services : Points de relais, Carrières, Accessibilité…"
+      >
+        <lucide-angular [img]="Menu" class="w-4 h-4"></lucide-angular>
+        Autre
+      </button>
 
-        <!-- Separator -->
-        <span class="hidden md:inline-block h-4 w-px bg-gray-300"></span>
+      <div class="max-w-7xl w-full mx-auto flex items-stretch px-4">
+      <!-- Fixed : Offres & Bons plans dropdown -->
+      <div
+        class="relative flex-shrink-0 flex items-center"
+        (mouseenter)="openOffersMenu()"
+        (mouseleave)="scheduleCloseOffersMenu()"
+        (click)="$event.stopPropagation()"
+      >
+        <button
+          type="button"
+          (click)="toggleOffersMenu($event)"
+          [attr.aria-expanded]="showOffersMenu"
+          aria-haspopup="true"
+          class="flex items-center gap-1.5 px-3 py-2 my-1.5 mr-3 rounded-full text-xs font-bold uppercase tracking-wide text-white bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 hover:shadow-lg hover:scale-[1.02] transition-all"
+        >
+          <lucide-angular [img]="Tag" class="w-3.5 h-3.5"></lucide-angular>
+          Offres &amp; Bons plans
+          <svg class="w-3 h-3 transition-transform" [class.rotate-180]="showOffersMenu" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
 
-        <a [routerLink]="['/search']" [queryParams]="{ sort: 'rating' }"
-           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
-          Meilleures ventes
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
-        </a>
-        <a [routerLink]="['/search']" [queryParams]="{ badge: 'Nouveau' }"
-           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
-          Nouveautés
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
-        </a>
-        <a [routerLink]="['/search']" [queryParams]="{ tab: 'brands' }"
-           class="font-medium text-gray-700 hover:text-indigo-600 whitespace-nowrap transition-colors relative group">
-          Marques
-          <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-600 group-hover:w-full transition-all"></span>
-        </a>
+        <!-- Dropdown mega-menu -->
+        <div
+          *ngIf="showOffersMenu"
+          class="absolute left-0 top-full mt-1 w-[min(880px,92vw)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[60] animate-fade-in"
+          (mouseenter)="openOffersMenu()"
+          (mouseleave)="scheduleCloseOffersMenu()"
+        >
+          <!-- Header -->
+          <div class="px-5 py-3 bg-gradient-to-r from-rose-50 via-pink-50 to-fuchsia-50 border-b border-gray-100 flex items-center justify-between">
+            <div>
+              <p class="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                <lucide-angular [img]="Gift" class="w-4 h-4 text-pink-600"></lucide-angular>
+                Toutes les manières d'économiser
+              </p>
+              <p class="text-[11px] text-gray-600 mt-0.5">
+                Jusqu'à -70% en temps réel — cumulez coupons, cashback et fidélité
+              </p>
+            </div>
+            <a routerLink="/offres"
+               (click)="closeOffersMenu()"
+               class="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-pink-600 hover:text-pink-700">
+              Voir toutes les offres
+              <lucide-angular [img]="ArrowRight" class="w-3.5 h-3.5"></lucide-angular>
+            </a>
+          </div>
 
-        <!-- Separator -->
-        <span class="hidden md:inline-block h-4 w-px bg-gray-300"></span>
+          <!-- 4 Containers grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-5">
+            <!-- Container 1 : Coupons -->
+            <a routerLink="/offres"
+               fragment="coupons"
+               (click)="closeOffersMenu()"
+               class="offers-card group relative overflow-hidden rounded-xl border border-gray-200 hover:border-pink-300 bg-gradient-to-br from-pink-50 to-rose-50 p-4 flex flex-col">
+              <div class="absolute -right-4 -top-4 w-20 h-20 bg-pink-200/40 rounded-full blur-2xl"></div>
+              <div class="relative z-10">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-md mb-3">
+                  <lucide-angular [img]="Ticket" class="w-5 h-5 text-white"></lucide-angular>
+                </div>
+                <h4 class="text-sm font-bold text-gray-900">Codes promo &amp; coupons</h4>
+                <p class="text-[11px] text-gray-600 mt-1 leading-snug">Activez des réductions à appliquer au panier.</p>
+                <div class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-pink-700 group-hover:gap-2 transition-all">
+                  Parcourir les coupons
+                  <lucide-angular [img]="ArrowRight" class="w-3 h-3"></lucide-angular>
+                </div>
+              </div>
+            </a>
 
-        <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }"
-           class="flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-700 whitespace-nowrap transition-colors">
-          <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
-          Premium
-        </a>
-        <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }"
-           class="flex items-center gap-1 font-medium text-pink-600 hover:text-pink-700 whitespace-nowrap transition-colors">
-          🔥 Promotions
-        </a>
-        <a [routerLink]="['/search']" [queryParams]="{ promo: 'flash' }"
-           class="flex items-center gap-1 font-medium text-red-600 hover:text-red-700 whitespace-nowrap transition-colors">
-          ⚡ Ventes Flash
-        </a>
-        <a [routerLink]="['/search']" [queryParams]="{ promo: 'deals' }"
-           class="font-medium text-emerald-600 hover:text-emerald-700 whitespace-nowrap transition-colors">
-          💰 Bons plans
-        </a>
+            <!-- Container 2 : Bons de réduction -->
+            <a routerLink="/offres"
+               fragment="bons"
+               (click)="closeOffersMenu()"
+               class="offers-card group relative overflow-hidden rounded-xl border border-gray-200 hover:border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-4 flex flex-col">
+              <div class="absolute -right-4 -top-4 w-20 h-20 bg-amber-200/40 rounded-full blur-2xl"></div>
+              <div class="relative z-10">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md mb-3">
+                  <lucide-angular [img]="Percent" class="w-5 h-5 text-white"></lucide-angular>
+                </div>
+                <h4 class="text-sm font-bold text-gray-900">Bons de réduction</h4>
+                <p class="text-[11px] text-gray-600 mt-1 leading-snug">Remises exclusives par catégorie et vendeur.</p>
+                <div class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 group-hover:gap-2 transition-all">
+                  Voir les bons du jour
+                  <lucide-angular [img]="ArrowRight" class="w-3 h-3"></lucide-angular>
+                </div>
+              </div>
+            </a>
 
-        <!-- Separator -->
-        <span class="hidden md:inline-block h-4 w-px bg-gray-300"></span>
+            <!-- Container 3 : Cashback -->
+            <a routerLink="/offres"
+               fragment="cashback"
+               (click)="closeOffersMenu()"
+               class="offers-card group relative overflow-hidden rounded-xl border border-gray-200 hover:border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 flex flex-col">
+              <div class="absolute -right-4 -top-4 w-20 h-20 bg-emerald-200/40 rounded-full blur-2xl"></div>
+              <div class="relative z-10">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md mb-3">
+                  <lucide-angular [img]="Wallet" class="w-5 h-5 text-white"></lucide-angular>
+                </div>
+                <h4 class="text-sm font-bold text-gray-900">Cashback &amp; crédits</h4>
+                <p class="text-[11px] text-gray-600 mt-1 leading-snug">Jusqu'à 8% remboursés sur chaque commande.</p>
+                <div class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 group-hover:gap-2 transition-all">
+                  Activer mon cashback
+                  <lucide-angular [img]="ArrowRight" class="w-3 h-3"></lucide-angular>
+                </div>
+              </div>
+            </a>
 
-        <a routerLink="/guide"
-           class="flex items-center gap-1.5 font-semibold whitespace-nowrap transition-all px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-orange-700 hover:from-amber-200 hover:to-orange-200 border border-amber-200">
-          <lucide-angular [img]="BookOpen" class="w-4 h-4"></lucide-angular>
-          Guide de l'acheteur
-        </a>
-      </nav>
+            <!-- Container 4 : Ventes flash -->
+            <a routerLink="/offres"
+               fragment="flash"
+               (click)="closeOffersMenu()"
+               class="offers-card group relative overflow-hidden rounded-xl border border-gray-200 hover:border-red-300 bg-gradient-to-br from-red-50 to-rose-50 p-4 flex flex-col">
+              <div class="absolute -right-4 -top-4 w-20 h-20 bg-red-200/40 rounded-full blur-2xl"></div>
+              <div class="relative z-10">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center shadow-md mb-3">
+                  <lucide-angular [img]="Zap" class="w-5 h-5 text-white"></lucide-angular>
+                </div>
+                <h4 class="text-sm font-bold text-gray-900">Ventes flash &amp; outlet</h4>
+                <p class="text-[11px] text-gray-600 mt-1 leading-snug">Deals chronométrés, stocks ultra-limités.</p>
+                <div class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-red-700 group-hover:gap-2 transition-all">
+                  Courir vers les deals
+                  <lucide-angular [img]="ArrowRight" class="w-3 h-3"></lucide-angular>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <!-- Footer bar -->
+          <div class="px-5 py-2.5 bg-gray-50 border-t border-gray-100 text-[11px] text-gray-600 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              +128 offres actives aujourd'hui
+            </span>
+            <a routerLink="/offres"
+               (click)="closeOffersMenu()"
+               class="font-semibold text-gray-700 hover:text-pink-600">
+              Tout voir →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scroll gauche -->
+      <button type="button"
+              (click)="scrollMarquee('left', $event)"
+              aria-label="Défiler vers la gauche"
+              title="Défiler vers la gauche"
+              class="shrink-0 w-7 h-7 rounded-full border border-gray-200 bg-white/80 hover:bg-white hover:border-indigo-300 text-gray-500 hover:text-indigo-600 flex items-center justify-center shadow-sm transition-all">
+        <lucide-angular [img]="ChevronLeft" class="w-3.5 h-3.5"></lucide-angular>
+      </button>
+
+      <!-- Marquee nav -->
+      <div class="marquee flex-1 min-w-0 py-3"
+           (mouseenter)="onMarqueeHoverEnter()"
+           (mouseleave)="onMarqueeHoverLeave()">
+        <div #marqueeTrack class="marquee-track text-sm">
+          <!-- copy 1 -->
+          <a routerLink="/category/electronique" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Électronique</a>
+          <a routerLink="/category/mode" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Mode &amp; Accessoires</a>
+          <a routerLink="/category/maison" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Maison &amp; Déco</a>
+          <a routerLink="/category/beaute" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Beauté &amp; Santé</a>
+          <a routerLink="/category/sport" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Sport &amp; Fitness</a>
+          <a routerLink="/category/auto" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Automobile</a>
+          <span class="h-4 w-px bg-gray-300 shrink-0"></span>
+          <a [routerLink]="['/search']" [queryParams]="{ sort: 'rating' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Meilleures ventes</a>
+          <a [routerLink]="['/search']" [queryParams]="{ badge: 'Nouveau' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Nouveautés</a>
+          <a [routerLink]="['/search']" [queryParams]="{ tab: 'brands' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Marques</a>
+          <span class="h-4 w-px bg-gray-300 shrink-0"></span>
+          <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }" class="inline-flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+            <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>Premium
+          </a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }" class="font-medium text-pink-600 hover:text-pink-700 transition-colors">🔥 Promotions</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'flash' }" class="font-medium text-red-600 hover:text-red-700 transition-colors">⚡ Ventes Flash</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'deals' }" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors">💰 Bons plans</a>
+          <span class="h-4 w-px bg-gray-300 shrink-0"></span>
+          <a routerLink="/guide" class="inline-flex items-center gap-1.5 font-semibold px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-orange-700 hover:from-amber-200 hover:to-orange-200 border border-amber-200 transition-all">
+            <lucide-angular [img]="BookOpen" class="w-4 h-4"></lucide-angular>Guide de l'acheteur
+          </a>
+
+          <!-- copy 2 (duplicate for seamless infinite loop) -->
+          <a routerLink="/category/electronique" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Électronique</a>
+          <a routerLink="/category/mode" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Mode &amp; Accessoires</a>
+          <a routerLink="/category/maison" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Maison &amp; Déco</a>
+          <a routerLink="/category/beaute" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Beauté &amp; Santé</a>
+          <a routerLink="/category/sport" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Sport &amp; Fitness</a>
+          <a routerLink="/category/auto" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Automobile</a>
+          <span class="h-4 w-px bg-gray-300 shrink-0"></span>
+          <a [routerLink]="['/search']" [queryParams]="{ sort: 'rating' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Meilleures ventes</a>
+          <a [routerLink]="['/search']" [queryParams]="{ badge: 'Nouveau' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Nouveautés</a>
+          <a [routerLink]="['/search']" [queryParams]="{ tab: 'brands' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Marques</a>
+          <span class="h-4 w-px bg-gray-300 shrink-0"></span>
+          <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }" class="inline-flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-700 transition-colors" aria-hidden="true">
+            <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>Premium
+          </a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }" class="font-medium text-pink-600 hover:text-pink-700 transition-colors" aria-hidden="true">🔥 Promotions</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'flash' }" class="font-medium text-red-600 hover:text-red-700 transition-colors" aria-hidden="true">⚡ Ventes Flash</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'deals' }" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors" aria-hidden="true">💰 Bons plans</a>
+          <span class="h-4 w-px bg-gray-300 shrink-0"></span>
+          <a routerLink="/guide" class="inline-flex items-center gap-1.5 font-semibold px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-orange-700 hover:from-amber-200 hover:to-orange-200 border border-amber-200 transition-all" aria-hidden="true">
+            <lucide-angular [img]="BookOpen" class="w-4 h-4"></lucide-angular>Guide de l'acheteur
+          </a>
+        </div>
+      </div>
+
+      <!-- Scroll droite -->
+      <button type="button"
+              (click)="scrollMarquee('right', $event)"
+              aria-label="Défiler vers la droite"
+              title="Défiler vers la droite"
+              class="shrink-0 w-7 h-7 rounded-full border border-gray-200 bg-white/80 hover:bg-white hover:border-indigo-300 text-gray-500 hover:text-indigo-600 flex items-center justify-center shadow-sm transition-all">
+        <lucide-angular [img]="ChevronRight" class="w-3.5 h-3.5"></lucide-angular>
+      </button>
+      </div>
     </div>
   </div>
 </header>
+
+<!-- ========== "AUTRE" SIDE DRAWER (overlay global) ========== -->
+<div *ngIf="showSideMenu"
+     class="fixed inset-0 z-[80]"
+     (click)="closeSideMenu()"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Menu complémentaire">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm animate-side-fade"></div>
+
+  <!-- Drawer panel (slide from left) -->
+  <aside
+    class="absolute top-0 left-0 bottom-0 w-[min(420px,92vw)] bg-white shadow-2xl flex flex-col animate-side-slide"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header -->
+    <div class="relative px-5 py-5 bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900 text-white">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center border border-white/20">
+            <lucide-angular [img]="Menu" class="w-5 h-5"></lucide-angular>
+          </div>
+          <div>
+            <p class="text-[11px] uppercase tracking-widest text-white/70">Tous nos services</p>
+            <h2 class="text-lg font-bold">Explorer HELIGXIAM</h2>
+          </div>
+        </div>
+        <button type="button"
+                (click)="closeSideMenu()"
+                class="w-9 h-9 rounded-lg hover:bg-white/10 flex items-center justify-center transition"
+                aria-label="Fermer le menu">
+          <lucide-angular [img]="X" class="w-5 h-5"></lucide-angular>
+        </button>
+      </div>
+
+      <!-- Greeting -->
+      <div *ngIf="isLoggedIn" class="mt-4 flex items-center gap-3 px-3 py-2.5 bg-white/10 backdrop-blur rounded-xl border border-white/10">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-sm font-bold">
+          {{ userInitials || 'U' }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate">Bonjour, {{ currentUser?.prenom || 'Client' }}</p>
+          <p class="text-[11px] text-white/70 truncate">{{ roleLabel }}</p>
+        </div>
+      </div>
+      <a *ngIf="!isLoggedIn"
+         routerLink="/account"
+         (click)="closeSideMenu()"
+         class="mt-4 flex items-center justify-between px-4 py-2.5 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition">
+        <span class="flex items-center gap-2 text-sm">
+          <lucide-angular [img]="User" class="w-4 h-4"></lucide-angular>
+          Identifiez-vous
+        </span>
+        <lucide-angular [img]="ArrowRight" class="w-4 h-4"></lucide-angular>
+      </a>
+    </div>
+
+    <!-- Content (scrollable) -->
+    <div class="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+      <div *ngFor="let section of sideMenuSections">
+        <p class="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">{{ section.title }}</p>
+        <ul class="space-y-0.5">
+          <li *ngFor="let item of section.items">
+            <a [routerLink]="item.route"
+               [queryParams]="item.queryParams ?? null"
+               [fragment]="item.fragment ?? ''"
+               (click)="closeSideMenu()"
+               class="flex items-center gap-3 px-2.5 py-2 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 transition group">
+              <span class="w-9 h-9 rounded-lg bg-gray-100 group-hover:bg-white group-hover:shadow-sm flex items-center justify-center text-gray-600 group-hover:text-indigo-600 transition">
+                <lucide-angular [img]="item.icon" class="w-4 h-4"></lucide-angular>
+              </span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <p class="text-sm font-semibold text-gray-900 truncate">{{ item.label }}</p>
+                  <span *ngIf="item.badge"
+                        class="inline-block px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white">
+                    {{ item.badge }}
+                  </span>
+                </div>
+                <p *ngIf="item.description" class="text-[11px] text-gray-500 truncate">{{ item.description }}</p>
+              </div>
+              <lucide-angular [img]="ArrowRight" class="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition"></lucide-angular>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer CTA -->
+    <div class="border-t border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50 px-5 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow">
+          <lucide-angular [img]="Sparkles" class="w-4 h-4 text-white"></lucide-angular>
+        </span>
+        <div>
+          <p class="text-[11px] font-bold text-gray-900">HELIGXIAM Plus</p>
+          <p class="text-[10px] text-gray-500">-70% sur vos achats</p>
+        </div>
+      </div>
+      <a routerLink="/offres"
+         fragment="cashback"
+         (click)="closeSideMenu()"
+         class="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold rounded-lg hover:shadow-md transition">
+        Découvrir
+      </a>
+    </div>
+  </aside>
+</div>
+
+<!-- Toast de confirmation : préférences régionales -->
+<div *ngIf="prefToastVisible"
+     class="fixed top-24 right-6 z-[90] pointer-events-none">
+  <div class="bg-white border border-emerald-200 shadow-2xl rounded-xl px-4 py-3 flex items-center gap-3 animate-fade-in min-w-[280px]">
+    <div class="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+      <lucide-angular [img]="CheckCircle2" class="w-5 h-5 text-emerald-600"></lucide-angular>
+    </div>
+    <div class="flex-1">
+      <p class="text-sm font-bold text-gray-900">{{ prefToastMessage }}</p>
+      <p class="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5">
+        {{ selectedLanguage.short }}
+        <span class="text-gray-300">•</span>
+        <span>{{ selectedCountry.flag }}</span>
+        {{ selectedCountry.label }}
+        <span class="text-gray-300">•</span>
+        <span class="font-bold text-indigo-600">{{ selectedCountry.currency }}</span>
+      </p>
+    </div>
+  </div>
+</div>
