@@ -10,6 +10,7 @@ import {
 } from 'lucide-angular';
 import { WishlistService } from '../../services/wishlist.service';
 import { CartService } from '../../services/cart.service';
+import { CatalogService } from '../../services/catalog.service';
 import { Product } from '../../models/product.model';
 
 type SortKey = 'recent' | 'price-asc' | 'price-desc' | 'rating' | 'discount' | 'name';
@@ -64,10 +65,14 @@ export class WishlistComponent implements OnInit {
 
   constructor(
     private wishlistService: WishlistService,
-    private cartService: CartService
+    private cartService: CartService,
+    private catalogService: CatalogService
   ) {}
 
   ngOnInit(): void {
+    void this.catalogService.loadProducts().then((products) => {
+      this.wishlistService.reconcileWithCatalog(products);
+    });
     this.wishlistService.wishlist$.subscribe(wishlist => {
       this.wishlist = wishlist;
       // Clean selected ids

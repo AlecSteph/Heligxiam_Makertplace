@@ -448,6 +448,11 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.currentUser?.role === 'vendeur';
   }
 
+  /** Session acheteur uniquement — l’espace client ne doit pas afficher le compte vendeur/admin. */
+  get isClientLoggedIn(): boolean {
+    return this.isLoggedIn && this.currentUser?.role === 'client';
+  }
+
   get roleLabel(): string {
     switch (this.currentUser?.role) {
       case 'vendeur': return 'Vendeur partenaire';

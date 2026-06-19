@@ -93,6 +93,11 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    void this.catalogService.loadProducts().then((products) => {
+      this.cartService.reconcileWithCatalog(products);
+      this.wishlistService.reconcileWithCatalog(products);
+    });
+
     this.catalogService.loadPromoCodes().then((codes) => {
       this.availablePromos = codes.map((c) => ({
         code: c.code,

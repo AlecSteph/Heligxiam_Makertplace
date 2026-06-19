@@ -11,6 +11,20 @@ const CATEGORIES = [
 const SLUG_TO_CATEGORY = Object.fromEntries(CATEGORIES.map((c) => [c.slug, c.name]));
 const NAME_TO_SLUG = Object.fromEntries(CATEGORIES.map((c) => [c.name, c.slug]));
 
+/** Noms courts issus du seed / descriptions produits → libellés catalogue client */
+const CATEGORY_ALIASES = {
+  Mode: 'Mode & Accessoires',
+  Maison: 'Maison & Décoration',
+  Beauté: 'Beauté & Santé',
+  Sport: 'Sport & Fitness'
+};
+
+function normalizeCategoryName(raw) {
+  const trimmed = String(raw || '').trim();
+  if (!trimmed) return 'Électronique';
+  return CATEGORY_ALIASES[trimmed] || trimmed;
+}
+
 /** @type {Record<string, object>} */
 const META_BY_SKU = {
   P001: { brand: 'Apple', badge: 'Premium', rating: 4.9, reviews: 1247, originalPrice: 3299 },
@@ -76,7 +90,7 @@ function normalizeImageUrl(url) {
 
 function enrichProduct(row, promoOverlay = null) {
   const meta = META_BY_SKU[row.sku] || {};
-  const category = row.category || 'Électronique';
+  const category = normalizeCategoryName(row.category || 'Électronique');
   const basePrice = Number(row.price);
   let price = basePrice;
   let originalPrice;
@@ -124,5 +138,6 @@ module.exports = {
   SLUG_TO_CATEGORY,
   NAME_TO_SLUG,
   META_BY_SKU,
+  normalizeCategoryName,
   enrichProduct
 };

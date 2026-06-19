@@ -1,10 +1,10 @@
 const { getMysqlPool } = require('../mysqlPool');
-const { CATEGORIES, SLUG_TO_CATEGORY, enrichProduct } = require('./productMeta');
+const { CATEGORIES, SLUG_TO_CATEGORY, enrichProduct, normalizeCategoryName } = require('./productMeta');
 const { listApprovedProductPromosMap } = require('./promotionsMysql');
 
 function parseCategoryFromDescription(desc) {
   const m = String(desc || '').match(/Catégorie\s*:\s*([^.]+)/);
-  return m ? m[1].trim() : 'Électronique';
+  return normalizeCategoryName(m ? m[1].trim() : 'Électronique');
 }
 
 async function queryPublishedProducts(filters = {}) {
@@ -44,11 +44,12 @@ async function queryPublishedProducts(filters = {}) {
 
   if (filters.categorySlug) {
     const name = SLUG_TO_CATEGORY[filters.categorySlug];
-    if (name) items = items.filter((p) => p.category === name);
+    if (name) items = items.filter((p) => normalizeCategoryName(p.category) === name);
   }
 
   if (filters.categoryName) {
-    items = items.filter((p) => p.category === filters.categoryName);
+    const target = normalizeCategoryName(filters.categoryName);
+    items = items.filter((p) => normalizeCategoryName(p.category) === target);
   }
 
   const enriched = items.map((r) => enrichProduct(r, promoMap.get(Number(r.id)) || null));
@@ -80,9 +81,9 @@ async function getProductById(id) {
      LEFT JOIN profils_vendeur pr ON pr.identifiant_vendeur = c.identifiant
      LEFT JOIN inventaire i ON i.identifiant_produit = p.identifiant AND i.identifiant_variante IS NULL
      LEFT JOIN images_produit img ON img.identifiant_produit = p.identifiant AND img.ordre_affichage = 0
-     WHERE p.identifiant = ? AND p.statut_moderation = 'publie'
+     WHERE (p.identifiant = ? OR p.reference_sku = ?) AND p.statut_moderation = 'publie'
      LIMIT 1`,
-    [id]
+    [id, id]
   );
   if (!rows.length) return null;
   const promoMap = await listApprovedProductPromosMap();

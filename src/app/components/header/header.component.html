@@ -361,8 +361,8 @@
           </div>
         </div>
 
-        <!-- Connecté : menu utilisateur -->
-        <div *ngIf="isLoggedIn" class="relative hidden lg:block" (click)="$event.stopPropagation()">
+        <!-- Connecté client : menu utilisateur -->
+        <div *ngIf="isClientLoggedIn" class="relative hidden lg:block" (click)="$event.stopPropagation()">
           <button
             type="button"
             (click)="toggleUserMenu($event)"
@@ -730,13 +730,13 @@
       </div>
 
       <!-- Greeting -->
-      <div *ngIf="isLoggedIn" class="mt-4 flex items-center gap-3 px-3 py-2.5 bg-white/10 backdrop-blur rounded-xl border border-white/10">
+      <div *ngIf="isClientLoggedIn" class="mt-4 flex items-center gap-3 px-3 py-2.5 bg-white/10 backdrop-blur rounded-xl border border-white/10">
         <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-sm font-bold">
           {{ userInitials || 'U' }}
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-semibold truncate">Bonjour, {{ currentUser?.prenom || 'Client' }}</p>
-          <p *ngIf="!isSeller" class="text-[11px] text-white/70 truncate">{{ roleLabel }}</p>
+          <p class="text-[11px] text-white/70 truncate">{{ roleLabel }}</p>
         </div>
       </div>
       <a *ngIf="!isLoggedIn"

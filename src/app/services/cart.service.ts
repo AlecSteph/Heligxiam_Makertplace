@@ -23,9 +23,16 @@ export class CartService {
     localStorage.setItem('heligxiam-cart', JSON.stringify(this.cartItems.value));
   }
 
+  private sameProduct(a: Product, b: Product): boolean {
+    return (
+      String(a.id) === String(b.id) ||
+      (!!a.sku && !!b.sku && String(a.sku) === String(b.sku))
+    );
+  }
+
   addToCart(product: Product): void {
     const currentCart = this.cartItems.value;
-    const existingItem = currentCart.find(item => item.id === product.id);
+    const existingItem = currentCart.find((item) => this.sameProduct(item, product));
 
     if (existingItem) {
       existingItem.quantity++;
@@ -81,5 +88,41 @@ export class CartService {
 
   getCart(): CartItem[] {
     return this.cartItems.value;
+  }
+
+  /** Réaligne le panier sur le catalogue API (IDs MySQL, prix/stock à jour). */
+  reconcileWithCatalog(products: Product[]): void {
+    if (!products.length) return;
+    const byId = new Map(products.map((p) => [String(p.id), p]));
+    const bySku = new Map(
+      products.filter((p) => p.sku).map((p) => [String(p.sku!), p])
+    );
+    const merged = new Map<string, CartItem>();
+    for (const item of this.cartItems.value) {
+      const fresh =
+        byId.get(String(item.id)) || (item.sku ? bySku.get(String(item.sku)) : undefined);
+      if (!fresh) continue;
+      const key = String(fresh.id);
+      const existing = merged.get(key);
+      if (existing) {
+        existing.quantity += item.quantity;
+      } else {
+        merged.set(key, { ...fresh, quantity: item.quantity });
+      }
+    }
+    const next = [...merged.values()];
+    const current = this.cartItems.value;
+    const changed =
+      next.length !== current.length ||
+      next.some(
+        (item, i) =>
+          String(item.id) !== String(current[i]?.id) ||
+          item.quantity !== current[i]?.quantity ||
+          item.price !== current[i]?.price
+      );
+    if (changed) {
+      this.cartItems.next(next);
+      this.saveCart();
+    }
   }
 }

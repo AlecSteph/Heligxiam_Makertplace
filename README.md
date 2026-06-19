@@ -1,5 +1,7 @@
 HeligxiamMarketplace
 
+**Installation données locales (après clone) :** [docs/README_SETUP_DONNEES_LOCAL.md](docs/README_SETUP_DONNEES_LOCAL.md) — MySQL, seed, Docker PostgreSQL, comptes test.
+
 **Documentation espace vendeur (backend) :** [docs/README_VENDEUR_BACKEND.md](docs/README_VENDEUR_BACKEND.md) — feuille de route pour brancher `http://localhost:4200/seller` sur des APIs.
 
 Ce projet a été généré avec Angular CLI version 21.1.1. Il s’agit d’une application Angular qui peut être exécutée localement pour le développement, compilée pour la production et testée à l’aide d’outils intégrés.

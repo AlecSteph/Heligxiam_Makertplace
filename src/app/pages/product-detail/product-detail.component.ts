@@ -121,6 +121,7 @@ export class ProductDetailComponent implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(async (params) => {
       const id = params.get('id');
+      this.scrollToTop();
       this.loading = true;
       this.loadError = false;
       this.product = undefined;
@@ -132,7 +133,18 @@ export class ProductDetailComponent implements OnInit {
       }
       try {
         await this.catalogService.loadProducts();
-        const product = await firstValueFrom(this.catalogService.getProductById(id));
+        let product =
+          (await firstValueFrom(this.catalogService.getProductById(id))) ?? undefined;
+        if (!product) {
+          product =
+            this.catalogService.findProductInCache(id) ??
+            this.wishlistService.getWishlist().find(
+              (p) => String(p.id) === String(id) || (p.sku != null && String(p.sku) === String(id))
+            ) ??
+            this.cartService.getCart().find(
+              (p) => String(p.id) === String(id) || (p.sku != null && String(p.sku) === String(id))
+            );
+        }
         this.product = product ?? undefined;
         if (!this.product) {
           this.loadError = true;
@@ -153,8 +165,14 @@ export class ProductDetailComponent implements OnInit {
       } finally {
         this.loading = false;
         this.cdr.markForCheck();
+        this.scrollToTop();
       }
     });
+  }
+
+  private scrollToTop(): void {
+    if (typeof window === 'undefined') return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
   }
 
   // ========== Galerie ==========

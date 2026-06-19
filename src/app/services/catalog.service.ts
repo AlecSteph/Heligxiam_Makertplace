@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, firstValueFrom, map, tap } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom, map, tap, catchError, of } from 'rxjs';
 import { Product } from '../models/product.model';
 
 export interface CatalogCategory {
@@ -80,15 +80,35 @@ export class CatalogService {
     return this.productsSubject.value;
   }
 
+  /** Recherche locale par identifiant MySQL ou référence SKU (P001…). */
+  findProductInCache(id: string): Product | undefined {
+    const key = String(id);
+    return this.productsSubject.value.find(
+      (p) => String(p.id) === key || (p.sku != null && String(p.sku) === key)
+    );
+  }
+
   getProductById(id: string): Observable<Product | null> {
     const normalized = String(id);
-    const cached = this.productsSubject.value.find((p) => String(p.id) === normalized);
+    const cached = this.findProductInCache(normalized);
     if (cached) {
-      return new BehaviorSubject(cached).asObservable();
+      return of(cached);
     }
     return this.http
-      .get<{ success: boolean; data?: { row: Product } }>(`${this.apiBase}/products/${normalized}`)
-      .pipe(map((res) => (res.success && res.data?.row ? res.data.row : null)));
+      .get<{ success: boolean; data?: { row: Product } }>(
+        `${this.apiBase}/products/${encodeURIComponent(normalized)}`
+      )
+      .pipe(
+        map((res) => (res.success && res.data?.row ? res.data.row : null)),
+        tap((row) => {
+          if (row) {
+            const merged = new Map(this.productsSubject.value.map((p) => [String(p.id), p]));
+            merged.set(String(row.id), row);
+            this.productsSubject.next([...merged.values()]);
+          }
+        }),
+        catchError(() => of(null))
+      );
   }
 
   loadByCategorySlug(slug: string): Promise<Product[]> {

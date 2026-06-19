@@ -53,4 +53,24 @@ export class WishlistService {
   getWishlistCount(): number {
     return this.wishlistItems.value.length;
   }
+
+  /** Réaligne les favoris sur le catalogue API (IDs MySQL, données à jour). */
+  reconcileWithCatalog(products: Product[]): void {
+    if (!products.length) return;
+    const byId = new Map(products.map((p) => [String(p.id), p]));
+    const bySku = new Map(
+      products.filter((p) => p.sku).map((p) => [String(p.sku), p])
+    );
+    const current = this.wishlistItems.value;
+    const next = current
+      .map((item) => byId.get(String(item.id)) || (item.sku ? bySku.get(String(item.sku)) : undefined))
+      .filter((p): p is Product => !!p);
+    const changed =
+      next.length !== current.length ||
+      next.some((p, i) => String(p.id) !== String(current[i]?.id));
+    if (changed) {
+      this.wishlistItems.next(next);
+      this.saveWishlist();
+    }
+  }
 }
