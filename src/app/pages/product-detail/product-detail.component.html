@@ -1,4 +1,11 @@
-<div *ngIf="product; else notFound" class="min-h-screen bg-gray-50">
+<div *ngIf="loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
+  <div class="text-center">
+    <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3"></div>
+    <p class="text-sm text-gray-600">Chargement du produit…</p>
+  </div>
+</div>
+
+<div *ngIf="!loading && product" class="min-h-screen bg-gray-50">
   <!-- Breadcrumb -->
   <div class="bg-white border-b">
     <div class="max-w-7xl mx-auto px-4 py-4">
@@ -101,6 +108,15 @@
           <h1 class="text-3xl font-bold text-gray-900 mb-4">
             {{ product.name }}
           </h1>
+
+          <!-- Vendeur -->
+          <div *ngIf="product.sellerName" class="flex items-center gap-3 mb-4 p-3 rounded-xl bg-gray-50 border border-gray-100">
+            <img *ngIf="product.sellerLogo" [src]="product.sellerLogo" [alt]="product.sellerName" class="w-10 h-10 rounded-full object-cover bg-white" />
+            <div>
+              <p class="text-xs text-gray-500 uppercase tracking-wide">Vendu par</p>
+              <p class="font-semibold text-gray-900">{{ product.sellerName }}</p>
+            </div>
+          </div>
 
           <!-- Rating -->
           <div class="flex items-center gap-3 mb-6">
@@ -405,11 +421,8 @@
   </div>
 </div>
 
-<ng-template #notFound>
-  <div class="max-w-7xl mx-auto px-4 py-16 text-center">
-    <h2 class="text-2xl font-bold mb-4">Produit non trouvé</h2>
-    <a routerLink="/" class="text-blue-600 hover:underline">
-      Retour à l'accueil
-    </a>
-  </div>
-</ng-template>
+<div *ngIf="!loading && !product" class="max-w-7xl mx-auto px-4 py-16 text-center min-h-screen bg-gray-50">
+  <h2 class="text-2xl font-bold mb-4">{{ loadError ? 'Impossible de charger le produit' : 'Produit non trouvé' }}</h2>
+  <p *ngIf="loadError" class="text-sm text-gray-500 mb-4">Vérifiez que le serveur API est démarré puis réessayez.</p>
+  <a routerLink="/" class="text-blue-600 hover:underline">Retour à l'accueil</a>
+</div>

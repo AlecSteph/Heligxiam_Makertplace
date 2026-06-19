@@ -6,6 +6,9 @@ export interface User {
   email: string;
   created_at: string;
   updated_at: string;
+  /** Renseignés pour un vendeur persisté en MySQL (auth-service). */
+  identifiant_boutique?: number;
+  identifiant_vendeur?: number;
 }
 
 export interface AuthResponse {

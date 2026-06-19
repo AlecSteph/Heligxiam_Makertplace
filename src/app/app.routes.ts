@@ -57,6 +57,38 @@ export const routes: Routes = [
     canActivate: [() => import('./guards/auth.guard').then(m => m.SellerGuard)]
   },
   {
+    path: 'admin/login',
+    loadComponent: () => import('./pages/admin/admin-login/admin-login.component').then(m => m.AdminLoginComponent)
+  },
+  {
+    path: 'admin/dashboard',
+    loadComponent: () => import('./pages/admin/admin-home/admin-home.component').then(m => m.AdminHomeComponent),
+    canActivate: [() => import('./guards/admin.guard').then(m => m.adminAuthGuard)]
+  },
+  {
+    path: 'admin/vendeurs',
+    loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+    canActivate: [() => import('./guards/admin.guard').then(m => m.adminAuthGuard)],
+    data: { area: 'vendors' }
+  },
+  {
+    path: 'admin/clients',
+    loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+    canActivate: [() => import('./guards/admin.guard').then(m => m.adminAuthGuard)],
+    data: { area: 'clients' }
+  },
+  {
+    path: 'admin/transverse',
+    loadComponent: () => import('./pages/admin/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+    canActivate: [() => import('./guards/admin.guard').then(m => m.adminAuthGuard)],
+    data: { area: 'transverse' }
+  },
+  {
+    path: 'admin',
+    pathMatch: 'full',
+    redirectTo: 'admin/login'
+  },
+  {
     path: '**',
     redirectTo: ''
   }

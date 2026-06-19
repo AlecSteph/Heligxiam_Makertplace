@@ -12,7 +12,7 @@
     "auth",
     "microservice",
     "nodejs",
-    "postgresql",
+    "mysql",
     "marketplace"
   ],
   "author": "Heligxiam Team",
@@ -28,6 +28,8 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^7.2.0",
+    "multer": "^2.1.1",
+    "mysql2": "^3.22.3",
     "pg": "^8.11.3",
     "uuid": "^8.3.2"
   },

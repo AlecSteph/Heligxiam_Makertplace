@@ -33,7 +33,8 @@ import {
   ThumbsUp
 } from 'lucide-angular';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
-import { PRODUCTS, CATEGORIES } from '../../data/products.data';
+import { CATEGORIES } from '../../data/products.data';
+import { CatalogService } from '../../services/catalog.service';
 import { Product } from '../../models/product.model';
 
 export type CollectionType =
@@ -128,7 +129,7 @@ export class SearchComponent implements OnInit, OnDestroy {
   showInStockOnly = false;
 
   // Data
-  products = PRODUCTS;
+  products: Product[] = [];
   categories = CATEGORIES;
   filteredProducts: Product[] = [];
   collectionProducts: Product[] = []; // before user filters
@@ -263,27 +264,35 @@ export class SearchComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private zone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private catalogService: CatalogService
   ) {}
 
   ngOnInit() {
-    // End of flash sale: next midnight
     const end = new Date();
     end.setHours(23, 59, 59, 999);
     this.flashEnd = end;
     this.tickCountdown();
 
-    // Brands are global (depend only on PRODUCTS) → compute once
-    this.brands = this.computeBrands();
-
-    this.route.queryParams.subscribe(params => {
-      this.queryParam = params['q'] || '';
-      this.collection = this.resolveCollection(params);
-      this.sortBy = this.collection.defaultSort || 'relevance';
-      this.buildCollectionSet();
-      this.filterProducts();
-      this.startCountdownIfNeeded();
+    this.catalogService.loadProducts().then((rows) => {
+      this.products = rows;
+      this.brands = this.computeBrands();
+      this.applyRouteParams(this.route.snapshot.queryParams);
+      this.route.queryParams.subscribe((params) => this.applyRouteParams(params));
+      this.cdr.markForCheck();
     });
+  }
+
+  private applyRouteParams(params: Record<string, string>): void {
+    this.queryParam = params['q'] || '';
+    this.collection = this.resolveCollection(params);
+    if (this.collection.type === 'default' && this.products.length) {
+      this.collection.heroStats[0].value = `${this.products.length}`;
+    }
+    this.sortBy = this.collection.defaultSort || 'relevance';
+    this.buildCollectionSet();
+    this.filterProducts();
+    this.startCountdownIfNeeded();
   }
 
   private startCountdownIfNeeded(): void {
@@ -309,6 +318,12 @@ export class SearchComponent implements OnInit, OnDestroy {
 
   // ====== Collection resolver ======
   private resolveCollection(params: any): CollectionConfig {
+    const collectionTypes: CollectionType[] = [
+      'default', 'bestsellers', 'new', 'brands', 'premium', 'promotions', 'flash', 'deals'
+    ];
+    if (params['collection'] && collectionTypes.includes(params['collection'])) {
+      return this.buildConfig(params['collection']);
+    }
     if (params['promo'] === 'flash') return this.buildConfig('flash');
     if (params['promo'] === 'deals') return this.buildConfig('deals');
     if (params['promo'] === 'true') return this.buildConfig('promotions');
@@ -509,9 +524,9 @@ export class SearchComponent implements OnInit, OnDestroy {
           gradient: 'from-indigo-600 via-purple-600 to-pink-600',
           accentHex: '#6366f1',
           heroStats: [
-            { label: 'Produits disponibles', value: '50 000+', icon: Package },
-            { label: 'Vendeurs vérifiés', value: '3 200', icon: ShieldCheck },
-            { label: 'Livraison offerte', value: 'Dès 99€', icon: Truck }
+            { label: 'Produits disponibles', value: '47', icon: Package },
+            { label: 'Vendeurs vérifiés', value: '10', icon: ShieldCheck },
+            { label: 'Livraison offerte', value: 'Dès 49€', icon: Truck }
           ],
           perks: []
         };
@@ -544,7 +559,7 @@ export class SearchComponent implements OnInit, OnDestroy {
       set = set.filter(p => p.originalPrice && p.originalPrice > p.price);
     }
     if (this.collection.flashOnly) {
-      set = set.filter(p => p.originalPrice && p.originalPrice > p.price);
+      set = set.filter((p) => p.isFlash || (p.originalPrice != null && p.originalPrice > p.price));
     }
     if (this.collection.type === 'deals') {
       set = set.filter(p => p.rating >= 4.3 && p.originalPrice && p.originalPrice > p.price);
@@ -668,6 +683,7 @@ export class SearchComponent implements OnInit, OnDestroy {
     }
 
     this.filteredProducts = filtered;
+    this.cdr.markForCheck();
   }
 
   onCategoryChange() { this.filterProducts(); }

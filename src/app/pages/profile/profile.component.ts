@@ -67,6 +67,10 @@ import {
   Gamepad2
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth.service';
+import { BuyerService } from '../../services/buyer.service';
+import { CatalogService } from '../../services/catalog.service';
+import { WishlistService } from '../../services/wishlist.service';
+import { CartService } from '../../services/cart.service';
 import { User } from '../../models/auth.model';
 
 type ProfileView =
@@ -107,7 +111,7 @@ interface OrderItem {
 }
 
 interface WishlistItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   oldPrice?: number;
@@ -330,74 +334,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   };
 
   // ==== Orders ====
-  recentOrders: OrderItem[] = [
-    {
-      id: 'CMD-2026-00247',
-      date: new Date(2026, 3, 20),
-      status: 'shipped',
-      total: 159.00,
-      items: 1,
-      seller: 'TechStore Pro',
-      products: [{ name: 'Casque Audio Aurora', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=80', qty: 1 }],
-      tracking: 'HX-284027-FR',
-      eta: 'Demain avant 18h',
-      progress: 70
-    },
-    {
-      id: 'CMD-2026-00239',
-      date: new Date(2026, 3, 18),
-      status: 'processing',
-      total: 234.75,
-      items: 3,
-      seller: 'ElectroMarket',
-      products: [
-        { name: 'Chargeur sans fil', image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=200&q=80', qty: 2 },
-        { name: 'Câble USB-C tressé', image: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=200&q=80', qty: 3 }
-      ],
-      progress: 25
-    },
-    {
-      id: 'CMD-2026-00221',
-      date: new Date(2026, 3, 10),
-      status: 'delivered',
-      total: 189.00,
-      items: 1,
-      seller: 'TechStore Pro',
-      products: [{ name: 'Montre connectée Pulse X2', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&q=80', qty: 1 }],
-      progress: 100
-    },
-    {
-      id: 'CMD-2026-00198',
-      date: new Date(2026, 2, 28),
-      status: 'delivered',
-      total: 89.50,
-      items: 2,
-      seller: 'Fashion Hub',
-      products: [
-        { name: 'Sac à dos minimaliste', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&q=80', qty: 1 },
-        { name: 'T-shirt premium', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&q=80', qty: 1 }
-      ],
-      progress: 100
-    },
-    {
-      id: 'CMD-2026-00172',
-      date: new Date(2026, 2, 15),
-      status: 'cancelled',
-      total: 49.90,
-      items: 1,
-      seller: 'Home Essentials',
-      products: [{ name: 'Diffuseur d\'huiles essentielles', image: 'https://images.unsplash.com/photo-1598300056393-4aac492f4344?w=200&q=80', qty: 1 }],
-      progress: 0
-    }
-  ];
+  recentOrders: OrderItem[] = [];
 
   // ==== Recommendations ====
-  recommendations: Recommendation[] = [
-    { id: 1, name: 'Enceinte Bluetooth Waveform', image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&q=80', price: 89, rating: 4.6, badge: 'Best-seller', reason: 'Parce que vous avez acheté "Casque Aurora"' },
-    { id: 2, name: 'Clavier mécanique RGB', image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400&q=80', price: 129.90, rating: 4.7, reason: 'Dans votre catégorie préférée' },
-    { id: 3, name: 'Souris ergonomique Pro', image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&q=80', price: 54.90, rating: 4.5, badge: '-20%', reason: 'Populaire cette semaine' },
-    { id: 4, name: 'Webcam 4K StreamPro', image: 'https://images.unsplash.com/photo-1587304931437-36bb6bee8edb?w=400&q=80', price: 149, rating: 4.4, reason: 'Complète votre setup' }
-  ];
+  recommendations: Recommendation[] = [];
 
   // ==== Recently viewed ====
   recentlyViewed = [
@@ -422,12 +362,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ];
 
   // ==== Wishlist ====
-  wishlist: WishlistItem[] = [
-    { id: 1, name: 'iPhone 15 Pro Max', price: 1169.99, oldPrice: 1299.99, seller: 'TechStore Pro', rating: 4.8, reviews: 1284, image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&q=80', discount: 10, inStock: true },
-    { id: 2, name: 'MacBook Air M2', price: 999.99, seller: 'Apple Reseller', rating: 4.9, reviews: 876, image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80', discount: 0, inStock: true },
-    { id: 3, name: 'Sony WH-1000XM5', price: 349, oldPrice: 399, seller: 'Audio Expert', rating: 4.7, reviews: 542, image: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400&q=80', discount: 12, inStock: false },
-    { id: 4, name: 'Apple Watch Ultra 2', price: 899, seller: 'TechStore Pro', rating: 4.8, reviews: 321, image: 'https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=400&q=80', discount: 0, inStock: true }
-  ];
+  wishlist: WishlistItem[] = [];
 
   // ==== Messages ====
   messages: MessageItem[] = [
@@ -445,12 +380,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ];
 
   // ==== Coupons ====
-  coupons: Coupon[] = [
-    { id: 1, code: 'BIENVENUE10', title: 'Bienvenue chez HELIGXIAM', description: '10€ de réduction sur votre prochaine commande', discount: '-10€', minAmount: 50, expiresAt: new Date(2026, 5, 30), used: false, color: 'from-indigo-500 to-purple-600', icon: this.Gift },
-    { id: 2, code: 'MODE30', title: 'Spécial Mode', description: 'Toute la catégorie Mode & Accessoires', discount: '-30%', minAmount: 40, expiresAt: new Date(2026, 4, 5), used: false, color: 'from-pink-500 to-rose-600', icon: this.Tag },
-    { id: 3, code: 'TECH15', title: 'Électronique Premium', description: 'Sur les produits de la catégorie électronique', discount: '-15%', minAmount: 100, expiresAt: new Date(2026, 4, 12), used: false, color: 'from-cyan-500 to-blue-600', icon: this.Zap },
-    { id: 4, code: 'FIRST5', title: 'Premier achat', description: 'Code utilisé le 05/02/2026', discount: '-5€', minAmount: 25, expiresAt: new Date(2026, 1, 5), used: true, color: 'from-gray-400 to-gray-500', icon: this.CheckCircle }
-  ];
+  coupons: Coupon[] = [];
 
   copiedCouponId: number | null = null;
 
@@ -532,7 +462,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private router: Router,
     private route: ActivatedRoute,
-    private authService: AuthService
+    private authService: AuthService,
+    private buyerService: BuyerService,
+    private catalogService: CatalogService,
+    private wishlistService: WishlistService,
+    private cartService: CartService
   ) {
     this.initializeForms();
   }
@@ -554,6 +488,92 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       const view = params['view'] as ProfileView | undefined;
       if (view) this.currentView = view;
+    });
+
+    this.loadBuyerData();
+  }
+
+  private loadBuyerData(): void {
+    this.buyerService.loadOrders().then((rows) => {
+      this.recentOrders = rows.map((r) => ({
+        id: r.id,
+        date: new Date(r.date),
+        status: r.status,
+        total: r.total,
+        items: r.items,
+        seller: r.seller,
+        products: r.products,
+        progress: r.status === 'delivered' ? 100 : r.status === 'shipped' ? 70 : 25
+      }));
+    }).catch(() => {
+      this.recentOrders = [];
+    });
+
+    this.authSubscription?.add(
+      this.wishlistService.wishlist$.subscribe((products) => {
+        this.wishlist = products.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          oldPrice: p.originalPrice,
+          seller: p.sellerName || 'Vendeur partenaire',
+          rating: p.rating,
+          reviews: p.reviews,
+          image: p.image,
+          discount: p.originalPrice
+            ? Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
+            : 0,
+          inStock: p.inStock
+        }));
+      })
+    );
+
+    this.buyerService.loadCoupons().then((rows) => {
+      const colors = [
+        'from-indigo-500 to-purple-600',
+        'from-pink-500 to-rose-600',
+        'from-cyan-500 to-blue-600',
+        'from-amber-500 to-orange-600'
+      ];
+      this.coupons = rows.map((r, i) => ({
+        id: i + 1,
+        code: r.code,
+        title: r.label,
+        description: r.category,
+        discount: r.discount,
+        minAmount: r.minAmount,
+        expiresAt: new Date(Date.now() + 30 * 86400000),
+        used: false,
+        color: colors[i % colors.length],
+        icon: this.Gift
+      }));
+    }).catch(() => {
+      this.catalogService.loadPromoCodes().then((rows) => {
+        this.coupons = rows.map((r, i) => ({
+          id: i + 1,
+          code: r.code,
+          title: r.label,
+          description: r.category,
+          discount: r.discount,
+          minAmount: r.minAmount,
+          expiresAt: new Date(Date.now() + 30 * 86400000),
+          used: false,
+          color: 'from-indigo-500 to-purple-600',
+          icon: this.Gift
+        }));
+      });
+    });
+
+    this.catalogService.loadProducts().then((products) => {
+      this.recommendations = products.slice(0, 4).map((p, i) => ({
+        id: i + 1,
+        name: p.name,
+        image: p.image,
+        price: p.price,
+        rating: p.rating,
+        badge: p.badge,
+        reason: 'Sélection du catalogue marketplace'
+      }));
     });
   }
 
@@ -673,12 +693,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.paymentMethods = this.paymentMethods.map(p => ({ ...p, isDefault: p.id === id }));
   }
 
-  removeFromWishlist(itemId: number): void {
-    this.wishlist = this.wishlist.filter(item => item.id !== itemId);
+  removeFromWishlist(itemId: string): void {
+    this.wishlistService.removeFromWishlist(itemId);
   }
 
-  addWishlistToCart(itemId: number): void {
-    console.log('Ajout au panier:', itemId);
+  addWishlistToCart(itemId: string): void {
+    const product = this.wishlistService.getWishlist().find((p) => p.id === itemId);
+    if (product) this.cartService.addToCart(product);
   }
 
   markAllMessagesRead(): void {

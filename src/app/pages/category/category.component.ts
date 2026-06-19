@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -24,7 +24,7 @@ import {
 } from 'lucide-angular';
 import { Subscription } from 'rxjs';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
-import { PRODUCTS } from '../../data/products.data';
+import { CatalogService } from '../../services/catalog.service';
 import { Product } from '../../models/product.model';
 import {
   CategoryConfig,
@@ -91,7 +91,11 @@ export class CategoryComponent implements OnInit, OnDestroy {
 
   private routeSub?: Subscription;
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private catalogService: CatalogService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.routeSub = this.route.paramMap.subscribe(params => {
@@ -116,20 +120,13 @@ export class CategoryComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const matchName = this.config.matchCategory;
-    this.categoryProducts = PRODUCTS.filter(
-      p => p.category.toLowerCase() === matchName.toLowerCase()
-    );
-
-    // Ensure we always have something to show even when the data set is small
-    if (this.categoryProducts.length < 4) {
-      const filler = PRODUCTS.filter(p => !this.categoryProducts.includes(p)).slice(0, 6 - this.categoryProducts.length);
-      this.categoryProducts = [...this.categoryProducts, ...filler];
-    }
-
-    this.buildSections();
-    this.resetFilters();
-    this.applyFilters();
+    this.catalogService.loadByCategorySlug(this.config.slug).then((products) => {
+      this.categoryProducts = products;
+      this.buildSections();
+      this.resetFilters();
+      this.applyFilters();
+      this.cdr.markForCheck();
+    });
   }
 
   private buildSections(): void {

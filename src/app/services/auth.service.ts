@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, Subject, throwError, timer } from 'rxjs';
-import { map, catchError, tap, finalize } from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject, throwError, timer, of } from 'rxjs';
+import { map, catchError, tap, finalize, switchMap, shareReplay } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { 
   User, 
@@ -44,6 +44,11 @@ export class AuthService {
   private loginSuccessSubject = new Subject<User>();
   public loginSuccess$ = this.loginSuccessSubject.asObservable();
 
+  /** Évite appels /me parallèles (guard + dashboard + init storage). */
+  private sessionValidation$: Observable<boolean> | null = null;
+  private readonly sessionReadySubject = new BehaviorSubject<boolean>(false);
+  readonly sessionReady$ = this.sessionReadySubject.asObservable();
+
   constructor(
     private http: HttpClient,
     private router: Router
@@ -68,6 +73,7 @@ export class AuthService {
           isLoading: false,
           error: null
         });
+        // La validation API est faite par SellerGuard / AuthGuard — pas ici (évite clearSession prématuré).
       }
     } catch (error) {
       console.error('Erreur lors de l\'initialisation de l\'auth:', error);
@@ -146,14 +152,12 @@ export class AuthService {
       return throwError(() => new Error('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre'));
     }
 
+    this.clearError();
     this.setLoading(true);
 
     return this.http.post<AuthResponse>(`${this.API_URL}/register`, registerData).pipe(
-      tap(response => {
-        if (response.success && response.data) {
-          this.handleAuthSuccess(response.data);
-        }
-      }),
+      // Important: l'inscription ne doit pas authentifier automatiquement.
+      // L'utilisateur doit passer explicitement par la connexion.
       catchError(this.handleError),
       finalize(() => this.setLoading(false))
     );
@@ -171,12 +175,13 @@ export class AuthService {
       return throwError(() => new Error('Trop de tentatives de connexion. Réessayez dans 15 minutes.'));
     }
 
+    this.clearError();
     this.setLoading(true);
 
     return this.http.post<AuthResponse>(`${this.API_URL}/login`, loginData).pipe(
       tap(response => {
         if (response.success && response.data) {
-          this.handleAuthSuccess(response.data);
+          this.handleAuthSuccess(response.data, true);
           // Réinitialiser les tentatives en cas de succès
           this.loginAttempts.delete(loginData.email.toLowerCase());
         }
@@ -200,8 +205,7 @@ export class AuthService {
         }
       }),
       catchError(error => {
-        // En cas d'erreur, déconnecter l'utilisateur
-        this.logout();
+        this.clearSession();
         return this.handleError(error);
       })
     );
@@ -213,6 +217,96 @@ export class AuthService {
       map(response => response.data),
       catchError(this.handleError)
     );
+  }
+
+  /**
+   * Vérifie le JWT / refresh token auprès de l’API.
+   * Invalide la session locale si le compte n’existe plus (purge BDD, etc.).
+   */
+  validateSession(): Observable<boolean> {
+    if (!this.getToken()) {
+      return of(false);
+    }
+    if (!this.sessionValidation$) {
+      this.sessionValidation$ = this.runValidateSession().pipe(
+        shareReplay(1),
+        finalize(() => {
+          this.sessionValidation$ = null;
+        })
+      );
+    }
+    return this.sessionValidation$;
+  }
+
+  private runValidateSession(): Observable<boolean> {
+    return this.http.get<{ success: boolean; data: User }>(`${this.API_URL}/me`).pipe(
+      tap((response) => {
+        if (response.success && response.data) {
+          this.applyUserFromServer(response.data);
+          this.sessionReadySubject.next(true);
+        }
+      }),
+      map(() => true),
+      catchError(() => this.tryRefreshAndValidate())
+    );
+  }
+
+  private tryRefreshAndValidate(): Observable<boolean> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.clearSession();
+      return of(false);
+    }
+
+    return this.http
+      .post<AuthResponse>(`${this.API_URL}/refresh-token`, { refreshToken })
+      .pipe(
+        tap((response) => {
+          if (response.success && response.data) {
+            this.updateTokens(response.data.token, response.data.refreshToken);
+          }
+        }),
+        switchMap(() =>
+          this.http.get<{ success: boolean; data: User }>(`${this.API_URL}/me`)
+        ),
+        tap((response) => {
+          if (response.success && response.data) {
+            this.applyUserFromServer(response.data);
+            this.sessionReadySubject.next(true);
+          }
+        }),
+        map(() => true),
+        catchError(() => {
+          this.sessionReadySubject.next(false);
+          this.clearSession();
+          return of(false);
+        })
+      );
+  }
+
+  private normalizeUserFromServer(user: User): User {
+    return {
+      ...user,
+      identifiant_vendeur:
+        user.identifiant_vendeur != null ? Number(user.identifiant_vendeur) : undefined,
+      identifiant_boutique:
+        user.identifiant_boutique != null ? Number(user.identifiant_boutique) : undefined
+    };
+  }
+
+  private applyUserFromServer(user: User): void {
+    const normalized = this.normalizeUserFromServer(user);
+    const currentState = this.authStateSubject.value;
+    this.authStateSubject.next({
+      ...currentState,
+      isAuthenticated: true,
+      user: normalized,
+      token: this.getToken(),
+      refreshToken: this.getRefreshToken(),
+      isLoading: false,
+      error: null
+    });
+    localStorage.setItem(this.USER_KEY, JSON.stringify(normalized));
   }
 
   // Mettre à jour le profil
@@ -255,6 +349,13 @@ export class AuthService {
       this.http.post(`${this.API_URL}/logout`, {}).subscribe();
     }
 
+    this.clearSession();
+    this.router.navigate(['/account']);
+  }
+
+  /** Efface la session locale sans redirection (validation silencieuse). */
+  clearSession(): void {
+    this.sessionReadySubject.next(false);
     this.clearStorage();
     this.authStateSubject.next({
       isAuthenticated: false,
@@ -264,27 +365,20 @@ export class AuthService {
       isLoading: false,
       error: null
     });
-
-    this.router.navigate(['/account']);
   }
 
   // Gestion du succès d'authentification
-  private handleAuthSuccess(authData: { user: User; token: string; refreshToken: string }): void {
+  private handleAuthSuccess(
+    authData: { user: User; token: string; refreshToken: string },
+    emitLoginEvent: boolean = true
+  ): void {
     this.updateTokens(authData.token, authData.refreshToken);
-    
-    const currentState = this.authStateSubject.value;
-    this.authStateSubject.next({
-      ...currentState,
-      isAuthenticated: true,
-      user: authData.user,
-      error: null
-    });
+    this.applyUserFromServer(authData.user);
+    this.sessionReadySubject.next(true);
 
-    localStorage.setItem(this.USER_KEY, JSON.stringify(authData.user));
-
-    // Emettre l'evenement de login/register reussi (uniquement sur action utilisateur,
-    // pas sur restauration depuis localStorage)
-    this.loginSuccessSubject.next(authData.user);
+    if (emitLoginEvent && this.authStateSubject.value.user) {
+      this.loginSuccessSubject.next(this.authStateSubject.value.user);
+    }
   }
 
   // Mettre à jour les tokens
@@ -313,6 +407,8 @@ export class AuthService {
 
     if (error.error?.message) {
       errorMessage = error.error.message;
+    } else if (error.status === 0) {
+      errorMessage = 'Impossible de joindre le serveur (vérifiez que auth-service tourne sur le port 3001).';
     } else if (error.status === 401) {
       errorMessage = 'Email ou mot de passe incorrect';
     } else if (error.status === 429) {
@@ -334,6 +430,13 @@ export class AuthService {
     this.authStateSubject.next({
       ...this.authStateSubject.value,
       isLoading
+    });
+  }
+
+  private clearError(): void {
+    this.authStateSubject.next({
+      ...this.authStateSubject.value,
+      error: null
     });
   }
 

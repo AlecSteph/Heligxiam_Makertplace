@@ -105,13 +105,13 @@
 
           <!-- Input -->
           <div class="relative flex-1">
-            <input
-              type="text"
+          <input
+            type="text"
               [placeholder]="searchCategory.value ? 'Rechercher dans ' + searchCategory.label + '…' : 'Rechercher des produits premium…'"
-              [(ngModel)]="searchQuery"
-              name="search"
+            [(ngModel)]="searchQuery"
+            name="search"
               class="w-full px-4 py-3 bg-transparent text-gray-900 placeholder-gray-400 focus:outline-none"
-            />
+          />
             <div class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hidden lg:block pointer-events-none">
               <kbd class="px-2 py-1 bg-gray-50 border rounded">⌘K</kbd>
             </div>
@@ -272,8 +272,8 @@
             [attr.aria-expanded]="showGuestMenu"
             aria-haspopup="true"
             class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded-xl transition-all group border border-transparent hover:border-gray-200"
-          >
-            <lucide-angular [img]="User" class="w-5 h-5 text-gray-700 group-hover:text-indigo-600 transition-colors"></lucide-angular>
+        >
+          <lucide-angular [img]="User" class="w-5 h-5 text-gray-700 group-hover:text-indigo-600 transition-colors"></lucide-angular>
             <div class="text-left leading-tight">
               <div class="text-[11px] text-gray-500">Bonjour, identifiez-vous</div>
               <div class="text-sm font-semibold text-gray-900 flex items-center gap-1">
@@ -386,32 +386,20 @@
             *ngIf="showUserMenu"
             class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-fade-in"
           >
-            <div [class]="'px-4 py-3 border-b border-gray-100 ' +
-                    (isSeller
-                      ? 'bg-gradient-to-r from-amber-50 via-orange-50 to-red-50'
-                      : 'bg-gradient-to-r from-indigo-50 to-purple-50')">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-purple-50">
               <p class="text-sm font-semibold text-gray-900 truncate">
                 {{ currentUser?.prenom }} {{ currentUser?.nom }}
               </p>
               <p class="text-xs text-gray-500 truncate">{{ currentUser?.email }}</p>
-              <span [class]="'inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide ' +
-                      (isSeller ? 'bg-orange-600 text-white' : 'bg-indigo-100 text-indigo-700')">
-                {{ roleLabel }}
+              <span *ngIf="currentUser?.role === 'client'"
+                    class="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide bg-indigo-100 text-indigo-700">
+                Client
+              </span>
+              <span *ngIf="currentUser?.role === 'admin'"
+                    class="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide bg-slate-800 text-white">
+                Administrateur
               </span>
             </div>
-
-            <!-- CTA vendeur en haut si vendeur -->
-            <a *ngIf="isSeller"
-               routerLink="/seller"
-               (click)="closeUserMenu()"
-               class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold hover:from-amber-600 hover:to-orange-600 transition-all group"
-            >
-              <lucide-angular [img]="Store" class="w-5 h-5"></lucide-angular>
-              <span class="flex-1">Espace vendeur</span>
-              <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </a>
 
             <nav class="py-1">
               <a *ngIf="!isSeller"
@@ -421,22 +409,6 @@
               >
                 <lucide-angular [img]="User" class="w-4 h-4 text-gray-500"></lucide-angular>
                 Mon profil
-              </a>
-
-              <!-- Sections spécifiques vendeur -->
-              <a *ngIf="isSeller"
-                 routerLink="/seller"
-                 (click)="closeUserMenu()"
-                 class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                <lucide-angular [img]="Package" class="w-4 h-4 text-gray-500"></lucide-angular>
-                Mon catalogue
-              </a>
-              <a *ngIf="isSeller"
-                 routerLink="/seller"
-                 (click)="closeUserMenu()"
-                 class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                <lucide-angular [img]="Sparkles" class="w-4 h-4 text-gray-500"></lucide-angular>
-                Mes commandes reçues
               </a>
 
               <!-- Sections client -->
@@ -764,7 +736,7 @@
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-semibold truncate">Bonjour, {{ currentUser?.prenom || 'Client' }}</p>
-          <p class="text-[11px] text-white/70 truncate">{{ roleLabel }}</p>
+          <p *ngIf="!isSeller" class="text-[11px] text-white/70 truncate">{{ roleLabel }}</p>
         </div>
       </div>
       <a *ngIf="!isLoggedIn"

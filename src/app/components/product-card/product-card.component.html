@@ -54,8 +54,11 @@
   <!-- Content -->
   <div class="p-5">
     <!-- Brand -->
-    <div *ngIf="product.brand" class="text-xs font-semibold text-indigo-600 mb-2 uppercase tracking-wide">
+    <div *ngIf="product.brand" class="text-xs font-semibold text-indigo-600 mb-1 uppercase tracking-wide">
       {{ product.brand }}
+    </div>
+    <div *ngIf="product.sellerName" class="text-xs text-gray-500 mb-2 truncate">
+      {{ product.sellerName }}
     </div>
 
     <!-- Title -->

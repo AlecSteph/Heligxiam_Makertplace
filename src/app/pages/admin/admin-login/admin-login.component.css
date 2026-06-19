@@ -1,0 +1,54 @@
+@keyframes brandPulse {
+  0%,
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 20px rgba(129, 140, 248, 0.5));
+  }
+  50% {
+    opacity: 0.92;
+    filter: drop-shadow(0 0 32px rgba(196, 181, 253, 0.65));
+  }
+}
+
+/* Durée = CURTAIN_MS (650) dans admin-login.component.ts */
+.curtain {
+  transition: transform 650ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes subFade {
+  from {
+    opacity: 0;
+    letter-spacing: 0.4em;
+  }
+  to {
+    opacity: 0.9;
+    letter-spacing: 0.12em;
+  }
+}
+
+.brand-glow {
+  animation: brandPulse 2.2s ease-in-out infinite;
+}
+
+.brand-sub {
+  animation: subFade 1.2s ease-out 0.3s both;
+}
+
+.curtain {
+  will-change: transform;
+}
+
+.form-enter {
+  animation: formIn 0.7s ease-out both;
+}
+
+@keyframes formIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

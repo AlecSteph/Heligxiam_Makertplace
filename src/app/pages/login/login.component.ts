@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -34,6 +34,8 @@ export class LoginComponent implements OnInit {
   // Popup de succès d'inscription
   showRegisterSuccessModal: boolean = false;
   registeredUserName: string = '';
+  /** Rôle réellement soumis (le modal ne doit pas dépendre d’un changement ultérieur de sellerMode). */
+  registerSuccessWasVendeur = false;
 
   // Mode vendeur (pré-rempli via query param ?role=seller)
   sellerMode: boolean = false;
@@ -56,7 +58,8 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     this.initializeForms();
     this.generateCaptcha();
@@ -66,8 +69,12 @@ export class LoginComponent implements OnInit {
     // Écouter les erreurs d'authentification
     this.authService.authState$.subscribe(state => {
       if (state.error) {
-        this.loginError = state.error;
-        this.registerError = state.error;
+        if (this.currentView === 'login') {
+          this.loginError = state.error;
+        } else if (this.currentView === 'register') {
+          this.registerError = state.error;
+        }
+        this.cdr.detectChanges();
       }
     });
 
@@ -157,6 +164,7 @@ export class LoginComponent implements OnInit {
       error: (error) => {
         console.error('Erreur lors de l\'obtention du challenge:', error);
         this.loginError = 'Erreur de connexion au serveur';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -231,7 +239,9 @@ export class LoginComponent implements OnInit {
 
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
+      this.loginForm.updateValueAndValidity({ onlySelf: false, emitEvent: true });
       this.loginError = 'Veuillez remplir tous les champs obligatoires correctement.';
+      this.cdr.detectChanges();
       return;
     }
 
@@ -239,6 +249,7 @@ export class LoginComponent implements OnInit {
       this.loginError = 'Le captcha est incorrect';
       this.generateCaptcha();
       this.loginForm.patchValue({ captcha: '' });
+      this.cdr.detectChanges();
       return;
     }
 
@@ -272,6 +283,8 @@ export class LoginComponent implements OnInit {
         },
         error: (error) => {
           console.error('Erreur de connexion:', error);
+          this.loginError = error?.message || error?.userMessage || 'Erreur de connexion';
+          this.cdr.detectChanges();
         }
       });
     } catch (error) {
@@ -285,7 +298,9 @@ export class LoginComponent implements OnInit {
 
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
+      this.registerForm.updateValueAndValidity({ onlySelf: false, emitEvent: true });
       this.registerError = 'Veuillez corriger les champs en rouge avant de continuer.';
+      this.cdr.detectChanges();
       return;
     }
 
@@ -293,6 +308,7 @@ export class LoginComponent implements OnInit {
       this.registerError = 'Le captcha est incorrect';
       this.generateCaptcha();
       this.registerForm.patchValue({ captcha: '' });
+      this.cdr.detectChanges();
       return;
     }
 
@@ -319,11 +335,16 @@ export class LoginComponent implements OnInit {
         next: () => {
           this.registerError = '';
           this.registeredUserName = `${registerData.prenom} ${registerData.nom}`.trim();
+          this.registerSuccessWasVendeur = registerData.role === UserRole.VENDEUR;
           this.showRegisterSuccessModal = true;
+          // Force un rendu immédiat du modal de confirmation
+          // (évite d'attendre une interaction utilisateur supplémentaire).
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Erreur d\'inscription:', error);
-          // L'erreur est déjà gérée par l'AuthService
+          this.registerError = error?.message || error?.userMessage || 'Erreur lors de l\'inscription';
+          this.cdr.detectChanges();
         }
       });
     } catch (error) {

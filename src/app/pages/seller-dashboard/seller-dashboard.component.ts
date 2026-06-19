@@ -1,8 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Subscription, firstValueFrom } from 'rxjs';
 import {
   LucideAngularModule,
   LayoutDashboard,
@@ -67,7 +68,11 @@ import {
   Gift,
   Flame,
   Inbox,
-  Menu
+  Menu,
+  UserRound,
+  Mail,
+  Smartphone,
+  MessageCircle
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/auth.model';
@@ -99,6 +104,7 @@ interface KpiCard {
 
 interface Order {
   id: string;
+  ref?: string;
   customer: string;
   product: string;
   image: string;
@@ -112,6 +118,7 @@ interface Order {
 
 interface ProductRow {
   id: string;
+  productId?: number;
   name: string;
   image: string;
   price: number;
@@ -120,6 +127,34 @@ interface ProductRow {
   rating: number;
   status: 'active' | 'draft' | 'out-of-stock';
   buyBox: number;
+}
+
+interface AddProductFormModel {
+  name: string;
+  brand: string;
+  category: string;
+  description: string;
+  price: number | null;
+  stock: number | null;
+  imagePreview: string;
+  imageName: string;
+}
+
+interface BulkHistoryRow {
+  id: string;
+  file: string;
+  items: number;
+  success: number;
+  errors: number;
+  date: string;
+  status: 'completed' | 'warning';
+}
+
+interface BrandRegistrationRow {
+  id: number;
+  libelle_marque: string;
+  statut_dossier: string;
+  date_soumission: string;
 }
 
 interface ActivityItem {
@@ -163,6 +198,69 @@ interface HealthMetric {
   value: string | number;
   target: string;
   status: 'good' | 'warning' | 'critical';
+}
+
+interface SellerCouponRow {
+  id: string;
+  dbId?: number;
+  code: string;
+  label?: string;
+  discount: string;
+  scope: string;
+  used: number;
+  max: number | string;
+  expires: string;
+  status: string;
+  moderationStatus?: string;
+  editable?: boolean;
+}
+
+interface SellerProductPromoRow {
+  id: string;
+  dbId?: number;
+  productId?: number;
+  sku: string;
+  name: string;
+  image: string;
+  price: number;
+  originalPrice?: number;
+  discountPct?: number | null;
+  type: 'flash' | 'promo';
+  badge: string;
+  status: string;
+  moderationStatus?: string;
+  editable?: boolean;
+  source?: string;
+}
+
+interface PromoProductOption {
+  id: number;
+  sku: string;
+  name: string;
+  price: number;
+}
+
+interface PromotionsSummary {
+  activeCoupons: number;
+  pendingCoupons?: number;
+  uses30d: number;
+  promoProductCount: number;
+  flashProductCount: number;
+  standardPromoCount: number;
+  avgDiscountPct: number;
+}
+
+/** Étapes d’activation boutique (soumission → attente validation admin) */
+export type OnboardingStepStatus = 'a_faire' | 'en_attente_validation' | 'valide';
+
+export interface OnboardingStepModel {
+  id: 'plan' | 'docs' | 'profile' | 'shipping' | 'payout';
+  label: string;
+  status: OnboardingStepStatus;
+  /** Réf. dossier côté plateforme (démo) */
+  fileReference?: string;
+  /** Horodatage soumission */
+  submittedAt?: string;
 }
 
 @Component({
@@ -237,6 +335,10 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
   readonly Flame = Flame;
   readonly Inbox = Inbox;
   readonly Menu = Menu;
+  readonly UserRound = UserRound;
+  readonly Mail = Mail;
+  readonly Smartphone = Smartphone;
+  readonly MessageCircle = MessageCircle;
 
   currentUser: User | null = null;
   activeNav = 'dashboard';
@@ -261,8 +363,8 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
     {
       label: 'Catalogue',
       items: [
-        { id: 'catalog', label: 'Produits', icon: this.Package, badge: 12 },
-        { id: 'add-product', label: 'Ajouter un produit', icon: this.Plus, new: true },
+        { id: 'catalog', label: 'Produits', icon: this.Package },
+        { id: 'add-product', label: 'Ajouter un produit', icon: this.Plus },
         { id: 'brand-registry', label: 'Registre des marques', icon: this.ShieldCheck },
         { id: 'bulk-upload', label: 'Import en masse (CSV)', icon: this.Upload }
       ]
@@ -271,30 +373,30 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
       label: 'Stock & Expédition',
       items: [
         { id: 'inventory', label: 'Gestion du stock', icon: this.Boxes },
-        { id: 'fba-shipments', label: 'Expéditions Logistique HX', icon: this.Truck, badge: 2 },
-        { id: 'returns', label: 'Retours & remboursements', icon: this.RefreshCw, badge: 1 }
+        { id: 'fba-shipments', label: 'Expéditions Logistique HX', icon: this.Truck },
+        { id: 'returns', label: 'Retours & remboursements', icon: this.RefreshCw }
       ]
     },
     {
       label: 'Prix',
       items: [
         { id: 'pricing', label: 'Tarification', icon: this.Tag },
-        { id: 'auto-pricing', label: 'Retarification auto', icon: this.Activity, new: true },
+        { id: 'auto-pricing', label: 'Retarification auto', icon: this.Activity },
         { id: 'promotions', label: 'Promotions & coupons', icon: this.Percent }
       ]
     },
     {
       label: 'Commandes',
       items: [
-        { id: 'orders', label: 'Gérer les commandes', icon: this.ShoppingBag, badge: 7 },
-        { id: 'unshipped', label: 'À expédier', icon: this.Package, badge: 4 },
-        { id: 'messages', label: 'Messagerie acheteurs', icon: this.MessageSquare, badge: 3 }
+        { id: 'orders', label: 'Gérer les commandes', icon: this.ShoppingBag },
+        { id: 'unshipped', label: 'À expédier', icon: this.Package },
+        { id: 'messages', label: 'Messagerie acheteurs', icon: this.MessageSquare }
       ]
     },
     {
       label: 'Publicité',
       items: [
-        { id: 'campaigns', label: 'Campagnes', icon: this.Megaphone, hot: true },
+        { id: 'campaigns', label: 'Campagnes', icon: this.Megaphone },
         { id: 'sponsored-brands', label: 'Sponsored Brands', icon: this.Rocket },
         { id: 'deals', label: 'Ventes flash & Deals', icon: this.Flame }
       ]
@@ -302,7 +404,7 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
     {
       label: 'Croissance',
       items: [
-        { id: 'coach', label: 'Growth Coach', icon: this.Lightbulb, new: true },
+        { id: 'coach', label: 'Growth Coach', icon: this.Lightbulb },
         { id: 'programs', label: 'Programmes HELIGXIAM', icon: this.Award },
         { id: 'global-selling', label: 'Vendre à l\'international', icon: this.Globe }
       ]
@@ -320,12 +422,14 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
       items: [
         { id: 'account-health', label: 'Santé du compte', icon: this.ShieldCheck },
         { id: 'feedback', label: 'Évaluations & avis', icon: this.Star },
-        { id: 'cases', label: 'Cas & réclamations', icon: this.Inbox, badge: 2 }
+        { id: 'cases', label: 'Cas & réclamations', icon: this.Inbox }
       ]
     },
     {
       label: 'Compte',
       items: [
+        { id: 'seller-profile', label: 'Mon profil & vérification', icon: this.UserRound },
+        { id: 'admin-messaging', label: 'Messagerie opérateur (admin)', icon: this.MessageCircle },
         { id: 'payouts', label: 'Paiements & versements', icon: this.Wallet },
         { id: 'invoices', label: 'Factures & fiscalité', icon: this.Receipt },
         { id: 'settings', label: 'Paramètres boutique', icon: this.Settings }
@@ -333,127 +437,165 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
     }
   ];
 
-  // =========== Onboarding ===========
-  onboardingSteps = [
-    { id: 'docs', label: 'Téléverser vos documents (Kbis, RIB, CNI)', done: false },
-    { id: 'profile', label: 'Compléter votre profil boutique', done: false },
-    { id: 'products', label: 'Ajouter vos 5 premiers produits', done: false },
-    { id: 'shipping', label: 'Configurer les frais de livraison', done: false },
-    { id: 'payout', label: 'Valider votre compte bancaire', done: false }
+  /** Formule choisie avant envoi (page marketing) */
+  sellerPlan: 'particulier' | 'professionnel' | null = null;
+
+  // =========== Onboarding (soumission → en attente admin → validé) ===========
+  onboardingSteps: OnboardingStepModel[] = [
+    { id: 'plan', label: 'Choisir votre plan d\'abonnement (Particulier ou Professionnel)', status: 'a_faire' },
+    { id: 'docs', label: 'Téléverser vos documents (Kbis, RIB, CNI)', status: 'a_faire' },
+    { id: 'profile', label: 'Compléter votre profil boutique', status: 'a_faire' },
+    { id: 'shipping', label: 'Configurer les frais de livraison', status: 'a_faire' },
+    { id: 'payout', label: 'Valider votre compte bancaire', status: 'a_faire' }
   ];
+
+  /** Panneau de formulaire ouvert (clic sur une ligne) */
+  onboardingOpenPanel: OnboardingStepModel['id'] | null = null;
+
+  /** Démonstration : noms de fichiers / champs (API fichiers plus tard) */
+  onboardingFormDocs = {
+    fichierKbis: '',
+    fichierCni: '',
+    fichierRib: '',
+    commentaire: ''
+  };
+  onboardingDocFiles: { kbis: File | null; cni: File | null; rib: File | null } = {
+    kbis: null,
+    cni: null,
+    rib: null
+  };
+  docsUploading = false;
+  onboardingLoading = false;
+  onboardingHydrated = false;
+  planSubmitting = false;
+  stepSubmitting = false;
+  private sellerDataLoadedFor: number | null = null;
+  private onboardingRequestId = 0;
+  private readonly onboardingCachePrefix = 'hx_onboarding_v_';
+  private readonly dashboardCachePrefix = 'hx_seller_dashboard_v_';
+  sellerSessionBootstrapping = true;
+
+  onboardingFormProfile = {
+    raisonSociale: '',
+    nomAffichage: '',
+    siret: '',
+    tva: '',
+    emailPro: '',
+    telephone: '',
+    adresse: ''
+  };
+
+  onboardingFormShipping = {
+    colissimo: '',
+    chronopost: '',
+    relais: '',
+    hxLogistics: true,
+    remarque: ''
+  };
+
+  onboardingFormPayout = {
+    titulaire: '',
+    iban: '',
+    bic: '',
+    referenceInterne: ''
+  };
+
+  onboardingFeedback = '';
+  private onboardingFeedbackTimer?: ReturnType<typeof setTimeout>;
 
   // =========== KPI Cards ===========
   readonly kpis: KpiCard[] = [
-    { label: 'Ventes (30j)', value: '12 847,40 €', trend: 18.2, trendLabel: 'vs mois dernier', icon: this.DollarSign, color: 'from-emerald-500 to-green-600', sparkline: [42, 55, 48, 62, 58, 71, 86, 94] },
-    { label: 'Commandes', value: '184', trend: 12.4, trendLabel: '7 à traiter', icon: this.ShoppingBag, color: 'from-indigo-500 to-blue-600', sparkline: [30, 35, 28, 40, 44, 52, 59, 68] },
-    { label: 'Pages vues', value: '4 320', trend: -3.1, trendLabel: 'vs mois dernier', icon: this.Eye, color: 'from-fuchsia-500 to-pink-600', sparkline: [88, 72, 80, 68, 65, 70, 62, 58] },
-    { label: 'Note boutique', value: '4,7 ★', trend: 0.2, trendLabel: '147 avis', icon: this.Star, color: 'from-amber-500 to-orange-600', sparkline: [45, 48, 50, 52, 55, 58, 60, 62] },
-    { label: 'Taux de conversion', value: '4,26 %', trend: 0.8, trendLabel: 'vs mois dernier', icon: this.Target, color: 'from-teal-500 to-cyan-600', sparkline: [35, 38, 42, 40, 44, 47, 49, 52] },
-    { label: 'Buy Box', value: '87 %', trend: 2.3, trendLabel: 'moyenne catalogue', icon: this.Award, color: 'from-purple-500 to-violet-600', sparkline: [70, 72, 75, 78, 80, 82, 85, 87] }
+    { label: 'Ventes (30j)', value: '0 €', trend: 0, trendLabel: 'vs mois dernier', icon: this.DollarSign, color: 'from-emerald-500 to-green-600', sparkline: [0, 0, 0, 0, 0, 0, 0, 0] },
+    { label: 'Commandes', value: '0', trend: 0, trendLabel: '0 à traiter', icon: this.ShoppingBag, color: 'from-indigo-500 to-blue-600', sparkline: [0, 0, 0, 0, 0, 0, 0, 0] },
+    { label: 'Pages vues', value: '0', trend: 0, trendLabel: 'vs mois dernier', icon: this.Eye, color: 'from-fuchsia-500 to-pink-600', sparkline: [0, 0, 0, 0, 0, 0, 0, 0] },
+    { label: 'Note boutique', value: '—', trend: 0, trendLabel: '0 avis', icon: this.Star, color: 'from-amber-500 to-orange-600', sparkline: [0, 0, 0, 0, 0, 0, 0, 0] },
+    { label: 'Taux de conversion', value: '0 %', trend: 0, trendLabel: 'vs mois dernier', icon: this.Target, color: 'from-teal-500 to-cyan-600', sparkline: [0, 0, 0, 0, 0, 0, 0, 0] },
+    { label: 'Buy Box', value: '0 %', trend: 0, trendLabel: 'moyenne catalogue', icon: this.Award, color: 'from-purple-500 to-violet-600', sparkline: [0, 0, 0, 0, 0, 0, 0, 0] }
   ];
 
   // =========== Today vs Yesterday (Amazon style) ===========
   readonly todaySnapshot = {
-    today: { sales: 1284.50, units: 27, orders: 18, pageViews: 420, sessions: 312 },
-    yesterday: { sales: 1092.30, units: 22, orders: 15, pageViews: 398, sessions: 288 },
-    lastWeek: { sales: 1456.80, units: 31, orders: 21, pageViews: 512, sessions: 380 }
+    today: { sales: 0, units: 0, orders: 0, pageViews: 0, sessions: 0 },
+    yesterday: { sales: 0, units: 0, orders: 0, pageViews: 0, sessions: 0 },
+    lastWeek: { sales: 0, units: 0, orders: 0, pageViews: 0, sessions: 0 }
   };
 
   // =========== Orders ===========
-  readonly orders: Order[] = [
-    { id: '#HX-84027', customer: 'Léa Bernard', product: 'Montre connectée Pulse X2', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80', qty: 1, total: 189.00, status: 'pending', date: 'Il y a 12 min', sla: '23h57', priority: 'high' },
-    { id: '#HX-84021', customer: 'Ahmed Zidane', product: 'Casque Audio Aurora', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=120&q=80', qty: 2, total: 318.00, status: 'pending', date: 'Il y a 48 min', sla: '22h18', priority: 'normal' },
-    { id: '#HX-84018', customer: 'Sophie Durand', product: 'Clavier Mécanique RGB', image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=120&q=80', qty: 1, total: 129.90, status: 'shipped', date: 'Il y a 2h' },
-    { id: '#HX-84014', customer: 'Tom Roussel', product: 'Enceinte Bluetooth Waveform', image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=120&q=80', qty: 1, total: 89.00, status: 'shipped', date: 'Il y a 4h' },
-    { id: '#HX-84005', customer: 'Claire Martin', product: 'Chargeur Sans Fil Premium', image: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=120&q=80', qty: 3, total: 74.70, status: 'delivered', date: 'Hier, 14:32' },
-    { id: '#HX-83996', customer: 'Karim Benzarti', product: 'Souris Ergonomique Pro', image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=120&q=80', qty: 1, total: 54.90, status: 'delivered', date: 'Hier, 09:18' },
-    { id: '#HX-83987', customer: 'Julie Laurent', product: 'Webcam 4K StreamPro', image: 'https://images.unsplash.com/photo-1587304931437-36bb6bee8edb?w=120&q=80', qty: 1, total: 149.00, status: 'returned', date: 'Avant-hier' }
-  ];
+  readonly orders: Order[] = [];
 
   // =========== Products ===========
-  readonly topProducts: ProductRow[] = [
-    { id: 'p1', name: 'Montre connectée Pulse X2', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&q=80', price: 189, stock: 48, sales: 142, rating: 4.8, status: 'active', buyBox: 94 },
-    { id: 'p2', name: 'Casque Audio Aurora', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=120&q=80', price: 159, stock: 23, sales: 98, rating: 4.6, status: 'active', buyBox: 88 },
-    { id: 'p3', name: 'Clavier Mécanique RGB', image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=120&q=80', price: 129.9, stock: 0, sales: 76, rating: 4.7, status: 'out-of-stock', buyBox: 0 },
-    { id: 'p4', name: 'Enceinte Bluetooth Waveform', image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=120&q=80', price: 89, stock: 67, sales: 64, rating: 4.5, status: 'active', buyBox: 82 },
-    { id: 'p5', name: 'Webcam 4K StreamPro', image: 'https://images.unsplash.com/photo-1587304931437-36bb6bee8edb?w=120&q=80', price: 149, stock: 12, sales: 0, rating: 0, status: 'draft', buyBox: 0 }
-  ];
+  topProducts: ProductRow[] = [];
+  addProductForm: AddProductFormModel = {
+    name: '',
+    brand: '',
+    category: 'Électronique',
+    description: '',
+    price: null,
+    stock: null,
+    imagePreview: '',
+    imageName: ''
+  };
+  private addProductImageFile: File | null = null;
+  bulkUploadFeedback = '';
+  private bulkUploadFeedbackTimer?: ReturnType<typeof setTimeout>;
+  private selectedCsvFile: File | null = null;
+  addProductFeedback = '';
+  brandRegistrations: BrandRegistrationRow[] = [];
+  brandFormLabel = '';
+  brandRegistryFeedback = '';
 
   // =========== Activity Feed ===========
-  readonly activity: ActivityItem[] = [
-    { icon: this.ShoppingBag, color: 'bg-emerald-100 text-emerald-700', title: 'Nouvelle commande #HX-84027 (189€) de Léa B.', time: 'Il y a 12 min' },
-    { icon: this.Star, color: 'bg-amber-100 text-amber-700', title: 'Avis 5★ laissé sur Casque Aurora', time: 'Il y a 34 min' },
-    { icon: this.MessageSquare, color: 'bg-indigo-100 text-indigo-700', title: 'Nouveau message de Tom R. sur "Enceinte Waveform"', time: 'Il y a 1h' },
-    { icon: this.AlertCircle, color: 'bg-red-100 text-red-700', title: 'Stock épuisé : Clavier Mécanique RGB', time: 'Il y a 2h' },
-    { icon: this.Wallet, color: 'bg-green-100 text-green-700', title: 'Versement bancaire effectué (1 248€)', time: 'Hier, 18:00' },
-    { icon: this.Megaphone, color: 'bg-fuchsia-100 text-fuchsia-700', title: 'Campagne Sponsored Products : +42% d\'impressions', time: 'Hier, 10:22' }
-  ];
+  readonly activity: ActivityItem[] = [];
 
   // =========== Chart ===========
   readonly chartData = [
-    { day: 'Lun', value: 55, amount: 1240 },
-    { day: 'Mar', value: 72, amount: 1580 },
-    { day: 'Mer', value: 48, amount: 1020 },
-    { day: 'Jeu', value: 86, amount: 2100 },
-    { day: 'Ven', value: 94, amount: 2340 },
-    { day: 'Sam', value: 78, amount: 1890 },
-    { day: 'Dim', value: 62, amount: 1430 }
+    { day: 'Lun', value: 0, amount: 0 },
+    { day: 'Mar', value: 0, amount: 0 },
+    { day: 'Mer', value: 0, amount: 0 },
+    { day: 'Jeu', value: 0, amount: 0 },
+    { day: 'Ven', value: 0, amount: 0 },
+    { day: 'Sam', value: 0, amount: 0 },
+    { day: 'Dim', value: 0, amount: 0 }
   ];
 
   // =========== Account Health ===========
   readonly healthMetrics: HealthMetric[] = [
-    { key: 'odr', label: 'Taux de commandes défectueuses', value: '0,4 %', target: '< 1%', status: 'good' },
-    { key: 'late', label: 'Taux d\'expédition en retard', value: '1,2 %', target: '< 4%', status: 'good' },
-    { key: 'cancel', label: 'Taux d\'annulations avant exp.', value: '0,7 %', target: '< 2,5%', status: 'good' },
-    { key: 'returns', label: 'Taux de retours valides', value: '3,1 %', target: '< 5%', status: 'warning' },
-    { key: 'response', label: 'Temps de réponse message', value: '14 h', target: '< 24h', status: 'good' },
+    { key: 'odr', label: 'Taux de commandes défectueuses', value: '0 %', target: '< 1%', status: 'good' },
+    { key: 'late', label: 'Taux d\'expédition en retard', value: '0 %', target: '< 4%', status: 'good' },
+    { key: 'cancel', label: 'Taux d\'annulations avant exp.', value: '0 %', target: '< 2,5%', status: 'good' },
+    { key: 'returns', label: 'Taux de retours valides', value: '0 %', target: '< 5%', status: 'good' },
+    { key: 'response', label: 'Temps de réponse message', value: '0 h', target: '< 24h', status: 'good' },
     { key: 'policy', label: 'Violations politique produit', value: '0', target: '0', status: 'good' }
   ];
 
   // =========== Cases ===========
-  readonly cases: Case[] = [
-    { id: 'CASE-9827', subject: 'Demande de remboursement partiel — #HX-83987', type: 'customer', priority: 'urgent', updated: 'Il y a 1h', status: 'open' },
-    { id: 'CASE-9810', subject: 'Réclamation acheteur sur colis endommagé', type: 'shipping', priority: 'high', updated: 'Il y a 4h', status: 'pending' }
-  ];
+  readonly cases: Case[] = [];
 
   // =========== Coach tips (Selling Coach) ===========
-  readonly coachTips: CoachTip[] = [
-    { id: 'c1', icon: this.Zap, title: 'Stock bientôt épuisé sur 2 produits best-sellers', text: 'Réapprovisionnez « Casque Aurora » (23 unités) et « Pulse X2 » (48 unités) pour éviter de perdre la Buy Box.', impact: 'high', ctaLabel: 'Créer un réapprovisionnement', color: 'from-red-500 to-pink-600' },
-    { id: 'c2', icon: this.Target, title: 'Votre concurrence a baissé ses prix', text: 'Sur 3 produits, vos concurrents ont baissé leur prix de 4 à 8% la semaine dernière. Activez la retarification auto.', impact: 'high', ctaLabel: 'Activer la retarification', color: 'from-amber-500 to-orange-600' },
-    { id: 'c3', icon: this.Rocket, title: '850€ de crédit Sponsored Products disponibles', text: 'Lancez votre 1ère campagne publicitaire et bénéficiez de visibilité sur les fiches concurrentes.', impact: 'medium', ctaLabel: 'Créer une campagne', color: 'from-indigo-500 to-purple-600' },
-    { id: 'c4', icon: this.Globe, title: 'Développez-vous en Allemagne', text: 'Vos produits se vendent bien en France. Les clients allemands recherchent 3× plus votre catégorie.', impact: 'medium', ctaLabel: 'Étendre à Amazon.de', color: 'from-teal-500 to-cyan-600' }
-  ];
+  readonly coachTips: CoachTip[] = [];
 
   // =========== News ===========
-  readonly news: NewsItem[] = [
-    { id: 'n1', category: 'Nouveauté', title: 'Logistique HELIGXIAM lance les retours gratuits automatiques', excerpt: 'À partir du 1er mai, tous vos produits FBA seront automatiquement éligibles aux retours gratuits.', date: 'Il y a 2h', isNew: true },
-    { id: 'n2', category: 'Important', title: 'Mise à jour des politiques de remboursement', excerpt: 'Les nouvelles règles s\'appliqueront à partir du 15 mai. Consultez les changements.', date: 'Hier' },
-    { id: 'n3', category: 'Fiscalité', title: 'Préparez votre déclaration de TVA Q2 2026', excerpt: 'Téléchargez votre rapport de ventes consolidé depuis la section Factures & fiscalité.', date: 'Il y a 3 jours' },
-    { id: 'n4', category: 'Formation', title: 'Webinaire gratuit : optimiser vos fiches produits', excerpt: 'Rejoignez notre session live le jeudi 23 avril à 14h avec un expert Seller Central.', date: 'Il y a 5 jours' }
-  ];
+  readonly news: NewsItem[] = [];
 
   // =========== Notifications ===========
-  readonly notifications = [
-    { id: 'nt1', icon: this.ShoppingBag, title: 'Nouvelle commande urgente', text: '#HX-84027 • Expédition sous 23h57', time: '12 min', type: 'order' },
-    { id: 'nt2', icon: this.AlertCircle, title: 'Stock épuisé', text: 'Clavier Mécanique RGB', time: '2h', type: 'alert' },
-    { id: 'nt3', icon: this.MessageSquare, title: 'Message acheteur', text: 'Tom R. demande le délai de livraison', time: '1h', type: 'message' },
-    { id: 'nt4', icon: this.Wallet, title: 'Versement effectué', text: '1 248€ reçus sur votre compte', time: '1j', type: 'payout' }
-  ];
+  notifications: { id: number; icon: any; title: string; text: string; time: string; type: string; read: boolean }[] = [];
+  notificationsUnreadCount = 0;
+  private notifPollTimer?: ReturnType<typeof setInterval>;
 
   // =========== Inventory health ===========
   readonly inventoryBreakdown = [
-    { label: 'Produits actifs', value: 10, percent: 55, color: 'bg-emerald-500' },
-    { label: 'Stock faible (<10)', value: 3, percent: 17, color: 'bg-amber-500' },
-    { label: 'Ruptures', value: 2, percent: 11, color: 'bg-red-500' },
-    { label: 'Brouillons', value: 3, percent: 17, color: 'bg-gray-400' }
+    { label: 'Produits actifs', value: 0, percent: 0, color: 'bg-emerald-500' },
+    { label: 'Stock faible (<10)', value: 0, percent: 0, color: 'bg-amber-500' },
+    { label: 'Ruptures', value: 0, percent: 0, color: 'bg-red-500' },
+    { label: 'Brouillons', value: 0, percent: 0, color: 'bg-gray-400' }
   ];
 
   // =========== Payouts ===========
   readonly payoutSummary = {
-    available: 2487.50,
-    pending: 1248.30,
-    lastPayout: 1248.00,
-    nextPayoutDate: 'Vendredi 24 avr.',
+    available: 0,
+    pending: 0,
+    lastPayout: 0,
+    nextPayoutDate: '—',
     currency: 'EUR'
   };
 
@@ -494,131 +636,167 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
     'account-health':   { title: 'Santé du compte',         subtitle: 'Indicateurs de performance et conformité' },
     'feedback':         { title: 'Évaluations & avis',      subtitle: 'Notes boutique et avis produits' },
     'cases':            { title: 'Cas & réclamations',      subtitle: 'Dossiers ouverts avec le support HELIGXIAM' },
+    'seller-profile':   { title: 'Mon profil & vérification', subtitle: 'Identité, coordonnées, vérifications (aligné sur la BDD `profils_vendeur`)' },
+    'admin-messaging':  { title: 'Messagerie opérateur (admin)', subtitle: 'Échangez avec l’équipe HELIGXIAM (conformité, KYC, compte boutique)' },
     'payouts':          { title: 'Paiements & versements',  subtitle: 'Historique, disponible, en attente' },
     'invoices':         { title: 'Factures & fiscalité',    subtitle: 'Documents comptables et TVA' },
     'settings':         { title: 'Paramètres boutique',     subtitle: 'Informations, logo, politiques, collaborateurs' }
   };
 
   // =========== Shipments (FBA-like) ===========
-  readonly shipments = [
-    { id: 'FBA-2204-001', items: 340, destination: 'Centre HX Lyon (LY-01)', status: 'in-transit', expected: '22 avr. 2026', units: 340 },
-    { id: 'FBA-2204-002', items: 128, destination: 'Centre HX Paris (PA-03)', status: 'received', expected: '19 avr. 2026', units: 128 },
-    { id: 'FBA-2204-003', items: 76,  destination: 'Centre HX Lille (LI-02)', status: 'pending',   expected: '28 avr. 2026', units: 76 }
-  ];
+  readonly shipments: { id: string; items: number; destination: string; status: string; expected: string; units: number }[] = [];
 
   // =========== Returns ===========
-  readonly returnsList = [
-    { id: 'RET-7712', order: '#HX-83987', product: 'Webcam 4K StreamPro', reason: 'Ne correspond pas à la description', status: 'awaiting', refund: 149.00, created: 'Il y a 2j' },
-    { id: 'RET-7703', order: '#HX-83950', product: 'Casque Audio Aurora', reason: 'Défectueux',                        status: 'refunded', refund: 159.00, created: 'Il y a 5j' },
-    { id: 'RET-7688', order: '#HX-83912', product: 'Clavier Mécanique RGB', reason: 'Changement d\'avis',              status: 'transit',  refund: 129.90, created: 'Il y a 6j' }
-  ];
+  readonly returnsList: { id: string; order: string; product: string; reason: string; status: string; refund: number; created: string }[] = [];
+
+  /** API vendeur (auth-service) — documents KYC + fil opérateur (JWT + boutique du token) */
+  private readonly sellerApiBase = 'http://localhost:3001/api/seller';
+
+  operatorThreadLoading = false;
+
+  /** Contexte MySQL vendeur (session) — absent si compte mémoire / non vendeur. */
+  get sellerMysqlContext(): { boutiqueId: number; vendeurId: number } | null {
+    const u = this.currentUser ?? this.authService.currentUser;
+    if (!u || u.role !== 'vendeur') {
+      return null;
+    }
+    const boutiqueId = Number(u.identifiant_boutique);
+    const vendeurId = Number(u.identifiant_vendeur);
+    if (!Number.isFinite(boutiqueId) || boutiqueId < 1 || !Number.isFinite(vendeurId) || vendeurId < 1) {
+      return null;
+    }
+    return { boutiqueId, vendeurId };
+  }
+
+  /** Fils de discussion avec l’opérateur / admin — chargé via GET /api/seller/operator-thread */
+  adminOperatorThread: { id: string; from: 'vendeur' | 'operateur' | 'systeme'; body: string; at: string }[] = [];
+  newMessageToOperator = '';
 
   // =========== Messages acheteurs ===========
-  readonly buyerMessages = [
-    { id: 'msg-01', buyer: 'Tom Roussel',    subject: 'Délai de livraison',           preview: 'Bonjour, je voulais savoir si la commande #HX-84014 peut arriver avant samedi…', time: '12 min', unread: true,  sla: '23h48' },
-    { id: 'msg-02', buyer: 'Claire Martin',  subject: 'Produit compatible ?',          preview: 'Est-ce que le chargeur est compatible iPhone 15 Pro Max ?',                       time: '1h',     unread: true,  sla: '22h58' },
-    { id: 'msg-03', buyer: 'Karim Benzarti', subject: 'Facture',                       preview: 'Pourriez-vous m\'envoyer la facture au format PDF s\'il vous plaît ?',             time: '3h',     unread: true,  sla: '20h45' },
-    { id: 'msg-04', buyer: 'Léa Bernard',    subject: 'Merci !',                        preview: 'Livraison rapide, emballage nickel. Merci !',                                     time: '1j',     unread: false, sla: '—' }
-  ];
+  readonly buyerMessages: { id: string; buyer: string; subject: string; preview: string; time: string; unread: boolean; sla: string }[] = [];
 
   // =========== Ad Campaigns ===========
-  readonly adCampaigns = [
-    { id: 'c-sp-01',  name: 'Auto — Catalogue général',       type: 'Sponsored Products', status: 'active',   budget: 25,  spent: 18.42, impressions: 12450, clicks: 246, acos: 18.4, sales: 412.30 },
-    { id: 'c-sp-02',  name: 'Manuel — Casques audio',         type: 'Sponsored Products', status: 'active',   budget: 40,  spent: 32.18, impressions: 24120, clicks: 512, acos: 14.7, sales: 918.70 },
-    { id: 'c-sb-01',  name: 'Bannière — Accessoires tech',    type: 'Sponsored Brands',   status: 'active',   budget: 60,  spent: 48.90, impressions: 54800, clicks: 980, acos: 22.1, sales: 1240.00 },
-    { id: 'c-sp-03',  name: 'Défensif — Marque',              type: 'Sponsored Products', status: 'paused',   budget: 15,  spent:  0.00, impressions:     0, clicks:   0, acos: 0.0,  sales:    0.00 },
-    { id: 'c-sd-01',  name: 'Display — Retargeting',          type: 'Sponsored Display',  status: 'active',   budget: 30,  spent: 21.75, impressions: 18900, clicks: 210, acos: 19.8, sales: 487.60 }
-  ];
+  readonly adCampaigns: { id: string; name: string; type: string; status: string; budget: number; spent: number; impressions: number; clicks: number; acos: number; sales: number }[] = [];
 
   // =========== Sponsored Brands (creatives) ===========
-  readonly sbCreatives = [
-    { id: 'sb-1', headline: 'Découvrez la collection Aurora',      format: 'Bannière catalogue', status: 'live',     ctr: 2.8, acos: 21.3, reach: '54 800' },
-    { id: 'sb-2', headline: 'Travaillez en Pro avec Pulse X2',     format: 'Vidéo 15s',          status: 'in-review', ctr: 0.0, acos: 0.0,  reach: '—' },
-    { id: 'sb-3', headline: 'Offrez un son haut de gamme',         format: 'Spotlight produit',  status: 'live',     ctr: 3.4, acos: 17.8, reach: '28 340' }
-  ];
+  readonly sbCreatives: { id: string; headline: string; format: string; status: string; ctr: number; acos: number; reach: string }[] = [];
 
   // =========== Flash deals (côté vendeur) ===========
-  readonly sellerDeals = [
-    { id: 'd1', product: 'Montre connectée Pulse X2', discount: 25, startsIn: '12h14', units: 120, sold: 47, status: 'scheduled', fee: 200 },
-    { id: 'd2', product: 'Casque Audio Aurora',       discount: 30, startsIn: 'En cours', units: 80, sold: 64, status: 'live',     fee: 150 },
-    { id: 'd3', product: 'Enceinte Bluetooth Waveform', discount: 20, startsIn: 'Dans 3j', units: 150, sold: 0, status: 'draft',   fee: 120 }
-  ];
+  readonly sellerDeals: { id: string; product: string; discount: number; startsIn: string; units: number; sold: number; status: string; fee: number }[] = [];
 
   // =========== HELIGXIAM Programs ===========
-  readonly programs = [
-    { id: 'vine',    name: 'Programme Vine',               desc: 'Obtenez des avis authentiques auprès de clients vérifiés.',        badge: 'Boostez vos avis',            eligible: true,  enrolled: false, icon: this.Star },
-    { id: 'brand',   name: 'Marque enregistrée (Brand)',   desc: 'Protégez votre marque et débloquez le contenu A+.',                badge: 'Protection',                  eligible: true,  enrolled: true,  icon: this.ShieldCheck },
-    { id: 'aplus',   name: 'Contenu A+',                   desc: 'Enrichissez vos fiches avec des visuels premium (+20% conv.).',    badge: '+20% de conversion',          eligible: true,  enrolled: true,  icon: this.Sparkles },
-    { id: 'climate', name: 'Climate Pledge Friendly',      desc: 'Affichez un label écologique vérifié sur vos fiches.',             badge: 'Éco-responsable',             eligible: true,  enrolled: false, icon: this.Award },
-    { id: 'subs',    name: 'Abonnez et économisez',        desc: 'Fidélisez avec des abonnements récurrents (-5% à -15%).',          badge: 'Fidélisation',                eligible: true,  enrolled: false, icon: this.RefreshCw },
-    { id: 'hxprime', name: 'HELIGXIAM Prime',              desc: 'Accédez aux clients Prime — livraison 1j et badge Prime.',         badge: 'Clients premium',             eligible: true,  enrolled: true,  icon: this.Rocket }
-  ];
+  programs: {
+    id: string;
+    name: string;
+    desc: string;
+    badge: string;
+    eligible: boolean;
+    enrolled: boolean;
+    icon: any;
+  }[] = [];
 
   // =========== Marchés internationaux ===========
-  readonly internationalMarkets = [
-    { code: 'DE', label: 'Allemagne',      flag: '🇩🇪', status: 'active',   sales: 3420,  growth: 24 },
-    { code: 'IT', label: 'Italie',         flag: '🇮🇹', status: 'active',   sales: 1820,  growth: 18 },
-    { code: 'ES', label: 'Espagne',        flag: '🇪🇸', status: 'eligible', sales: 0,     growth: 0 },
-    { code: 'UK', label: 'Royaume-Uni',    flag: '🇬🇧', status: 'eligible', sales: 0,     growth: 0 },
-    { code: 'NL', label: 'Pays-Bas',       flag: '🇳🇱', status: 'coming',   sales: 0,     growth: 0 }
-  ];
+  readonly internationalMarkets: { code: string; label: string; flag: string; status: string; sales: number; growth: number }[] = [];
 
   // =========== Termes de recherche ===========
-  readonly searchTerms = [
-    { term: 'casque bluetooth sans fil',    impressions: 12450, clicks: 384, conv: 6.8, sales: 1248.50 },
-    { term: 'montre connectée sport',        impressions: 9820,  clicks: 260, conv: 5.4, sales: 892.00 },
-    { term: 'clavier mécanique rgb silencieux', impressions: 7430, clicks: 198, conv: 4.1, sales: 512.30 },
-    { term: 'webcam 4k télétravail',         impressions: 5120,  clicks: 142, conv: 3.2, sales: 298.40 },
-    { term: 'chargeur sans fil rapide',      impressions: 4380,  clicks: 120, conv: 2.8, sales: 212.00 }
-  ];
+  readonly searchTerms: { term: string; impressions: number; clicks: number; conv: number; sales: number }[] = [];
 
   // =========== Évaluations & avis ===========
-  readonly sellerFeedback = [
-    { id: 'f1', rating: 5, author: 'Pauline R.',   comment: 'Livraison ultra rapide, produit conforme, emballage soigné.',        date: 'Il y a 3j',  product: 'Casque Audio Aurora' },
-    { id: 'f2', rating: 5, author: 'Mathieu D.',   comment: 'Excellent vendeur, très réactif sur les messages.',                   date: 'Il y a 5j',  product: 'Montre Pulse X2' },
-    { id: 'f3', rating: 4, author: 'Julie L.',     comment: 'Bon produit mais légèrement en retard (2 jours).',                    date: 'Il y a 6j',  product: 'Enceinte Waveform' },
-    { id: 'f4', rating: 2, author: 'Karim B.',     comment: 'Produit ok mais le colis est arrivé abîmé.',                         date: 'Il y a 10j', product: 'Clavier RGB' }
-  ];
+  readonly sellerFeedback: { id: string; rating: number; author: string; comment: string; date: string; product: string }[] = [];
 
-  readonly feedbackDistribution = [
-    { stars: 5, percent: 78, count: 115 },
-    { stars: 4, percent: 14, count: 21 },
-    { stars: 3, percent:  5, count:  7 },
-    { stars: 2, percent:  2, count:  3 },
-    { stars: 1, percent:  1, count:  1 }
-  ];
+  readonly feedbackDistribution: { stars: number; percent: number; count: number }[] = [];
 
   // =========== Payouts history ===========
-  readonly payoutsHistory = [
-    { id: 'pay-2604', date: '12 avr. 2026', amount: 1248.00, status: 'paid',     method: 'Virement SEPA', ref: 'SEPA-202604' },
-    { id: 'pay-2603', date: '05 avr. 2026', amount: 1894.20, status: 'paid',     method: 'Virement SEPA', ref: 'SEPA-202603' },
-    { id: 'pay-2602', date: '29 mars 2026', amount: 2140.50, status: 'paid',     method: 'Virement SEPA', ref: 'SEPA-202602' },
-    { id: 'pay-next', date: '19 avr. 2026', amount: 2487.50, status: 'pending',  method: 'Virement SEPA', ref: '—' }
-  ];
+  readonly payoutsHistory: { id: string; date: string; amount: number; status: string; method: string; ref: string }[] = [];
 
   // =========== Factures ===========
-  readonly invoices = [
-    { id: 'INV-2026-0048', type: 'Commission HX',      period: 'Mars 2026', amount: 342.80, status: 'paid',    download: true },
-    { id: 'INV-2026-0047', type: 'Logistique HX',      period: 'Mars 2026', amount: 128.40, status: 'paid',    download: true },
-    { id: 'INV-2026-0046', type: 'Publicité',          period: 'Mars 2026', amount: 221.25, status: 'paid',    download: true },
-    { id: 'INV-2026-0049', type: 'Commission HX',      period: 'Avril 2026', amount: 189.50, status: 'pending', download: false }
-  ];
+  readonly invoices: { id: string; type: string; period: string; amount: number; status: string; download: boolean; downloadUrl?: string | null }[] = [];
 
   // =========== Paramètres boutique ===========
   storeSettings = {
-    name: 'Ma boutique HELIGXIAM',
-    displayName: 'HXstore',
+    name: '',
+    displayName: '',
     language: 'fr',
     currency: 'EUR',
-    vat: 'FR12345678901',
-    siret: '12345678900012',
-    email: 'vendeur@heligxiam.fr',
-    phone: '+33 1 23 45 67 89',
-    autoAcceptReturns: true,
-    lowStockAlerts: true,
-    weeklyReport: true,
+    vat: '',
+    siret: '',
+    email: '',
+    phone: '',
+    autoAcceptReturns: false,
+    lowStockAlerts: false,
+    weeklyReport: false,
     smsNotifications: false
   };
+
+  private storeSettingsBackup: Record<string, unknown> | null = null;
+
+  /**
+   * Données d’écran « Mon profil » — miroir de la table SQL `profils_vendeur`
+   * (persistance via API à brancher).
+   */
+  sellerProfile: {
+    urlPhoto: string;
+    biographie: string;
+    posteOuFonction: string;
+    siteWeb: string;
+    langueInterface: string;
+    fuseauHoraire: string;
+    courrielVerifie: boolean;
+    telephoneVerifie: boolean;
+    adresseLigne1: string;
+    adresseLigne2: string;
+    ville: string;
+    codePostal: string;
+    codePays: string;
+    notifCommande: boolean;
+    notifPromo: boolean;
+    notifSmsUrgent: boolean;
+    accepteCgu: boolean;
+    dateAcceptationCgu: string;
+    accepteDonnees: boolean;
+    dateAcceptationDonnees: string;
+    profilComplet: boolean;
+  } = {
+    urlPhoto: '',
+    biographie: '',
+    posteOuFonction: '',
+    siteWeb: '',
+    langueInterface: 'fr',
+    fuseauHoraire: 'Europe/Paris',
+    courrielVerifie: false,
+    telephoneVerifie: false,
+    adresseLigne1: '',
+    adresseLigne2: '',
+    ville: '',
+    codePostal: '',
+    codePays: 'FR',
+    notifCommande: true,
+    notifPromo: false,
+    notifSmsUrgent: false,
+    accepteCgu: false,
+    dateAcceptationCgu: '',
+    accepteDonnees: false,
+    dateAcceptationDonnees: '',
+    profilComplet: false
+  };
+
+  relectureProfilHistorique: { type: string; date: string }[] = [];
+
+  profileFeedback = '';
+  private profileFeedbackTimer?: ReturnType<typeof setTimeout>;
+  private addProductFeedbackTimer?: ReturnType<typeof setTimeout>;
+
+  readonly languesInterface = [
+    { code: 'fr', libelle: 'Français' },
+    { code: 'en', libelle: 'English' },
+    { code: 'de', libelle: 'Deutsch' }
+  ];
+
+  readonly fuseauxHoraire = [
+    { id: 'Europe/Paris', libelle: 'Europe / Paris' },
+    { id: 'Europe/Brussels', libelle: 'Europe / Bruxelles' },
+    { id: 'Europe/Berlin', libelle: 'Europe / Berlin' }
+  ];
 
   // =========== Bulk upload templates ===========
   readonly csvTemplates = [
@@ -628,26 +806,64 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
     { id: 'cat-beaute', label: 'Beauté & Santé', cols: 34, samples: 5, updated: '10 avr. 2026' }
   ];
 
-  readonly bulkHistory = [
-    { id: 'u-0812', file: 'catalogue_avril.csv',     items: 142, success: 140, errors: 2,  date: 'Il y a 2h',  status: 'completed' },
-    { id: 'u-0811', file: 'prix_mai_2026.csv',        items: 78,  success: 78,  errors: 0,  date: 'Hier',       status: 'completed' },
-    { id: 'u-0810', file: 'stock_hebdo.csv',          items: 310, success: 287, errors: 23, date: 'Il y a 3j',  status: 'warning' }
-  ];
+  readonly bulkHistory: BulkHistoryRow[] = [];
 
   // =========== Coupons (promotions page) ===========
-  readonly sellerCoupons = [
-    { id: 'cp-01', code: 'PRINTEMPS25',  discount: '25%',  scope: 'Catégorie : Audio',      used: 184, max: 500, expires: '30 avr. 2026', status: 'active' },
-    { id: 'cp-02', code: 'NEW10',        discount: '10€',  scope: 'Nouveaux clients',       used: 47,  max: 200, expires: '31 mai 2026',  status: 'active' },
-    { id: 'cp-03', code: 'FLASH50',      discount: '50%',  scope: '3 produits ciblés',      used: 0,   max: 100, expires: '22 avr. 2026', status: 'scheduled' },
-    { id: 'cp-04', code: 'WELCOME5',     discount: '5€',   scope: 'Toute la boutique',      used: 820, max: 820, expires: '15 avr. 2026', status: 'expired' }
-  ];
+  sellerCoupons: SellerCouponRow[] = [];
+
+  sellerProductPromos: SellerProductPromoRow[] = [];
+
+  promotionsSummary: PromotionsSummary = {
+    activeCoupons: 0,
+    pendingCoupons: 0,
+    uses30d: 0,
+    promoProductCount: 0,
+    flashProductCount: 0,
+    standardPromoCount: 0,
+    avgDiscountPct: 0
+  };
+
+  showCouponModal = false;
+  editingCouponId: number | null = null;
+  couponSaving = false;
+  showProductPromoModal = false;
+  editingProductPromoId: number | null = null;
+  productPromoSaving = false;
+  promoProductOptions: PromoProductOption[] = [];
+  promoFeedback = '';
+  private promoFeedbackTimer?: ReturnType<typeof setTimeout>;
+  couponForm = {
+    code: '',
+    label: '',
+    typeRemise: 'pourcentage' as 'pourcentage' | 'montant',
+    valeur: 10,
+    plafond: 100,
+    validDays: 30
+  };
+  productPromoForm = {
+    productId: 0,
+    promoPrice: 0,
+    originalPrice: 0,
+    typePromo: 'promo' as 'promo' | 'flash',
+    label: '',
+    validDays: 14
+  };
+
+  pageFeedback = '';
+  private pageFeedbackTimer?: ReturnType<typeof setTimeout>;
+  orderStatusFilter: 'all' | 'pending' | 'shipped' | 'delivered' = 'all';
+  catalogSearch = '';
+  healthScore = 0;
+  feedbackSummary = { average: 0, total: 0 };
+  buyerMessagesUnread = 0;
+  trafficOverview = { sessions: 0, pages_vues: 0, conversion: 0 };
+  buyBoxPercent = 0;
+  orderActionLoading = false;
+  stockEditProductId: number | null = null;
 
   // =========== Règles de retarification ===========
-  readonly pricingRules = [
-    { id: 'r1', name: 'Suivre la Buy Box à -1c',   scope: '12 produits',  minMargin: 15, active: true,  last: 'Il y a 12 min' },
-    { id: 'r2', name: 'Plancher prix coûtant +10%', scope: '5 produits',   minMargin: 10, active: true,  last: 'Il y a 1h' },
-    { id: 'r3', name: 'Match concurrent meilleure note', scope: '3 produits', minMargin: 20, active: false, last: 'Désactivée' }
-  ];
+  readonly pricingRules: { id: string; name: string; scope: string; minMargin: number; active: boolean; last: string }[] = [];
+  readonly trafficSources: { name: string; value: number; color: string }[] = [];
 
   // =========== Helpers for templates ===========
   getPageHeader(id: string): { title: string; subtitle: string } {
@@ -702,9 +918,21 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
   getCouponStatusClass(s: string): string {
     switch (s) {
       case 'active':    return 'bg-green-100 text-green-700';
+      case 'pending':   return 'bg-amber-100 text-amber-800';
+      case 'rejected':  return 'bg-rose-100 text-rose-700';
       case 'scheduled': return 'bg-blue-100 text-blue-700';
       case 'expired':   return 'bg-slate-100 text-slate-500';
       default:          return 'bg-slate-100 text-slate-700';
+    }
+  }
+
+  getPromoStatusLabel(s: string): string {
+    switch (s) {
+      case 'active': return 'Active';
+      case 'pending': return 'En attente admin';
+      case 'rejected': return 'Refusée';
+      case 'expired': return 'Expirée';
+      default: return s;
     }
   }
 
@@ -726,20 +954,411 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Action methods for new sections
-  toggleCampaignStatus(c: any): void {
-    c.status = c.status === 'active' ? 'paused' : 'active';
+  toggleCampaignStatus(c: { id: string; status: string }): void {
+    if (!this.sellerMysqlContext) return;
+    const next = c.status === 'active' ? 'paused' : 'active';
+    this.http
+      .patch<{ success: boolean; data?: { status: string } }>(
+        `${this.sellerApiBase}/campaigns/${c.id}`,
+        { status: next === 'active' ? 'active' : 'paused' }
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.data?.status) c.status = res.data.status === 'pause' ? 'paused' : res.data.status;
+          else c.status = next;
+        },
+        error: () => this.showProfileMessage('Impossible de modifier la campagne.')
+      });
   }
 
-  togglePricingRule(r: any): void {
-    r.active = !r.active;
+  togglePricingRule(r: { id: string; active: boolean }): void {
+    if (!this.sellerMysqlContext) return;
+    const next = !r.active;
+    this.http
+      .patch<{ success: boolean; data?: { active: boolean } }>(
+        `${this.sellerApiBase}/pricing-rules/${r.id}`,
+        { active: next }
+      )
+      .subscribe({
+        next: (res) => {
+          r.active = res.data?.active ?? next;
+        },
+        error: () => this.showProfileMessage('Impossible de modifier la règle de prix.')
+      });
   }
 
-  toggleProgramEnrollment(p: any): void {
-    if (p.eligible) p.enrolled = !p.enrolled;
+  toggleProgramEnrollment(p: { id: string; eligible: boolean; enrolled: boolean }): void {
+    if (!p.eligible || !this.sellerMysqlContext) return;
+    const next = !p.enrolled;
+    this.http
+      .patch<{ success: boolean; data?: { enrolled: boolean } }>(
+        `${this.sellerApiBase}/programs/${p.id}`,
+        { enrolled: next }
+      )
+      .subscribe({
+        next: (res) => {
+          p.enrolled = res.data?.enrolled ?? next;
+        },
+        error: () => this.showProfileMessage('Impossible de modifier l’inscription au programme.')
+      });
   }
 
   markAllMessagesRead(): void {
-    this.buyerMessages.forEach(m => m.unread = false);
+    if (!this.sellerMysqlContext) {
+      this.buyerMessages.forEach((m) => (m.unread = false));
+      this.buyerMessagesUnread = 0;
+      return;
+    }
+    this.http.patch(`${this.sellerApiBase}/buyer-messages/read-all`, {}).subscribe({
+      next: () => {
+        this.buyerMessages.forEach((m) => (m.unread = false));
+        this.buyerMessagesUnread = 0;
+        this.showPageFeedback('Messages acheteurs marqués comme lus.');
+      },
+      error: () => this.showPageFeedback('Impossible de marquer les messages comme lus.')
+    });
+  }
+
+  showPageFeedback(msg: string): void {
+    this.pageFeedback = msg;
+    this.promoFeedback = msg;
+    if (this.pageFeedbackTimer) clearTimeout(this.pageFeedbackTimer);
+    this.pageFeedbackTimer = setTimeout(() => {
+      this.pageFeedback = '';
+      if (this.activeNav !== 'promotions') this.promoFeedback = '';
+    }, 4500);
+    this.cdr.markForCheck();
+  }
+
+  filteredOrders(): Order[] {
+    if (this.orderStatusFilter === 'all') return this.orders;
+    return this.orders.filter((o) => o.status === this.orderStatusFilter);
+  }
+
+  filteredCatalogProducts(): ProductRow[] {
+    const q = this.catalogSearch.trim().toLowerCase();
+    if (!q) return this.topProducts;
+    return this.topProducts.filter(
+      (p) => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q)
+    );
+  }
+
+  updateOrderStatus(order: Order, status: Order['status']): void {
+    if (!this.sellerMysqlContext || !order.ref) return;
+    this.orderActionLoading = true;
+    this.http
+      .patch<{ success: boolean; message?: string }>(`${this.sellerApiBase}/orders/${order.ref}/status`, {
+        status
+      })
+      .subscribe({
+        next: () => {
+          this.orderActionLoading = false;
+          order.status = status;
+          this.showPageFeedback(`Commande ${order.id} mise à jour.`);
+          this.loadDashboardDataFromApi();
+        },
+        error: (err) => {
+          this.orderActionLoading = false;
+          this.showPageFeedback(err.error?.message || 'Mise à jour commande impossible.');
+        }
+      });
+  }
+
+  shipOrder(order: Order): void {
+    this.updateOrderStatus(order, 'shipped');
+  }
+
+  shipAllPendingOrders(): void {
+    const pending = this.orders.filter((o) => o.status === 'pending');
+    if (!pending.length) {
+      this.showPageFeedback('Aucune commande à expédier.');
+      return;
+    }
+    if (!confirm(`Marquer ${pending.length} commande(s) comme expédiée(s) ?`)) return;
+    let done = 0;
+    for (const o of pending) {
+      if (!o.ref) continue;
+      this.http
+        .patch(`${this.sellerApiBase}/orders/${o.ref}/status`, { status: 'shipped' })
+        .subscribe({
+          next: () => {
+            done++;
+            if (done === pending.length) {
+              this.showPageFeedback(`${pending.length} commande(s) expédiée(s).`);
+              this.loadDashboardDataFromApi();
+            }
+          }
+        });
+    }
+  }
+
+  printShippingLabels(): void {
+    const pending = this.orders.filter((o) => o.status === 'pending');
+    if (!pending.length) {
+      this.showPageFeedback('Aucune étiquette à imprimer.');
+      return;
+    }
+    this.showPageFeedback(`${pending.length} étiquette(s) générée(s) (simulation).`);
+    window.print();
+  }
+
+  editProductStock(product: ProductRow): void {
+    const pid = product.productId || Number(String(product.id).replace(/^p-/, ''));
+    if (!pid) return;
+    const raw = prompt(`Nouveau stock pour « ${product.name} » :`, String(product.stock));
+    if (raw == null) return;
+    const stock = Number(raw);
+    if (!Number.isFinite(stock) || stock < 0) {
+      this.showPageFeedback('Stock invalide.');
+      return;
+    }
+    this.http
+      .patch<{ success: boolean }>(`${this.sellerApiBase}/products/${pid}/stock`, { stock })
+      .subscribe({
+        next: () => {
+          product.stock = stock;
+          this.showPageFeedback('Stock mis à jour.');
+          this.loadDashboardDataFromApi();
+        },
+        error: (err) => this.showPageFeedback(err.error?.message || 'Mise à jour stock impossible.')
+      });
+  }
+
+  createPricingRule(): void {
+    const name = prompt('Nom de la règle de retarification :', 'Marge minimum 15 %');
+    if (!name?.trim()) return;
+    this.http
+      .post<{ success: boolean; message?: string }>(`${this.sellerApiBase}/pricing-rules`, { name: name.trim() })
+      .subscribe({
+        next: (res) => {
+          this.showPageFeedback(res.message || 'Règle créée.');
+          this.loadDashboardDataFromApi();
+        },
+        error: () => this.showPageFeedback('Création de règle impossible.')
+      });
+  }
+
+  exportSectionData(): void {
+    const rows: string[] = [];
+    if (this.activeNav === 'orders' || this.activeNav === 'unshipped') {
+      rows.push('id,client,produit,qte,total,statut');
+      this.filteredOrders().forEach((o) =>
+        rows.push([o.id, o.customer, o.product, o.qty, o.total, o.status].join(','))
+      );
+    } else if (this.activeNav === 'catalog' || this.activeNav === 'inventory') {
+      rows.push('id,nom,prix,stock,ventes');
+      this.topProducts.forEach((p) =>
+        rows.push([p.id, p.name, p.price, p.stock, p.sales].join(','))
+      );
+    } else {
+      rows.push('label,valeur');
+      this.kpis.forEach((k) => rows.push([k.label, k.value].join(',')));
+    }
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `export-vendeur-${this.activeNav}-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.showPageFeedback('Export CSV téléchargé.');
+  }
+
+  openQuickAction(action: string): void {
+    switch (action) {
+      case 'add-product':
+        this.setActiveNav('add-product');
+        break;
+      case 'bulk-upload':
+        this.setActiveNav('bulk-upload');
+        break;
+      case 'flash-deal':
+        this.setActiveNav('promotions');
+        this.openCreateProductPromoModal();
+        this.productPromoForm.typePromo = 'flash';
+        break;
+      case 'campaign':
+        this.setActiveNav('campaigns');
+        break;
+      case 'export':
+        this.exportSectionData();
+        break;
+      case 'coupon':
+        this.openCreateCouponModal();
+        break;
+      case 'promo':
+        this.openCreateProductPromoModal();
+        break;
+      case 'support':
+        this.setActiveNav('admin-messaging');
+        break;
+      case 'returns':
+        this.setActiveNav('returns');
+        break;
+      case 'shipment':
+        this.setActiveNav('fba-shipments');
+        break;
+      case 'pricing-rule':
+        this.setActiveNav('auto-pricing');
+        this.createPricingRule();
+        break;
+      default:
+        this.showPageFeedback('Section ouverte.');
+    }
+  }
+
+  reloadDashboard(): void {
+    this.loadDashboardDataFromApi();
+    this.showPageFeedback('Données actualisées.');
+  }
+
+  applyCoachTip(tip: CoachTip): void {
+    const navByCode: Record<string, string> = {
+      seo_titres: 'catalog',
+      fiches_images: 'catalog',
+      reponse_msg_24h: 'buyer-messaging',
+      stock_reassort: 'inventory'
+    };
+    this.setActiveNav(navByCode[tip.id] || 'coach');
+    this.showPageFeedback(`Conseil « ${tip.title} » — section ouverte.`);
+  }
+
+  requestPayout(early = false): void {
+    if (!this.sellerMysqlContext) {
+      this.showPageFeedback('Connexion vendeur requise.');
+      return;
+    }
+    const amount = this.payoutSummary.available;
+    if (amount <= 0) {
+      this.showPageFeedback('Aucun montant disponible pour un versement.');
+      return;
+    }
+    const label = early ? 'versement anticipé' : 'versement';
+    if (!confirm(`Demander un ${label} de ${amount.toFixed(2)} € ?`)) return;
+    this.http
+      .post<{ success: boolean; message?: string }>(`${this.sellerApiBase}/payouts/request`, { amount, early })
+      .subscribe({
+        next: (res) => {
+          this.showPageFeedback(res.message || 'Demande de versement enregistrée.');
+          this.loadDashboardDataFromApi();
+        },
+        error: (err) => this.showPageFeedback(err.error?.message || 'Demande impossible.')
+      });
+  }
+
+  downloadCsvTemplate(t: { id: string; label: string }): void {
+    const headers = ['sku', 'titre', 'description', 'prix', 'stock', 'categorie'];
+    const sample = ['SKU-001', `Exemple ${t.label}`, 'Description produit', '29.99', '10', t.label];
+    const blob = new Blob([[headers.join(','), sample.join(',')].join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `modele-import-${t.id}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.showPageFeedback(`Modèle « ${t.label} » téléchargé.`);
+  }
+
+  downloadInvoice(inv: { id: string; type: string; period: string; amount: number; downloadUrl?: string | null }): void {
+    if (inv.downloadUrl) {
+      window.open(inv.downloadUrl, '_blank');
+      return;
+    }
+    const content = `Facture ${inv.id}\nType: ${inv.type}\nPériode: ${inv.period}\nMontant: ${inv.amount.toFixed(2)} EUR`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${inv.id}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.showPageFeedback(`Document ${inv.id} téléchargé.`);
+  }
+
+  downloadVatReport(): void {
+    const rows = ['periode,type,montant,statut'];
+    this.invoices.forEach((i) => rows.push([i.period, i.type, i.amount.toFixed(2), i.status].join(',')));
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rapport-tva-vendeur-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.showPageFeedback('Rapport TVA exporté.');
+  }
+
+  editCatalogProduct(p: ProductRow): void {
+    this.addProductForm.name = p.name;
+    this.addProductForm.price = Number(p.price) || 0;
+    this.addProductForm.stock = p.stock ?? 0;
+    this.addProductForm.description = '';
+    if (p.image) {
+      this.addProductForm.imagePreview = p.image;
+      this.addProductImageFile = null;
+    }
+    this.setActiveNav('add-product');
+    this.showPageFeedback(`Édition de « ${p.name} » — modifiez la fiche puis publiez.`);
+  }
+
+  trackShipment(shipment: { id: string }): void {
+    this.showPageFeedback(`Suivi colis ${shipment.id} : en transit (simulation transporteur).`);
+  }
+
+  openCasesList(): void {
+    this.setActiveNav('cases');
+  }
+
+  openOrdersList(filter: 'all' | 'pending' | 'shipped' | 'delivered' = 'all'): void {
+    this.orderStatusFilter = filter;
+    this.setActiveNav(filter === 'pending' ? 'unshipped' : 'orders');
+  }
+
+  addSearchTermToCampaign(term: string): void {
+    this.setActiveNav('campaigns');
+    this.showPageFeedback(`Terme « ${term} » ajouté à votre liste campagnes (brouillon).`);
+  }
+
+  cancelStoreSettings(): void {
+    if (this.storeSettingsBackup) {
+      Object.assign(this.storeSettings, this.storeSettingsBackup);
+      this.showPageFeedback('Modifications annulées.');
+    } else {
+      this.loadSettingsFromApi();
+      this.showPageFeedback('Paramètres rechargés.');
+    }
+  }
+
+  changeStoreLogo(): void {
+    this.setActiveNav('seller-profile');
+    this.showPageFeedback('Mettez à jour votre photo de profil / logo dans Mon profil.');
+  }
+
+  inviteCollaborator(): void {
+    const email = prompt('E-mail du collaborateur à inviter :');
+    if (!email?.trim()) return;
+    this.showPageFeedback(`Invitation envoyée à ${email.trim()} (simulation).`);
+  }
+
+  showCatalogBulkActions(): void {
+    this.showPageFeedback('Sélectionnez des produits via les cases à cocher, puis relancez l’action.');
+  }
+
+  openBrandRegistryAction(action: 'report' | 'aplus' | 'storefront'): void {
+    switch (action) {
+      case 'report':
+        this.setActiveNav('cases');
+        this.showPageFeedback('Signalement — décrivez le listing contrefaisant au support.');
+        break;
+      case 'aplus':
+        this.setActiveNav('catalog');
+        this.showPageFeedback('Contenu A+ : enrichissez vos fiches depuis le catalogue.');
+        break;
+      case 'storefront':
+        this.setActiveNav('settings');
+        this.showPageFeedback('Personnalisez votre vitrine dans Paramètres boutique.');
+        break;
+    }
   }
 
   getOrderTotalPending(): number {
@@ -748,19 +1367,134 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    this.currentUser = this.authService.currentUser;
+    this.restoreOnboardingFromCache();
+    this.restoreDashboardFromCache();
+
     this.sub.add(
-      this.authService.authState$.subscribe(state => {
-        this.currentUser = state.user;
+      this.authService.validateSession().subscribe((valid) => {
+        this.sellerSessionBootstrapping = false;
+        this.currentUser = this.authService.currentUser;
+        if (valid && this.sellerMysqlContext) {
+          this.restoreOnboardingFromCache();
+          this.restoreDashboardFromCache();
+          this.ensureSellerDataLoaded(true);
+        }
+        this.cdr.markForCheck();
       })
     );
+
+    this.sub.add(
+      this.authService.loginSuccess$.subscribe((user) => {
+        this.currentUser = user;
+        this.sellerDataLoadedFor = null;
+        this.ensureSellerDataLoaded(true);
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.sub.add(
+      this.authService.authState$.subscribe((state) => {
+        this.currentUser = state.user;
+        if (!state.isAuthenticated) {
+          this.sellerDataLoadedFor = null;
+        }
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.notifPollTimer = setInterval(() => {
+      if (this.sellerMysqlContext) {
+        this.loadNotificationsFromApi();
+      }
+    }, 45_000);
+  }
+
+  /** Une seule vague de chargement API par vendeur (évite doublons au refresh token). */
+  private ensureSellerDataLoaded(force = false): void {
+    const ctx = this.sellerMysqlContext;
+    if (!ctx) return;
+    if (!force && this.sellerDataLoadedFor === ctx.vendeurId) return;
+    this.sellerDataLoadedFor = ctx.vendeurId;
+    this.loadDashboardDataFromApi();
+    this.loadOnboardingFromApi();
+    this.loadProfileFromApi();
+    this.loadSettingsFromApi();
+    this.loadOperatorThreadFromApi();
+    this.loadNotificationsFromApi();
+  }
+
+  private onboardingCacheKey(): string | null {
+    const id = this.sellerMysqlContext?.vendeurId;
+    return id ? `${this.onboardingCachePrefix}${id}` : null;
+  }
+
+  private restoreOnboardingFromCache(): void {
+    const key = this.onboardingCacheKey();
+    if (!key) return;
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        this.applyOnboardingData(JSON.parse(raw));
+        this.onboardingHydrated = true;
+      }
+    } catch {
+      /* ignore cache parse errors */
+    }
+  }
+
+  private persistOnboardingCache(data: unknown): void {
+    const key = this.onboardingCacheKey();
+    if (!key || !data) return;
+    try {
+      sessionStorage.setItem(key, JSON.stringify(data));
+    } catch {
+      /* quota / private mode */
+    }
+  }
+
+  private dashboardCacheKey(): string | null {
+    const id = this.sellerMysqlContext?.vendeurId;
+    return id ? `${this.dashboardCachePrefix}${id}` : null;
+  }
+
+  private restoreDashboardFromCache(): void {
+    const key = this.dashboardCacheKey();
+    if (!key) return;
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        this.applyDashboardData(JSON.parse(raw));
+        this.cdr.markForCheck();
+      }
+    } catch {
+      /* ignore cache parse errors */
+    }
+  }
+
+  private persistDashboardCache(data: unknown): void {
+    const key = this.dashboardCacheKey();
+    if (!key || !data) return;
+    try {
+      sessionStorage.setItem(key, JSON.stringify(data));
+    } catch {
+      /* quota / private mode */
+    }
   }
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    if (this.notifPollTimer) clearInterval(this.notifPollTimer);
+    if (this.profileFeedbackTimer) clearTimeout(this.profileFeedbackTimer);
+    if (this.onboardingFeedbackTimer) clearTimeout(this.onboardingFeedbackTimer);
+    if (this.addProductFeedbackTimer) clearTimeout(this.addProductFeedbackTimer);
+    if (this.bulkUploadFeedbackTimer) clearTimeout(this.bulkUploadFeedbackTimer);
   }
 
   // =========== Computed ===========
@@ -783,17 +1517,176 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
     return 'Bonsoir';
   }
 
+  stepOnboardingValide(step: OnboardingStepModel): boolean {
+    return step.status === 'valide';
+  }
+
+  /** 0 = à faire, 0,5 = en attente admin, 1 = validé */
   get onboardingProgress(): number {
-    const done = this.onboardingSteps.filter(s => s.done).length;
-    return Math.round((done / this.onboardingSteps.length) * 100);
+    if (!this.onboardingHydrated) {
+      return 0;
+    }
+    const w: Record<OnboardingStepStatus, number> = {
+      a_faire: 0,
+      en_attente_validation: 0.5,
+      valide: 1
+    };
+    const sum = this.onboardingSteps.reduce((acc, s) => acc + w[s.status], 0);
+    return Math.round((sum / this.onboardingSteps.length) * 100);
+  }
+
+  get onboardingActivationTerminee(): boolean {
+    return this.onboardingSteps.every(s => s.status === 'valide');
+  }
+
+  onboardingStatusLabel(status: OnboardingStepStatus): string {
+    const m: Record<OnboardingStepStatus, string> = {
+      a_faire: 'À compléter',
+      en_attente_validation: 'En attente validation',
+      valide: 'Validé'
+    };
+    return m[status];
+  }
+
+  onboardingBadgeClass(status: OnboardingStepStatus): string {
+    const m: Record<OnboardingStepStatus, string> = {
+      a_faire: 'bg-slate-100 text-slate-600',
+      en_attente_validation: 'bg-amber-100 text-amber-900',
+      valide: 'bg-emerald-100 text-emerald-800'
+    };
+    return m[status];
+  }
+
+  private patchOnboardingStep(id: OnboardingStepModel['id'], patch: Partial<OnboardingStepModel>): void {
+    this.onboardingSteps = this.onboardingSteps.map(s => (s.id === id ? { ...s, ...patch } : s));
+  }
+
+  private showOnboardingMessage(msg: string): void {
+    this.onboardingFeedback = msg;
+    if (this.onboardingFeedbackTimer) clearTimeout(this.onboardingFeedbackTimer);
+    this.onboardingFeedbackTimer = setTimeout(() => (this.onboardingFeedback = ''), 4500);
+  }
+
+  private apiErrorMessage(err: unknown, fallback: string): string {
+    const e = err as HttpErrorResponse & { userMessage?: string };
+    if (e?.error?.message) return String(e.error.message);
+    if (e?.userMessage) return e.userMessage;
+    if (e?.status === 0) {
+      return 'Serveur injoignable. Lancez auth-service (port 3001) et vérifiez que le front est sur localhost.';
+    }
+    if (e?.status === 401) {
+      return 'Session expirée — déconnectez-vous puis reconnectez-vous (compte vendeur MySQL).';
+    }
+    if (e?.status === 403) {
+      return 'Accès refusé — reconnectez-vous avec un compte vendeur enregistré en base MySQL.';
+    }
+    return fallback;
+  }
+
+  private refDossier(prefix: string): string {
+    const t = Date.now().toString(36).toUpperCase();
+    return `${prefix}-${t.slice(-6)}`;
+  }
+
+  getOnboardingStepById(id: OnboardingStepModel['id']): OnboardingStepModel | undefined {
+    return this.onboardingSteps.find(s => s.id === id);
   }
 
   get currentMarket() {
     return this.markets.find(m => m.code === this.selectedMarket) ?? this.markets[0];
   }
 
+  private notificationIcon(type: string) {
+    switch (type) {
+      case 'action_requise':
+        return this.AlertCircle;
+      case 'kyc':
+        return this.FileCheck;
+      case 'moderation':
+        return this.Package;
+      case 'onboarding':
+        return this.Sparkles;
+      default:
+        return this.Bell;
+    }
+  }
+
+  private mapNotificationRow(n: {
+    id: number;
+    type: string;
+    title: string;
+    text: string;
+    time: string;
+    read?: boolean;
+  }) {
+    return {
+      id: n.id,
+      type: n.type,
+      title: n.title,
+      text: n.text,
+      time: n.time,
+      read: Boolean(n.read),
+      icon: this.notificationIcon(n.type)
+    };
+  }
+
+  loadNotificationsFromApi(): void {
+    if (!this.sellerMysqlContext) return;
+    this.http
+      .get<{ success: boolean; data?: { rows: any[]; unreadCount: number } }>(
+        `${this.sellerApiBase}/notifications`
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.notifications = (res.data.rows || []).map((n) => this.mapNotificationRow(n));
+            this.notificationsUnreadCount = res.data.unreadCount ?? 0;
+            this.cdr.markForCheck();
+          }
+        }
+      });
+  }
+
+  markAllNotificationsRead(): void {
+    this.http.patch(`${this.sellerApiBase}/notifications/read-all`, {}).subscribe({
+      next: () => {
+        this.notifications = this.notifications.map((n) => ({ ...n, read: true }));
+        this.notificationsUnreadCount = 0;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  openSellerNotification(n: { id: number; read: boolean; type: string }): void {
+    if (!n.read) {
+      this.http.patch(`${this.sellerApiBase}/notifications/${n.id}/read`, {}).subscribe({
+        next: (res: any) => {
+          n.read = true;
+          if (res?.data?.unreadCount != null) {
+            this.notificationsUnreadCount = res.data.unreadCount;
+          } else if (this.notificationsUnreadCount > 0) {
+            this.notificationsUnreadCount--;
+          }
+          this.cdr.markForCheck();
+        }
+      });
+    }
+    this.showNotifications = false;
+    if (n.type === 'message') {
+      this.setActiveNav('admin-messaging');
+      return;
+    }
+    if (n.type === 'onboarding' || n.type === 'action_requise' || n.type === 'kyc') {
+      this.activeNav = 'dashboard';
+      this.onboardingOpenPanel = null;
+    } else if (n.type === 'moderation') {
+      this.activeNav = 'catalog';
+    }
+    this.cdr.markForCheck();
+  }
+
   get notificationsCount(): number {
-    return this.notifications.length;
+    return this.notificationsUnreadCount;
   }
 
   get casesCount(): number {
@@ -818,22 +1711,974 @@ export class SellerDashboardComponent implements OnInit, OnDestroy {
     return +(((t - lw) / lw) * 100).toFixed(1);
   }
 
-  // =========== Actions ===========
-  toggleOnboardingStep(id: string): void {
-    this.onboardingSteps = this.onboardingSteps.map(s =>
-      s.id === id ? { ...s, done: !s.done } : s
-    );
+  // =========== Actions — Onboarding ===========
+  selectOnboardingRow(id: OnboardingStepModel['id']): void {
+    if (this.onboardingOpenPanel === id) {
+      return;
+    }
+    this.onboardingOpenPanel = id;
+  }
+
+  selectSellerPlan(tier: 'particulier' | 'professionnel'): void {
+    this.sellerPlan = tier;
+    this.cdr.markForCheck();
+  }
+
+  soumettreOnboardingPlan(): void {
+    if (this.planSubmitting) return;
+    const step = this.onboardingSteps.find(s => s.id === 'plan');
+    if (!step) return;
+    if (step.status === 'en_attente_validation') {
+      this.showOnboardingMessage('Formule déjà soumise — en attente de validation admin.');
+      return;
+    }
+    if (step.status === 'valide') {
+      this.showOnboardingMessage('Formule déjà validée par l’admin.');
+      return;
+    }
+    if (step.status !== 'a_faire') {
+      return;
+    }
+    if (!this.sellerPlan) {
+      this.showOnboardingMessage('Choisissez d’abord Particulier ou Professionnel.');
+      return;
+    }
+    if (!this.sellerMysqlContext) {
+      this.showOnboardingMessage('Connectez-vous avec un compte vendeur MySQL pour soumettre la formule.');
+      return;
+    }
+    this.planSubmitting = true;
+    this.http
+      .post<{ success: boolean; message?: string; data?: any }>(
+        `${this.sellerApiBase}/onboarding/plan`,
+        { tier: this.sellerPlan }
+      )
+      .subscribe({
+        next: (res) => {
+          this.planSubmitting = false;
+          if (res.data) this.applyOnboardingData(res.data);
+          this.showOnboardingMessage(res.message || 'Formule soumise pour validation admin.');
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.planSubmitting = false;
+          this.showOnboardingMessage(
+            this.apiErrorMessage(err, 'Impossible de soumettre la formule. Vérifiez auth-service (port 3001).')
+          );
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  async soumettreEtapeOnboarding(id: OnboardingStepModel['id']): Promise<void> {
+    if (this.stepSubmitting) return;
+    const step = this.onboardingSteps.find(s => s.id === id);
+    if (!step || step.status !== 'a_faire' || id === 'plan') {
+      return;
+    }
+
+    if (id === 'docs') {
+      if (!this.onboardingDocFiles.kbis || !this.onboardingDocFiles.cni || !this.onboardingDocFiles.rib) {
+        this.showOnboardingMessage('Ajoutez les 3 fichiers : Kbis, CNI/passeport et RIB.');
+        return;
+      }
+      this.docsUploading = true;
+      try {
+        if (!this.sellerMysqlContext) {
+          this.showOnboardingMessage(
+            'Connectez-vous avec un compte vendeur enregistré en base (MySQL + auth-service) pour envoyer les pièces KYC.'
+          );
+          this.docsUploading = false;
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('kbis', this.onboardingDocFiles.kbis);
+        formData.append('cni', this.onboardingDocFiles.cni);
+        formData.append('rib', this.onboardingDocFiles.rib);
+        if (this.onboardingFormDocs.commentaire?.trim()) {
+          formData.append('commentaire', this.onboardingFormDocs.commentaire.trim());
+        }
+
+        const response = await firstValueFrom(
+          this.http.post<any>(`${this.sellerApiBase}/documents`, formData)
+        );
+        this.onboardingFormDocs.fichierKbis = response?.data?.kbis?.originalName || this.onboardingDocFiles.kbis.name;
+        this.onboardingFormDocs.fichierCni = response?.data?.cni?.originalName || this.onboardingDocFiles.cni.name;
+        this.onboardingFormDocs.fichierRib = response?.data?.rib?.originalName || this.onboardingDocFiles.rib.name;
+        if (response?.data?.onboarding) {
+          this.applyOnboardingData(response.data.onboarding);
+        }
+        this.showOnboardingMessage('Documents transmis — en attente de validation admin.');
+        return;
+      } catch (_error) {
+        this.showOnboardingMessage('Échec du téléversement. Vérifiez que le service auth est bien lancé sur le port 3001.');
+        return;
+      } finally {
+        this.docsUploading = false;
+      }
+    }
+
+    if (!this.sellerMysqlContext) {
+      this.showOnboardingMessage('Connectez-vous avec un compte vendeur MySQL pour soumettre cette étape.');
+      return;
+    }
+
+    if (id === 'profile') {
+      if (!this.onboardingFormProfile.raisonSociale?.trim()) {
+        this.showOnboardingMessage('La raison sociale est obligatoire (ou « Exemple »).');
+        return;
+      }
+    }
+    if (id === 'payout') {
+      if (!this.onboardingFormPayout.iban?.trim() || !this.onboardingFormPayout.titulaire?.trim()) {
+        this.showOnboardingMessage('Titulaire et IBAN sont requis (ou « Exemple »).');
+        return;
+      }
+    }
+
+    const endpoints: Partial<Record<OnboardingStepModel['id'], string>> = {
+      profile: '/onboarding/profile',
+      shipping: '/onboarding/shipping',
+      payout: '/onboarding/payout'
+    };
+    const bodies: Partial<Record<OnboardingStepModel['id'], object>> = {
+      profile: this.onboardingFormProfile,
+      shipping: this.onboardingFormShipping,
+      payout: this.onboardingFormPayout
+    };
+
+    const path = endpoints[id];
+    if (!path) return;
+
+    this.stepSubmitting = true;
+    try {
+      const response = await firstValueFrom(
+        this.http.post<{ success: boolean; message?: string; data?: any }>(
+          `${this.sellerApiBase}${path}`,
+          bodies[id]
+        )
+      );
+      if (response.data) this.applyOnboardingData(response.data);
+      this.showOnboardingMessage(response.message || 'Étape soumise pour validation admin.');
+      this.loadNotificationsFromApi();
+    } catch (err) {
+      this.showOnboardingMessage(this.apiErrorMessage(err, 'Échec de la soumission. Vérifiez auth-service et la base MySQL.'));
+    } finally {
+      this.stepSubmitting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  onDocFileSelected(kind: 'kbis' | 'cni' | 'rib', event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.onboardingDocFiles[kind] = file;
+    if (kind === 'kbis') this.onboardingFormDocs.fichierKbis = file?.name ?? '';
+    if (kind === 'cni') this.onboardingFormDocs.fichierCni = file?.name ?? '';
+    if (kind === 'rib') this.onboardingFormDocs.fichierRib = file?.name ?? '';
+  }
+
+  scrollToOnboardingPlan(): void {
+    const el = document.getElementById('seller-onboarding-plan');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this.onboardingOpenPanel = 'plan';
   }
 
   setActiveNav(id: string): void {
+    if (this.activeNav === id) {
+      this.showMobileSidebar = false;
+      if (id === 'admin-messaging') {
+        this.loadOperatorThreadFromApi();
+      }
+      return;
+    }
     this.activeNav = id;
     this.showMobileSidebar = false;
+    this.cdr.markForCheck();
+    if (id === 'brand-registry' && this.sellerMysqlContext) {
+      this.loadBrandRegistrationsFromApi();
+    }
+    if (id === 'admin-messaging') {
+      this.loadOperatorThreadFromApi();
+    }
+    if (id === 'promotions' && this.sellerMysqlContext) {
+      this.loadPromotionsFromApi();
+    }
+  }
+
+  openCreateCouponModal(): void {
+    this.setActiveNav('promotions');
+    this.editingCouponId = null;
+    this.couponForm = {
+      code: '',
+      label: '',
+      typeRemise: 'pourcentage',
+      valeur: 10,
+      plafond: 100,
+      validDays: 30
+    };
+    this.showCouponModal = true;
+    this.cdr.markForCheck();
+  }
+
+  openEditCouponModal(coupon: SellerCouponRow): void {
+    if (!coupon.dbId) return;
+    this.editingCouponId = coupon.dbId;
+    const isPct = coupon.discount.includes('%');
+    const valeur = Number(coupon.discount.replace(/[^0-9.]/g, '')) || 10;
+    this.couponForm = {
+      code: coupon.code,
+      label: coupon.label || '',
+      typeRemise: isPct ? 'pourcentage' : 'montant',
+      valeur,
+      plafond: typeof coupon.max === 'number' ? coupon.max : 100,
+      validDays: 30
+    };
+    this.showCouponModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeCouponModal(): void {
+    this.showCouponModal = false;
+    this.editingCouponId = null;
+  }
+
+  openCreateProductPromoModal(): void {
+    this.setActiveNav('promotions');
+    this.editingProductPromoId = null;
+    this.loadPromoProductOptions();
+    this.productPromoForm = {
+      productId: 0,
+      promoPrice: 0,
+      originalPrice: 0,
+      typePromo: 'promo',
+      label: '',
+      validDays: 14
+    };
+    this.showProductPromoModal = true;
+    this.cdr.markForCheck();
+  }
+
+  openEditProductPromoModal(promo: SellerProductPromoRow): void {
+    if (!promo.dbId) return;
+    this.editingProductPromoId = promo.dbId;
+    this.loadPromoProductOptions();
+    this.productPromoForm = {
+      productId: promo.productId || 0,
+      promoPrice: promo.price,
+      originalPrice: promo.originalPrice || promo.price,
+      typePromo: promo.type,
+      label: promo.badge || '',
+      validDays: 14
+    };
+    this.showProductPromoModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeProductPromoModal(): void {
+    this.showProductPromoModal = false;
+    this.editingProductPromoId = null;
+  }
+
+  onPromoProductSelected(): void {
+    const p = this.promoProductOptions.find((x) => x.id === Number(this.productPromoForm.productId));
+    if (!p) return;
+    this.productPromoForm.originalPrice = p.price;
+    if (!this.productPromoForm.promoPrice) {
+      this.productPromoForm.promoPrice = Math.round(p.price * 0.9 * 100) / 100;
+    }
+  }
+
+  loadPromoProductOptions(): void {
+    if (!this.sellerMysqlContext) return;
+    this.http
+      .get<{ success: boolean; data?: { products: PromoProductOption[] } }>(
+        `${this.sellerApiBase}/promotions/product-options`
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data?.products) {
+            this.replaceArray(this.promoProductOptions, res.data.products);
+            this.cdr.markForCheck();
+          }
+        }
+      });
+  }
+
+  loadPromotionsFromApi(): void {
+    if (!this.sellerMysqlContext) return;
+    this.http
+      .get<{
+        success: boolean;
+        data?: {
+          coupons: SellerCouponRow[];
+          productPromos: SellerProductPromoRow[];
+          summary: PromotionsSummary;
+        };
+      }>(`${this.sellerApiBase}/promotions`)
+      .subscribe({
+        next: (res) => {
+          if (!res.success || !res.data) return;
+          this.replaceArray(this.sellerCoupons, res.data.coupons);
+          this.replaceArray(this.sellerProductPromos, res.data.productPromos);
+          Object.assign(this.promotionsSummary, res.data.summary);
+          this.cdr.markForCheck();
+        },
+        error: () => this.showPromoFeedback('Impossible de charger les promotions.')
+      });
+  }
+
+  submitCreateCoupon(): void {
+    if (!this.sellerMysqlContext) return;
+    const code = this.couponForm.code.trim();
+    if (!code || code.length < 3) {
+      this.showPromoFeedback('Code requis (3 caractères minimum).');
+      return;
+    }
+    if (!this.couponForm.valeur || this.couponForm.valeur <= 0) {
+      this.showPromoFeedback('Indiquez une valeur de remise valide.');
+      return;
+    }
+
+    const body = {
+      code: code.toUpperCase(),
+      label: this.couponForm.label.trim() || undefined,
+      typeRemise: this.couponForm.typeRemise,
+      valeur: this.couponForm.valeur,
+      plafond: this.couponForm.plafond || undefined,
+      validDays: this.couponForm.validDays
+    };
+
+    this.couponSaving = true;
+    const req$ = this.editingCouponId
+      ? this.http.patch<{ success: boolean; message?: string }>(
+          `${this.sellerApiBase}/promotions/coupons/${this.editingCouponId}`,
+          body
+        )
+      : this.http.post<{ success: boolean; message?: string }>(
+          `${this.sellerApiBase}/promotions/coupons`,
+          body
+        );
+
+    req$.subscribe({
+      next: (res) => {
+        this.couponSaving = false;
+        if (res.success) {
+          this.showCouponModal = false;
+          this.editingCouponId = null;
+          this.showPromoFeedback(res.message || 'Coupon enregistré.');
+          this.loadPromotionsFromApi();
+        }
+      },
+      error: (err) => {
+        this.couponSaving = false;
+        this.showPromoFeedback(err.error?.message || 'Enregistrement impossible.');
+      }
+    });
+  }
+
+  deleteCoupon(coupon: SellerCouponRow): void {
+    if (!coupon.dbId || !confirm(`Supprimer le coupon « ${coupon.code} » ?`)) return;
+    this.http
+      .delete<{ success: boolean; message?: string }>(
+        `${this.sellerApiBase}/promotions/coupons/${coupon.dbId}`
+      )
+      .subscribe({
+        next: (res) => {
+          this.showPromoFeedback(res.message || 'Coupon supprimé.');
+          this.loadPromotionsFromApi();
+        },
+        error: (err) => this.showPromoFeedback(err.error?.message || 'Suppression impossible.')
+      });
+  }
+
+  submitProductPromo(): void {
+    if (!this.sellerMysqlContext) return;
+    if (!this.productPromoForm.productId) {
+      this.showPromoFeedback('Sélectionnez un produit.');
+      return;
+    }
+    if (!this.productPromoForm.promoPrice || this.productPromoForm.promoPrice <= 0) {
+      this.showPromoFeedback('Indiquez un prix promo valide.');
+      return;
+    }
+
+    const body = {
+      productId: this.productPromoForm.productId,
+      promoPrice: this.productPromoForm.promoPrice,
+      originalPrice: this.productPromoForm.originalPrice || undefined,
+      typePromo: this.productPromoForm.typePromo,
+      label: this.productPromoForm.label.trim() || undefined,
+      validDays: this.productPromoForm.validDays
+    };
+
+    this.productPromoSaving = true;
+    const req$ = this.editingProductPromoId
+      ? this.http.patch<{ success: boolean; message?: string }>(
+          `${this.sellerApiBase}/promotions/products/${this.editingProductPromoId}`,
+          body
+        )
+      : this.http.post<{ success: boolean; message?: string }>(
+          `${this.sellerApiBase}/promotions/products`,
+          body
+        );
+
+    req$.subscribe({
+      next: (res) => {
+        this.productPromoSaving = false;
+        if (res.success) {
+          this.showProductPromoModal = false;
+          this.editingProductPromoId = null;
+          this.showPromoFeedback(res.message || 'Promotion enregistrée.');
+          this.loadPromotionsFromApi();
+        }
+      },
+      error: (err) => {
+        this.productPromoSaving = false;
+        this.showPromoFeedback(err.error?.message || 'Enregistrement impossible.');
+      }
+    });
+  }
+
+  deleteProductPromo(promo: SellerProductPromoRow): void {
+    if (!promo.dbId || !confirm(`Supprimer la promotion sur « ${promo.name} » ?`)) return;
+    this.http
+      .delete<{ success: boolean; message?: string }>(
+        `${this.sellerApiBase}/promotions/products/${promo.dbId}`
+      )
+      .subscribe({
+        next: (res) => {
+          this.showPromoFeedback(res.message || 'Promotion supprimée.');
+          this.loadPromotionsFromApi();
+        },
+        error: (err) => this.showPromoFeedback(err.error?.message || 'Suppression impossible.')
+      });
+  }
+
+  private showPromoFeedback(msg: string): void {
+    this.promoFeedback = msg;
+    if (this.promoFeedbackTimer) clearTimeout(this.promoFeedbackTimer);
+    this.promoFeedbackTimer = setTimeout(() => (this.promoFeedback = ''), 4500);
+  }
+
+  getProductPromoTypeClass(type: string): string {
+    return type === 'flash' ? 'bg-red-100 text-red-700' : 'bg-rose-100 text-rose-700';
+  }
+
+  openSupportMessaging(): void {
+    this.showHelpMenu = false;
+    this.setActiveNav('admin-messaging');
+  }
+
+  loadBrandRegistrationsFromApi(): void {
+    this.http
+      .get<{ success: boolean; data?: { rows: BrandRegistrationRow[] } }>(
+        `${this.sellerApiBase}/brand-registrations`
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data?.rows) {
+            this.brandRegistrations = res.data.rows;
+          }
+        },
+        error: () => (this.brandRegistryFeedback = 'Impossible de charger les marques.')
+      });
+  }
+
+  submitBrandRegistration(): void {
+    const libelle = this.brandFormLabel.trim() || this.storeSettings.displayName || this.storeSettings.name;
+    if (!libelle) {
+      this.brandRegistryFeedback = 'Indiquez un nom de marque.';
+      return;
+    }
+    this.http
+      .post<{ success: boolean; message?: string }>(`${this.sellerApiBase}/brand-registrations`, {
+        libelleMarque: libelle
+      })
+      .subscribe({
+        next: (res) => {
+          this.brandRegistryFeedback = res.message || 'Demande enregistrée.';
+          this.brandFormLabel = '';
+          this.loadBrandRegistrationsFromApi();
+        },
+        error: () => (this.brandRegistryFeedback = 'Échec enregistrement marque.')
+      });
+  }
+
+  get primaryBrandRegistration(): BrandRegistrationRow | null {
+    return this.brandRegistrations[0] || null;
+  }
+
+  private showProfileMessage(msg: string): void {
+    this.profileFeedback = msg;
+    if (this.profileFeedbackTimer) clearTimeout(this.profileFeedbackTimer);
+    this.profileFeedbackTimer = setTimeout(() => (this.profileFeedback = ''), 4000);
+  }
+
+  private replaceArray<T>(target: T[], source: T[] | undefined): void {
+    target.splice(0, target.length, ...((source || []) as T[]));
+  }
+
+  private applyDashboardData(data: any): void {
+    if (!data) return;
+    this.persistDashboardCache(data);
+    this.replaceArray(this.kpis, data.kpis);
+    Object.assign(this.todaySnapshot.today, data.todaySnapshot?.today || {});
+    Object.assign(this.todaySnapshot.yesterday, data.todaySnapshot?.yesterday || {});
+    Object.assign(this.todaySnapshot.lastWeek, data.todaySnapshot?.lastWeek || {});
+    this.replaceArray(this.orders, data.orders);
+    this.replaceArray(this.topProducts, data.topProducts);
+    this.replaceArray(this.inventoryBreakdown, data.inventoryBreakdown);
+    Object.assign(this.payoutSummary, data.payoutSummary || {});
+    this.replaceArray(this.activity, data.activity);
+    this.replaceArray(this.chartData, data.chartData);
+    this.replaceArray(this.healthMetrics, data.healthMetrics);
+    this.replaceArray(this.cases, data.cases);
+    this.replaceArray(this.coachTips, data.coachTips);
+    this.replaceArray(this.news, data.news);
+    this.replaceArray(this.shipments, data.shipments);
+    this.replaceArray(this.returnsList, data.returnsList);
+    this.replaceArray(this.buyerMessages, data.buyerMessages);
+    this.replaceArray(this.adCampaigns, data.adCampaigns);
+    this.replaceArray(this.sbCreatives, data.sbCreatives);
+    this.replaceArray(this.sellerDeals, data.sellerDeals);
+    this.replaceArray(this.internationalMarkets, data.internationalMarkets);
+    this.replaceArray(this.searchTerms, data.searchTerms);
+    this.replaceArray(this.sellerFeedback, data.sellerFeedback);
+    this.replaceArray(this.feedbackDistribution, data.feedbackDistribution);
+    this.replaceArray(this.payoutsHistory, data.payoutsHistory);
+    this.replaceArray(this.invoices, data.invoices);
+    this.replaceArray(this.sellerCoupons, data.sellerCoupons);
+    this.replaceArray(this.sellerProductPromos, data.sellerProductPromos);
+    if (data.promotionsSummary) {
+      Object.assign(this.promotionsSummary, data.promotionsSummary);
+    }
+    this.replaceArray(this.pricingRules, data.pricingRules);
+    this.replaceArray(this.bulkHistory, data.bulkHistory);
+    this.replaceArray(this.trafficSources, data.trafficSources);
+    this.replaceArray(this.programs, this.enrichPrograms(data.programs));
+    this.replaceArray(
+      this.notifications,
+      (data.notifications || []).map((n: any) =>
+        this.mapNotificationRow({
+          id: Number(n.id),
+          type: n.type,
+          title: n.title,
+          text: n.text,
+          time: n.time,
+          read: n.read
+        })
+      )
+    );
+    if (typeof data.notificationsUnreadCount === 'number') {
+      this.notificationsUnreadCount = data.notificationsUnreadCount;
+    }
+    if (data.trafficOverview) {
+      Object.assign(this.trafficOverview, data.trafficOverview);
+      this.todaySnapshot.today.sessions = Number(data.trafficOverview.sessions || 0);
+      this.todaySnapshot.today.pageViews = Number(data.trafficOverview.pages_vues || 0);
+    }
+    if (typeof data.healthScore === 'number') {
+      this.healthScore = data.healthScore;
+    }
+    if (data.feedbackSummary) {
+      Object.assign(this.feedbackSummary, data.feedbackSummary);
+    }
+    if (typeof data.buyerMessagesUnread === 'number') {
+      this.buyerMessagesUnread = data.buyerMessagesUnread;
+    }
+    const buyBoxKpi = (data.kpis || []).find((k: { label?: string }) => k.label === 'Buy Box');
+    if (buyBoxKpi?.value) {
+      const m = String(buyBoxKpi.value).match(/[\d.]+/);
+      this.buyBoxPercent = m ? Number(m[0]) : 0;
+    }
+  }
+
+  private applyOnboardingData(data: any): void {
+    if (!data) return;
+    if (data.sellerPlan === 'particulier' || data.sellerPlan === 'professionnel') {
+      this.sellerPlan = data.sellerPlan;
+    }
+    if (Array.isArray(data.steps)) {
+      this.onboardingSteps = data.steps.map((s: OnboardingStepModel) => ({
+        id: s.id,
+        label: s.label,
+        status: s.status,
+        fileReference: s.fileReference,
+        submittedAt: s.submittedAt
+      }));
+    }
+    const forms = data.forms || {};
+    if (forms.docs) {
+      this.onboardingFormDocs.commentaire = forms.docs.commentaire || '';
+    }
+    if (forms.profile) {
+      this.onboardingFormProfile = { ...this.onboardingFormProfile, ...forms.profile };
+    }
+    if (forms.shipping) {
+      this.onboardingFormShipping = { ...this.onboardingFormShipping, ...forms.shipping };
+    }
+    if (forms.payout) {
+      this.onboardingFormPayout = { ...this.onboardingFormPayout, ...forms.payout };
+    }
+    this.onboardingHydrated = true;
+    this.persistOnboardingCache(data);
+    this.cdr.markForCheck();
+  }
+
+  private enrichPrograms(
+    programs: Array<{ id: string; name: string; desc: string; badge: string; eligible: boolean; enrolled: boolean }> | undefined
+  ) {
+    const iconMap: Record<string, typeof this.Star> = {
+      vine: this.Star,
+      brand: this.ShieldCheck,
+      aplus: this.Sparkles,
+      climate: this.Award,
+      subs: this.RefreshCw,
+      hxprime: this.Rocket
+    };
+    return (programs || []).map((p) => ({ ...p, icon: iconMap[p.id] || this.Award }));
+  }
+
+  loadProfileFromApi(): void {
+    if (!this.sellerMysqlContext) return;
+    this.http.get<{ success: boolean; data?: { profile: any; relectures: any[] } }>(`${this.sellerApiBase}/profile`).subscribe({
+      next: (res) => {
+        if (res.data?.profile) Object.assign(this.sellerProfile, res.data.profile);
+        if (res.data?.relectures) this.relectureProfilHistorique = res.data.relectures;
+      }
+    });
+  }
+
+  loadSettingsFromApi(): void {
+    if (!this.sellerMysqlContext) return;
+    this.http.get<{ success: boolean; data?: { settings: any } }>(`${this.sellerApiBase}/settings`).subscribe({
+      next: (res) => {
+        if (res.data?.settings) {
+          Object.assign(this.storeSettings, res.data.settings);
+          this.storeSettingsBackup = { ...this.storeSettings };
+        }
+      }
+    });
+  }
+
+  loadOnboardingFromApi(): void {
+    if (!this.sellerMysqlContext) return;
+    const reqId = ++this.onboardingRequestId;
+    this.onboardingLoading = true;
+    this.http
+      .get<{ success: boolean; data?: any }>(`${this.sellerApiBase}/onboarding`)
+      .subscribe({
+        next: (res) => {
+          if (reqId !== this.onboardingRequestId) return;
+          this.onboardingLoading = false;
+          if (res.success && res.data) {
+            this.applyOnboardingData(res.data);
+          }
+        },
+        error: (err) => {
+          if (reqId !== this.onboardingRequestId) return;
+          this.onboardingLoading = false;
+          if (!this.onboardingHydrated) {
+            this.showOnboardingMessage(
+              this.apiErrorMessage(err, 'Impossible de charger l’onboarding vendeur.')
+            );
+          }
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  loadDashboardDataFromApi(): void {
+    if (!this.sellerMysqlContext) return;
+    this.http
+      .get<{ success: boolean; data?: any }>(`${this.sellerApiBase}/dashboard`)
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.applyDashboardData(res.data);
+          }
+        },
+        error: () => {
+          this.showProfileMessage('Impossible de charger les données vendeur depuis la base.');
+        }
+      });
+  }
+
+  private computeProfilComplet(): boolean {
+    const p = this.sellerProfile;
+    return !!(
+      p.adresseLigne1?.trim() &&
+      p.ville?.trim() &&
+      p.codePostal?.trim() &&
+      p.biographie?.trim()
+    );
+  }
+
+  saveSellerProfile(): void {
+    if (!this.sellerMysqlContext) {
+      this.showProfileMessage('Connectez-vous avec un compte vendeur MySQL.');
+      return;
+    }
+    this.http
+      .put<{ success: boolean; message?: string; data?: { profile: any } }>(
+        `${this.sellerApiBase}/profile`,
+        this.sellerProfile
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.data?.profile) Object.assign(this.sellerProfile, res.data.profile);
+          this.showProfileMessage(res.message || 'Profil enregistré.');
+        },
+        error: () => this.showProfileMessage('Impossible d’enregistrer le profil.')
+      });
+  }
+
+  saveStoreSettings(): void {
+    if (!this.sellerMysqlContext) {
+      this.showProfileMessage('Connectez-vous avec un compte vendeur MySQL.');
+      return;
+    }
+    this.http
+      .put<{ success: boolean; message?: string; data?: { settings: any } }>(
+        `${this.sellerApiBase}/settings`,
+        this.storeSettings
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.data?.settings) Object.assign(this.storeSettings, res.data.settings);
+          this.storeSettingsBackup = { ...this.storeSettings };
+          this.showProfileMessage(res.message || 'Paramètres enregistrés.');
+        },
+        error: () => this.showProfileMessage('Impossible d’enregistrer les paramètres.')
+      });
+  }
+
+  envoyerLienVerificationCourriel(): void {
+    if (!this.sellerMysqlContext) return;
+    this.http.post<{ success: boolean; message?: string }>(`${this.sellerApiBase}/profile/verify-email`, {}).subscribe({
+      next: (res) => this.showProfileMessage(res.message || 'E-mail de vérification envoyé.'),
+      error: () => this.showProfileMessage('Envoi impossible.')
+    });
+  }
+
+  envoyerCodeVerificationTelephone(): void {
+    if (!this.sellerMysqlContext) return;
+    this.http.post<{ success: boolean; message?: string }>(`${this.sellerApiBase}/profile/verify-phone`, {}).subscribe({
+      next: (res) => this.showProfileMessage(res.message || 'Code SMS envoyé.'),
+      error: () => this.showProfileMessage('Envoi impossible.')
+    });
+  }
+
+  confirmerRelectureDonnees(): void {
+    if (!this.sellerMysqlContext) return;
+    this.http
+      .post<{ success: boolean; message?: string; data?: { relectures: any[] } }>(
+        `${this.sellerApiBase}/profile/relecture-donnees`,
+        {}
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.data?.relectures) this.relectureProfilHistorique = res.data.relectures;
+          this.showProfileMessage(res.message || 'Confirmation enregistrée.');
+        },
+        error: () => this.showProfileMessage('Enregistrement impossible.')
+      });
+  }
+
+  loadOperatorThreadFromApi(): void {
+    if (!this.sellerMysqlContext) {
+      this.showProfileMessage(
+        'Messagerie opérateur : connectez-vous en vendeur (compte créé avec MySQL configuré sur auth-service).'
+      );
+      return;
+    }
+    this.operatorThreadLoading = true;
+    this.http
+      .get<{
+        success: boolean;
+        data?: { messages: { id: string; from: 'vendeur' | 'operateur' | 'systeme'; body: string; at: string }[] };
+      }>(`${this.sellerApiBase}/operator-thread`)
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data?.messages) {
+            this.adminOperatorThread = res.data.messages;
+          }
+          this.operatorThreadLoading = false;
+        },
+        error: () => {
+          this.operatorThreadLoading = false;
+        }
+      });
+  }
+
+  async envoyerMessageOperateur(): Promise<void> {
+    const body = this.newMessageToOperator.trim();
+    if (!body) {
+      return;
+    }
+    if (!this.sellerMysqlContext) {
+      this.showProfileMessage('Connectez-vous en vendeur (MySQL) pour envoyer un message à l’opérateur.');
+      return;
+    }
+    try {
+      const res = await firstValueFrom(
+        this.http.post<{
+          success: boolean;
+          data?: { messages: { id: string; from: 'vendeur' | 'operateur' | 'systeme'; body: string; at: string }[] };
+        }>(`${this.sellerApiBase}/operator-thread/messages`, { body })
+      );
+      if (res.success && res.data?.messages) {
+        this.adminOperatorThread = res.data.messages;
+      }
+      this.newMessageToOperator = '';
+      this.showProfileMessage('Message enregistré (API vendeur).');
+    } catch {
+      this.showProfileMessage('Impossible d’envoyer le message (vérifiez que auth-service tourne sur le port 3001).');
+    }
   }
 
   toggleSection(label: string): void {
     this.navSections = this.navSections.map(sec =>
       sec.label === label ? { ...sec, collapsed: !sec.collapsed } : sec
     );
+  }
+
+  onAddProductImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.showAddProductMessage('Fichier invalide : choisissez une image (JPG/PNG/WebP).');
+      return;
+    }
+    this.addProductImageFile = file;
+    this.addProductForm.imageName = file.name;
+    this.addProductForm.imagePreview = URL.createObjectURL(file);
+    this.showAddProductMessage('Photo produit ajoutée avec succès.');
+  }
+
+  async saveAddProduct(mode: 'draft' | 'publish'): Promise<void> {
+    if (!this.addProductForm.name.trim()) {
+      this.showAddProductMessage('Le nom du produit est obligatoire.');
+      return;
+    }
+    if (!this.addProductForm.price || this.addProductForm.price <= 0) {
+      this.showAddProductMessage('Le prix doit être supérieur à 0.');
+      return;
+    }
+    if (!this.addProductForm.imagePreview || !this.addProductImageFile) {
+      this.showAddProductMessage('Ajoutez au moins une photo du produit.');
+      return;
+    }
+    if (!this.sellerMysqlContext) {
+      this.showAddProductMessage('Connectez-vous en vendeur MySQL pour publier le produit.');
+      return;
+    }
+    try {
+      const created = await firstValueFrom(this.http.post<{ success: boolean; data?: { productId: number } }>(
+        `${this.sellerApiBase}/products`,
+        {
+          name: this.addProductForm.name.trim(),
+          description: this.addProductForm.description || '',
+          price: this.addProductForm.price,
+          stock: this.addProductForm.stock ?? 0,
+          status: mode === 'publish' ? 'publie' : 'brouillon'
+        }
+      ));
+      if (!created.success || !created.data?.productId) {
+        this.showAddProductMessage('Impossible de créer le produit.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('image', this.addProductImageFile);
+      const uploaded = await firstValueFrom(this.http.post<{ success: boolean }>(
+        `${this.sellerApiBase}/products/${created.data.productId}/images`,
+        formData
+      ));
+      if (!uploaded.success) {
+        this.showAddProductMessage('Produit créé, mais échec upload image.');
+        return;
+      }
+      this.loadDashboardDataFromApi();
+      this.showAddProductMessage(mode === 'publish' ? 'Produit publié en base avec sa photo.' : 'Brouillon enregistré en base.');
+      this.resetAddProductForm();
+      this.activeNav = 'catalog';
+    } catch {
+      this.showAddProductMessage('Échec création produit. Vérifiez auth-service (port 3001).');
+    }
+  }
+
+  private resetAddProductForm(): void {
+    this.addProductForm = {
+      name: '',
+      brand: '',
+      category: 'Électronique',
+      description: '',
+      price: null,
+      stock: null,
+      imagePreview: '',
+      imageName: ''
+    };
+    this.addProductImageFile = null;
+  }
+
+  private showAddProductMessage(message: string): void {
+    this.addProductFeedback = message;
+    if (this.addProductFeedbackTimer) clearTimeout(this.addProductFeedbackTimer);
+    this.addProductFeedbackTimer = setTimeout(() => (this.addProductFeedback = ''), 3500);
+  }
+
+  onBulkCsvSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+    this.selectedCsvFile = file;
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      this.selectedCsvFile = null;
+      this.showBulkUploadMessage('Format invalide: choisissez un fichier CSV.');
+      return;
+    }
+    this.showBulkUploadMessage(`Fichier sélectionné: ${file.name}`);
+  }
+
+  async uploadBulkCsv(): Promise<void> {
+    if (!this.selectedCsvFile) {
+      this.showBulkUploadMessage('Sélectionnez un fichier CSV avant envoi.');
+      return;
+    }
+    if (!this.sellerMysqlContext) {
+      this.showBulkUploadMessage('Connexion vendeur MySQL requise.');
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append('file', this.selectedCsvFile);
+      const res = await firstValueFrom(this.http.post<{ success: boolean; data?: BulkHistoryRow }>(
+        `${this.sellerApiBase}/imports-catalogue`,
+        formData
+      ));
+      if (!res.success || !res.data) {
+        this.showBulkUploadMessage('Import échoué.');
+        return;
+      }
+      this.bulkHistory.unshift({
+        ...res.data,
+        status: res.data.errors > 0 ? 'warning' : 'completed'
+      });
+      this.showBulkUploadMessage(`Import terminé: ${res.data.file} (${res.data.items} lignes).`);
+      this.selectedCsvFile = null;
+      this.loadDashboardDataFromApi();
+    } catch {
+      this.showBulkUploadMessage('Échec import CSV. Vérifiez auth-service.');
+    }
+  }
+
+  private showBulkUploadMessage(message: string): void {
+    this.bulkUploadFeedback = message;
+    if (this.bulkUploadFeedbackTimer) clearTimeout(this.bulkUploadFeedbackTimer);
+    this.bulkUploadFeedbackTimer = setTimeout(() => (this.bulkUploadFeedback = ''), 4000);
   }
 
   selectMarket(code: 'FR' | 'DE' | 'IT' | 'ES' | 'UK'): void {

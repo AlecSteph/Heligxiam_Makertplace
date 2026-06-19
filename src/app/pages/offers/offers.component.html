@@ -290,8 +290,9 @@
         </header>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div *ngFor="let d of flashDeals"
-               class="bg-white rounded-2xl border border-gray-200 hover:border-red-300 overflow-hidden shadow-sm transition">
+          <a *ngFor="let d of flashDeals"
+               [routerLink]="['/product', d.id]"
+               class="bg-white rounded-2xl border border-gray-200 hover:border-red-300 overflow-hidden shadow-sm transition block">
             <div class="relative aspect-[4/3] bg-gray-100 overflow-hidden">
               <img [src]="d.image" [alt]="d.name" class="w-full h-full object-cover" loading="lazy" />
               <div class="absolute top-2 left-2 flex gap-1.5">
@@ -324,12 +325,11 @@
                 </div>
               </div>
 
-              <button type="button"
-                      class="mt-3 w-full px-3 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg hover:bg-gray-800 transition">
+              <span class="mt-3 block w-full px-3 py-2 bg-gray-900 text-white text-sm font-bold rounded-lg text-center">
                 Voir le deal
-              </button>
+              </span>
             </div>
-          </div>
+          </a>
         </div>
       </section>
 

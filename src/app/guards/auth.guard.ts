@@ -65,15 +65,10 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   }
 
   private validateToken(): Observable<boolean> {
-    // Essayer de rafraîchir le token pour vérifier sa validité
-    return this.authService.refreshToken().pipe(
-      map(() => true),
-      catchError(() => {
-        // Le refresh a échoué, déconnecter l'utilisateur
-        this.authService.logout();
-        return of(false);
-      })
-    );
+    if (!this.authService.isAuthenticated) {
+      return of(false);
+    }
+    return of(true);
   }
 
   private redirectByRole(userRole: UserRole | null): void {
@@ -129,17 +124,19 @@ export class SellerGuard implements CanActivate {
   ) {}
 
   canActivate(): Observable<boolean> {
-    if (!this.authService.isAuthenticated) {
-      this.router.navigate(['/account']);
-      return of(false);
-    }
-
-    if (!this.authService.hasAnyRole([UserRole.VENDEUR, UserRole.ADMIN])) {
-      this.router.navigate(['/']);
-      return of(false);
-    }
-
-    return of(true);
+    return this.authService.validateSession().pipe(
+      map((valid) => {
+        if (!valid) {
+          this.router.navigate(['/account']);
+          return false;
+        }
+        if (!this.authService.hasAnyRole([UserRole.VENDEUR, UserRole.ADMIN])) {
+          this.router.navigate(['/']);
+          return false;
+        }
+        return true;
+      })
+    );
   }
 }
 

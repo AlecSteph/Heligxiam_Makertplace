@@ -1,0 +1,1296 @@
+<div class="admin-app min-h-screen flex bg-slate-100 text-slate-800">
+  <!-- Sidebar -->
+  <aside class="w-64 flex-shrink-0 bg-slate-900 text-slate-200 border-r border-slate-800 flex flex-col">
+    <div class="p-5 border-b border-slate-800">
+      <p class="text-[0.6rem] uppercase tracking-[0.25em] text-indigo-400 font-bold">HELIGXIAM</p>
+      <p class="text-sm font-semibold text-white mt-1">Console opérateur</p>
+      <p class="text-[11px] text-slate-500 mt-0.5">{{ areaSubtitle() }}</p>
+    </div>
+    <nav class="flex-1 p-2 space-y-3 overflow-y-auto text-left">
+      <ng-container *ngIf="area === 'vendors'">
+        <div>
+          <p class="px-3 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-amber-500/90 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Espace vendeurs
+          </p>
+          <p class="px-3 text-[0.65rem] text-slate-500 leading-snug">Boutiques, KYC, offres, comptes marchands</p>
+          <div class="space-y-0.5 mt-2">
+            <button
+              *ngFor="let item of navVendeur"
+              type="button"
+              (click)="setSection(item.id)"
+              [class]="navBtnClass(item.id)"
+            >
+              <lucide-angular [img]="item.icon" class="w-4 h-4 flex-shrink-0"></lucide-angular>
+              <span class="flex-1 font-medium text-left">{{ item.label }}</span>
+              <span *ngIf="item.badge" class="text-[0.6rem] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">{{
+                item.badge
+              }}</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="area === 'clients'">
+        <div>
+          <p class="px-3 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-cyan-500/90 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span> Espace clients
+          </p>
+          <p class="px-3 text-[0.65rem] text-slate-500 leading-snug">Acheteurs, commandes, retours, CSAT</p>
+          <div class="space-y-0.5 mt-2">
+            <button
+              *ngFor="let item of navClient"
+              type="button"
+              (click)="setSection(item.id)"
+              [class]="navBtnClass(item.id)"
+            >
+              <lucide-angular [img]="item.icon" class="w-4 h-4 flex-shrink-0"></lucide-angular>
+              <span class="flex-1 font-medium text-left">{{ item.label }}</span>
+              <span *ngIf="item.badge" class="text-[0.6rem] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-mono">{{
+                item.badge
+              }}</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="area === 'transverse'">
+        <div>
+          <p class="px-3 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-slate-500">Transverse</p>
+          <p class="px-3 text-[0.65rem] text-slate-500 leading-snug">Acheteur & vendeur (litiges, audit)</p>
+          <div class="space-y-0.5 mt-2">
+            <button
+              *ngFor="let item of navTransverse"
+              type="button"
+              (click)="setSection(item.id)"
+              [class]="navBtnClass(item.id)"
+            >
+              <lucide-angular [img]="item.icon" class="w-4 h-4 flex-shrink-0"></lucide-angular>
+              <span class="flex-1 font-medium text-left">{{ item.label }}</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </nav>
+    <div class="p-3 border-t border-slate-800">
+      <a
+        routerLink="/admin/dashboard"
+        class="flex items-center gap-2 text-xs font-medium text-amber-100/90 hover:text-white px-2 py-2 rounded-lg hover:bg-slate-800/80"
+      >
+        <lucide-angular [img]="Home" class="w-3.5 h-3.5"></lucide-angular>
+        Accueil choix d’espace
+      </a>
+      <a
+        routerLink="/"
+        class="flex items-center gap-2 text-xs text-slate-500 hover:text-indigo-400 px-2 py-2"
+      >
+        <lucide-angular [img]="ChevronRight" class="w-3 h-3 rotate-180"></lucide-angular>
+        Retour site public
+      </a>
+      <button
+        type="button"
+        (click)="logout()"
+        class="w-full mt-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white bg-rose-600/90 hover:bg-rose-500"
+      >
+        <lucide-angular [img]="LogOut" class="w-4 h-4"></lucide-angular>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <header
+      class="h-16 flex-shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 gap-4"
+    >
+      <div class="flex items-center gap-2 min-w-0">
+        <lucide-angular [img]="LayoutDashboard" class="w-5 h-5 text-slate-400 flex-shrink-0"></lucide-angular>
+        <div class="min-w-0">
+          <p class="text-[10px] uppercase tracking-widest text-slate-500 truncate">Espace opérations</p>
+          <h1 class="text-base font-bold text-slate-900 truncate">{{ sectionTitle() }}</h1>
+        </div>
+      </div>
+      <div class="hidden sm:flex items-center max-w-md flex-1">
+        <div class="relative w-full">
+          <lucide-angular [img]="Search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-angular>
+          <input
+            type="search"
+            [(ngModel)]="searchQuery"
+            placeholder="Rechercher dans cette file…"
+            class="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 outline-none"
+          />
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="relative">
+          <button
+            type="button"
+            class="relative p-2 rounded-lg border border-slate-200 hover:bg-slate-50"
+            (click)="toggleAdminNotificationsPanel()"
+          >
+            <lucide-angular [img]="Bell" class="w-4 h-4 text-slate-600"></lucide-angular>
+            <span
+              *ngIf="adminUnreadCount > 0"
+              class="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full ring-2 ring-white flex items-center justify-center"
+            >{{ adminUnreadCount > 9 ? '9+' : adminUnreadCount }}</span>
+          </button>
+          <div
+            *ngIf="showAdminNotifications"
+            class="absolute right-0 mt-1 w-96 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 max-h-[480px] flex flex-col"
+          >
+            <div class="flex items-center justify-between p-3 border-b border-slate-100 bg-slate-50/80">
+              <p class="text-sm font-bold text-slate-900">Notifications opérateur</p>
+              <button type="button" class="text-xs font-semibold text-indigo-600 hover:underline" (click)="markAllAdminNotificationsRead()">
+                Tout marquer lu
+              </button>
+            </div>
+            <div class="flex-1 overflow-y-auto divide-y divide-slate-100">
+              <p *ngIf="!adminNotifications.length" class="p-4 text-sm text-slate-500 text-center">Aucune notification pour le moment.</p>
+              <button
+                *ngFor="let n of adminNotifications"
+                type="button"
+                (click)="openAdminNotification(n)"
+                class="w-full text-left flex items-start gap-3 p-3 hover:bg-indigo-50/50 transition-colors"
+                [class.bg-indigo-50/30]="!n.read"
+              >
+                <span
+                  class="mt-1 w-2 h-2 rounded-full flex-shrink-0"
+                  [class.bg-indigo-500]="!n.read"
+                  [class.bg-transparent]="n.read"
+                ></span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold text-slate-900 leading-snug">{{ n.title }}</p>
+                  <p class="text-xs text-slate-600 mt-0.5 line-clamp-2">{{ n.text }}</p>
+                  <p class="text-[10px] text-slate-400 mt-1">{{ n.time }}</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center gap-2 pl-2 border-l border-slate-200">
+          <lucide-angular [img]="Shield" class="w-8 h-8 text-indigo-600 p-1.5 bg-indigo-50 rounded-lg"></lucide-angular>
+          <div class="text-left">
+            <p class="text-xs font-bold text-slate-900">Admin</p>
+            <p class="text-[10px] text-slate-500">Droit modération</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-auto p-4 lg:p-6">
+      <ng-container [ngSwitch]="activeSection">
+        <!-- File KYC -->
+        <ng-container *ngSwitchCase="'queue-kyc'">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
+            <p class="text-sm text-slate-600">Validation d’identité, documents légaux et ouverture boutique.</p>
+            <span class="text-xs text-slate-500 flex items-center gap-1"
+              ><lucide-angular [img]="Filter" class="w-3.5 h-3.5"></lucide-angular> Tri : plus récents d’abord</span
+            >
+          </div>
+          <p *ngIf="vendorApiLoading" class="text-sm text-slate-500 mb-2">Chargement depuis MySQL…</p>
+          <p *ngIf="vendorApiError" class="text-sm text-rose-600 mb-2">{{ vendorApiError }}</p>
+          <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm text-left min-w-[720px]">
+                <thead class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3">Référence</th>
+                    <th class="px-4 py-3">Boutique</th>
+                    <th class="px-4 py-3">Responsable</th>
+                    <th class="px-4 py-3">Pays</th>
+                    <th class="px-4 py-3">Documents</th>
+                    <th class="px-4 py-3">Reçu le</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let r of filteredKyc()"
+                    class="border-b border-slate-100 hover:bg-slate-50/80"
+                    [class.opacity-50]="r.status !== 'pending'"
+                  >
+                    <td class="px-4 py-3 font-mono text-xs">{{ r.id }}</td>
+                    <td class="px-4 py-3 font-medium text-slate-900">{{ r.shopName }}</td>
+                    <td class="px-4 py-3">{{ r.owner }}</td>
+                    <td class="px-4 py-3">{{ r.country }}</td>
+                    <td class="px-4 py-3 text-slate-600 max-w-[140px] truncate" [title]="r.docs">{{ r.docs }}</td>
+                    <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ r.submittedAt }}</td>
+                    <td class="px-4 py-3 text-right space-x-1 whitespace-nowrap">
+                      <button
+                        *ngIf="r.status === 'pending'"
+                        type="button"
+                        (click)="approveKyc(r)"
+                        class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-500"
+                      >
+                        <lucide-angular [img]="CheckCircle2" class="w-3.5 h-3.5"></lucide-angular>
+                        Valider
+                      </button>
+                      <button
+                        *ngIf="r.status === 'pending'"
+                        type="button"
+                        (click)="rejectKyc(r)"
+                        class="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-rose-200 text-rose-700 text-xs font-semibold hover:bg-rose-50"
+                      >
+                        <lucide-angular [img]="XCircle" class="w-3.5 h-3.5"></lucide-angular>
+                        Refuser
+                      </button>
+                      <span *ngIf="r.status === 'approved'" class="text-xs text-emerald-600 font-semibold">Approuvé</span>
+                      <span *ngIf="r.status === 'rejected'" class="text-xs text-rose-600 font-semibold">Refusé</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p *ngIf="!filteredKyc().length" class="p-8 text-center text-slate-500 text-sm">Aucun dossier KYC en attente.</p>
+          </div>
+        </ng-container>
+
+        <!-- Modération produits -->
+        <ng-container *ngSwitchCase="'queue-products'">
+          <p class="text-sm text-slate-600 mb-4">Contrôle des fiches, signalements concurrence et allégations.</p>
+          <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm min-w-[800px]">
+                <thead class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase border-b">
+                  <tr>
+                    <th class="px-4 py-3">Réf.</th>
+                    <th class="px-4 py-3">Produit</th>
+                    <th class="px-4 py-3">Vendeur</th>
+                    <th class="px-4 py-3">Catégorie</th>
+                    <th class="px-4 py-3">Motif revue</th>
+                    <th class="px-4 py-3">Date</th>
+                    <th class="px-4 py-3 text-right">Décision</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let p of filteredProducts()" class="border-b border-slate-100 hover:bg-slate-50" [class.opacity-50]="p.status !== 'pending'">
+                    <td class="px-4 py-3 font-mono text-xs">{{ p.id }}</td>
+                    <td class="px-4 py-3 font-medium text-slate-900">{{ p.title }}</td>
+                    <td class="px-4 py-3">{{ p.seller }}</td>
+                    <td class="px-4 py-3 text-xs">{{ p.category }}</td>
+                    <td class="px-4 py-3 text-amber-800 text-xs max-w-[200px]">{{ p.flagReason }}</td>
+                    <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ p.submittedAt }}</td>
+                    <td class="px-4 py-3 text-right space-x-1">
+                      <button *ngIf="p.status === 'pending'" type="button" (click)="approveProduct(p)" class="px-2 py-1 rounded-md bg-indigo-600 text-white text-xs font-semibold">Publier</button>
+                      <button *ngIf="p.status === 'pending'" type="button" (click)="rejectProduct(p)" class="px-2 py-1 rounded-md border border-slate-200 text-xs">Retirer</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p *ngIf="!filteredProducts().length" class="p-8 text-center text-slate-500">Aucun résultat.</p>
+          </div>
+        </ng-container>
+
+        <!-- Validation coupons & promotions vendeur -->
+        <ng-container *ngSwitchCase="'queue-promotions'">
+          <p class="text-sm text-slate-600 mb-4">
+            Coupons et promotions produit soumis par les vendeurs — à valider avant mise en ligne côté clients.
+          </p>
+          <div class="rounded-xl border border-violet-200 bg-white shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm min-w-[900px]">
+                <thead class="bg-violet-50 text-violet-950 text-xs font-semibold uppercase border-b border-violet-100">
+                  <tr>
+                    <th class="px-4 py-3">Réf.</th>
+                    <th class="px-4 py-3">Type</th>
+                    <th class="px-4 py-3">Boutique</th>
+                    <th class="px-4 py-3">Détail</th>
+                    <th class="px-4 py-3">Remise</th>
+                    <th class="px-4 py-3">Soumis</th>
+                    <th class="px-4 py-3 text-right">Décision</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let r of filteredPromotions()" class="border-b border-slate-100 hover:bg-violet-50/40">
+                    <td class="px-4 py-3 font-mono text-xs">{{ r.id }}</td>
+                    <td class="px-4 py-3 text-xs">
+                      <span class="px-2 py-0.5 rounded-full font-bold"
+                        [class]="r.kind === 'coupon' ? 'bg-violet-100 text-violet-800' : 'bg-rose-100 text-rose-800'">
+                        {{ r.kind === 'coupon' ? 'Coupon' : 'Promo produit' }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 font-medium">{{ r.shopName }}</td>
+                    <td class="px-4 py-3 text-xs text-slate-700">
+                      <ng-container *ngIf="r.kind === 'coupon'">
+                        <span class="font-mono font-bold">{{ r.code }}</span>
+                        <span *ngIf="r.label" class="text-slate-500"> — {{ r.label }}</span>
+                      </ng-container>
+                      <ng-container *ngIf="r.kind === 'product_promo'">
+                        {{ r.productTitle }} <span class="text-slate-400">({{ r.sku }})</span>
+                      </ng-container>
+                    </td>
+                    <td class="px-4 py-3 font-semibold text-rose-700 text-xs">
+                      {{ r.discount || (r.promoPrice != null ? (r.promoPrice | number:'1.2-2') + ' €' : '—') }}
+                    </td>
+                    <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ r.submittedAt }}</td>
+                    <td class="px-4 py-3 text-right space-x-1">
+                      <button type="button" (click)="approvePromotion(r)"
+                        class="px-2 py-1 rounded-md bg-emerald-600 text-white text-xs font-semibold">Approuver</button>
+                      <button type="button" (click)="rejectPromotion(r)"
+                        class="px-2 py-1 rounded-md border border-rose-200 text-rose-700 text-xs font-semibold">Refuser</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p *ngIf="!filteredPromotions().length" class="p-8 text-center text-slate-500 text-sm">
+              Aucune promotion en attente de validation.
+            </p>
+          </div>
+        </ng-container>
+
+        <!-- Comptes VENDEUR uniquement -->
+        <ng-container *ngSwitchCase="'queue-accounts-seller'">
+          <div class="flex items-center gap-2 mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <p class="text-sm text-amber-950 font-medium">Dossiers réservés aux <strong>comptes marchands / boutiques</strong> (pas les acheteurs).</p>
+          </div>
+          <div class="rounded-xl border border-amber-200 bg-white shadow-sm overflow-hidden">
+            <table class="w-full text-sm min-w-[680px]">
+              <thead class="bg-amber-50/90 text-amber-950 text-xs font-semibold uppercase border-b border-amber-200">
+                <tr>
+                  <th class="px-4 py-3">Dossier</th>
+                  <th class="px-4 py-3">Compte marchand</th>
+                  <th class="px-4 py-3">Priorité</th>
+                  <th class="px-4 py-3">Motif</th>
+                  <th class="px-4 py-3">Ouvert</th>
+                  <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of filteredAccountsSeller()" class="border-b border-slate-100 hover:bg-amber-50/50" [class.opacity-50]="a.status === 'resolved'">
+                  <td class="px-4 py-3 font-mono text-xs">{{ a.id }}</td>
+                  <td class="px-4 py-3 font-mono text-xs">{{ a.email }}</td>
+                  <td class="px-4 py-3">
+                    <span
+                      [class]="
+                        a.priority === 'haut' ? 'bg-rose-100 text-rose-800' : a.priority === 'moyen' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
+                      "
+                      class="text-[0.65rem] px-2 py-0.5 rounded-full font-bold uppercase"
+                      >{{ a.priority }}</span
+                    >
+                  </td>
+                  <td class="px-4 py-3 text-xs text-slate-600 max-w-[220px]">{{ a.reason }}</td>
+                  <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ a.openedAt }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <button *ngIf="a.status === 'open'" type="button" (click)="resolveAccount(a)" class="px-2 py-1 rounded-md bg-amber-700 text-white text-xs">Clôturer</button>
+                    <span *ngIf="a.status === 'resolved'" class="text-xs text-slate-400">Traité</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredAccountsSeller().length" class="p-8 text-center text-slate-500">Aucun dossier vendeur — API comptes & alertes à brancher.</p>
+          </div>
+        </ng-container>
+
+        <!-- Comptes CLIENT uniquement -->
+        <ng-container *ngSwitchCase="'queue-accounts-client'">
+          <div class="flex items-center gap-2 mb-4 p-3 rounded-lg bg-cyan-50 border border-cyan-200">
+            <span class="w-2 h-2 rounded-full bg-cyan-500"></span>
+            <p class="text-sm text-cyan-950 font-medium">Dossiers réservés aux <strong>comptes acheteurs</strong> (pas les boutiques).</p>
+          </div>
+          <div class="rounded-xl border border-cyan-200 bg-white shadow-sm overflow-hidden">
+            <table class="w-full text-sm min-w-[680px]">
+              <thead class="bg-cyan-50/90 text-cyan-950 text-xs font-semibold uppercase border-b border-cyan-200">
+                <tr>
+                  <th class="px-4 py-3">Dossier</th>
+                  <th class="px-4 py-3">Compte client</th>
+                  <th class="px-4 py-3">Priorité</th>
+                  <th class="px-4 py-3">Motif</th>
+                  <th class="px-4 py-3">Ouvert</th>
+                  <th class="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of filteredAccountsClient()" class="border-b border-slate-100 hover:bg-cyan-50/50" [class.opacity-50]="a.status === 'resolved'">
+                  <td class="px-4 py-3 font-mono text-xs">{{ a.id }}</td>
+                  <td class="px-4 py-3 font-mono text-xs">{{ a.email }}</td>
+                  <td class="px-4 py-3">
+                    <span
+                      [class]="
+                        a.priority === 'haut' ? 'bg-rose-100 text-rose-800' : a.priority === 'moyen' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
+                      "
+                      class="text-[0.65rem] px-2 py-0.5 rounded-full font-bold uppercase"
+                      >{{ a.priority }}</span
+                    >
+                  </td>
+                  <td class="px-4 py-3 text-xs text-slate-600 max-w-[220px]">{{ a.reason }}</td>
+                  <td class="px-4 py-3 text-slate-500 text-xs whitespace-nowrap">{{ a.openedAt }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <button *ngIf="a.status === 'open'" type="button" (click)="resolveAccount(a)" class="px-2 py-1 rounded-md bg-cyan-700 text-white text-xs">Clôturer</button>
+                    <span *ngIf="a.status === 'resolved'" class="text-xs text-slate-400">Traité</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredAccountsClient().length" class="p-8 text-center text-slate-500">Aucun dossier client — API comptes & alertes à brancher.</p>
+          </div>
+        </ng-container>
+
+        <!-- Litiges -->
+        <ng-container *ngSwitchCase="'disputes'">
+          <p class="text-sm text-slate-600 mb-4">Garantie A à Z : médiation, remboursement partiel ou total, historique message.</p>
+          <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-x-auto">
+            <table class="w-full text-sm min-w-[850px]">
+              <thead class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase border-b">
+                <tr>
+                  <th class="px-4 py-3">ID litige</th>
+                  <th class="px-4 py-3">Commande</th>
+                  <th class="px-4 py-3">Acheteur</th>
+                  <th class="px-4 py-3">Vendeur</th>
+                  <th class="px-4 py-3">Sujet</th>
+                  <th class="px-4 py-3">Montant</th>
+                  <th class="px-4 py-3">Statut</th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let d of filteredDisputes()" class="border-b border-slate-100 hover:bg-slate-50">
+                  <td class="px-4 py-3 font-mono text-xs">{{ d.id }}</td>
+                  <td class="px-4 py-3 text-indigo-600 font-mono text-xs">{{ d.orderRef }}</td>
+                  <td class="px-4 py-3">{{ d.buyer }}</td>
+                  <td class="px-4 py-3">{{ d.seller }}</td>
+                  <td class="px-4 py-3 text-xs max-w-[200px]">{{ d.topic }}</td>
+                  <td class="px-4 py-3 font-semibold">{{ d.amount }}</td>
+                  <td class="px-4 py-3">
+                    <span
+                      [class]="d.status === 'résolu' ? 'text-emerald-600' : d.status === 'mediation' ? 'text-amber-600' : 'text-rose-600'"
+                      class="text-xs font-bold uppercase"
+                      >{{ d.status }}</span
+                    >
+                  </td>
+                  <td class="px-4 py-3 text-right space-x-1">
+                    <button type="button" (click)="openCase('Détail', d.id)" class="px-2 py-1 text-xs border rounded-md hover:bg-slate-50">
+                      <lucide-angular [img]="Eye" class="w-3.5 h-3.5 inline -mt-0.5"></lucide-angular>
+                      Voir
+                    </button>
+                    <button
+                      *ngIf="d.status !== 'résolu'"
+                      type="button"
+                      (click)="closeDispute(d)"
+                      class="px-2 py-1 text-xs bg-emerald-600 text-white rounded-md"
+                    >Clôturer</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredDisputes().length" class="p-8 text-center text-slate-500">Aucun litige — API médiation à brancher.</p>
+          </div>
+        </ng-container>
+
+        <!-- Vendeurs -->
+        <ng-container *ngSwitchCase="'sellers'">
+          <p class="text-sm text-slate-600 mb-4">Santé du compte, volume d’annonce, statut opérationnel.</p>
+          <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase border-b">
+                <tr>
+                  <th class="px-4 py-3">ID</th>
+                  <th class="px-4 py-3">Boutique</th>
+                  <th class="px-4 py-3">Statut</th>
+                  <th class="px-4 py-3">Annonces</th>
+                  <th class="px-4 py-3">Santé</th>
+                  <th class="px-4 py-3">Dernière act.</th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of filteredSellers()" class="border-b border-slate-100 hover:bg-slate-50">
+                  <td class="px-4 py-3 font-mono text-xs">{{ s.id }}</td>
+                  <td class="px-4 py-3 font-medium">{{ s.name }}</td>
+                  <td class="px-4 py-3">
+                    <span
+                      [class]="
+                        s.status === 'actif'
+                          ? 'text-emerald-600'
+                          : s.status === 'surveillé'
+                            ? 'text-amber-600'
+                            : s.status === 'kyc_en_cours'
+                              ? 'text-indigo-600'
+                              : s.status === 'brouillon'
+                                ? 'text-slate-500'
+                                : 'text-rose-600'
+                      "
+                      class="text-xs font-bold"
+                      >{{ s.status }}</span
+                    >
+                  </td>
+                  <td class="px-4 py-3">{{ s.listings | number }}</td>
+                  <td class="px-4 py-3">
+                    <div class="h-1.5 w-20 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-indigo-500 rounded-full" [style.width.%]="s.health"></div>
+                    </div>
+                    <span class="text-xs text-slate-500">{{ s.health }}%</span>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-slate-500">{{ s.lastSync }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <button type="button" (click)="openVendorFiche(s)" class="text-xs text-indigo-600 font-semibold">Fiche complète</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredSellers().length" class="p-8 text-center text-slate-500">Aucun vendeur enregistré — les boutiques apparaîtront ici après inscription.</p>
+          </div>
+        </ng-container>
+
+        <!-- Activation & onboarding — liste vendeurs -->
+        <ng-container *ngSwitchCase="'onboarding-activation'">
+          <p class="text-sm text-slate-600 mb-4">
+            Sélectionnez un vendeur pour ouvrir son dossier d’activation (plan, documents, profil, livraison, RIB).
+          </p>
+          <p *ngIf="onboardingApiLoading && !onboardingBoutiqueRows.length" class="text-sm text-slate-600 mb-4">Chargement des dossiers depuis MySQL…</p>
+          <p *ngIf="onboardingApiLoading && onboardingBoutiqueRows.length" class="text-xs text-slate-500 mb-3">Actualisation de la liste…</p>
+          <p *ngIf="onboardingApiError" class="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 mb-4">{{ onboardingApiError }}</p>
+          <p *ngIf="!onboardingApiLoading && !onboardingApiError && !onboardingBoutiqueRows.length" class="text-sm text-slate-600 mb-4 rounded-lg border border-dashed border-slate-300 bg-white px-3 py-4">
+            Aucun dossier en cours — les boutiques apparaissent ici dès qu’un vendeur s’inscrit et soumet des étapes d’onboarding.
+          </p>
+
+          <div *ngIf="onboardingBoutiqueRows.length" class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-2">
+              <p class="text-xs font-bold uppercase tracking-wide text-slate-600">
+                {{ filteredOnboardingBoutiques().length }} vendeur(s) en cours d’activation
+              </p>
+              <p class="text-[11px] text-slate-500">Cliquez sur une ligne pour ouvrir le dossier complet</p>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm min-w-[640px]">
+                <thead class="text-xs font-bold uppercase text-slate-500 border-b border-slate-100">
+                  <tr>
+                    <th class="px-4 py-3 text-left">Vendeur / boutique</th>
+                    <th class="px-4 py-3 text-left hidden sm:table-cell">Réf.</th>
+                    <th class="px-4 py-3 text-left">Formule</th>
+                    <th class="px-4 py-3 text-left">Progression</th>
+                    <th class="px-4 py-3 text-left">Statut</th>
+                    <th class="px-4 py-3 w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let row of filteredOnboardingBoutiques()"
+                    (click)="openOnboardingDossier(row)"
+                    class="border-b border-slate-50 last:border-0 cursor-pointer transition-colors hover:bg-indigo-50/60 group"
+                  >
+                    <td class="px-4 py-3.5">
+                      <p class="font-semibold text-slate-900 group-hover:text-indigo-800">{{ row.shopName }}</p>
+                      <p class="text-[11px] text-slate-500 mt-0.5 sm:hidden font-mono">{{ row.vendorId }}</p>
+                    </td>
+                    <td class="px-4 py-3.5 hidden sm:table-cell font-mono text-xs text-slate-500">{{ row.vendorId }}</td>
+                    <td class="px-4 py-3.5 capitalize text-slate-700">{{ row.plan }}</td>
+                    <td class="px-4 py-3.5 min-w-[140px]">
+                      <div class="flex items-center gap-2">
+                        <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            class="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all"
+                            [style.width.%]="row.progressPercent"
+                          ></div>
+                        </div>
+                        <span class="text-xs font-bold text-slate-700 tabular-nums w-9 text-right">{{ row.progressPercent }}%</span>
+                      </div>
+                      <p class="text-[10px] text-slate-500 mt-1">{{ onboardingStepsValides(row) }}/{{ onboardingStepsTotal(row) }} étapes</p>
+                    </td>
+                    <td class="px-4 py-3.5">
+                      <span class="text-[11px] font-bold px-2 py-1 rounded-full" [ngClass]="statutBoutiqueClass(row.statutBoutique)">
+                        {{ statutBoutiqueLabel(row.statutBoutique) }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3.5 text-slate-400 group-hover:text-indigo-600">
+                      <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p *ngIf="!filteredOnboardingBoutiques().length && searchQuery.trim()" class="p-6 text-center text-sm text-slate-500">
+              Aucun vendeur ne correspond à « {{ searchQuery }} ».
+            </p>
+          </div>
+        </ng-container>
+
+        <!-- Dossier onboarding — détail vendeur -->
+        <ng-container *ngSwitchCase="'onboarding-detail'">
+          <p *ngIf="onboardingDetailLoading" class="text-sm text-slate-600 mb-4 rounded-lg border border-slate-200 bg-white px-4 py-6 text-center">
+            Chargement du dossier vendeur…
+          </p>
+          <p *ngIf="!onboardingDetailLoading && onboardingApiError && !selectedOnboardingRow" class="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 mb-4">{{ onboardingApiError }}</p>
+
+          <div *ngIf="!onboardingDetailLoading && selectedOnboardingRow as row" class="space-y-5 onboarding-dossier">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                (click)="backToOnboardingList()"
+                class="text-sm text-indigo-600 font-semibold flex items-center gap-1 hover:text-indigo-800"
+              >
+                ← Retour à la liste
+              </button>
+              <button
+                type="button"
+                (click)="activerBoutiqueAdmin(row)"
+                [disabled]="!peutActiverBoutique(row) || row.statutBoutique === 'active' || adminActionBusy"
+                class="text-xs font-bold px-4 py-2.5 rounded-lg bg-emerald-600 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-emerald-500 shadow-sm"
+              >
+                Activer la boutique
+              </button>
+            </div>
+
+            <!-- Résumé -->
+            <section class="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+              <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-600 mb-1">Dossier vendeur</p>
+                  <h2 class="text-xl font-bold text-slate-900">{{ row.shopName }}</h2>
+                  <p class="text-sm text-slate-500 mt-1 font-mono">{{ row.vendorId }} · Boutique #{{ row.boutiqueId }}</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 capitalize">{{ row.plan }}</span>
+                  <span class="text-xs font-bold px-2.5 py-1 rounded-full" [ngClass]="statutBoutiqueClass(row.statutBoutique)">
+                    {{ statutBoutiqueLabel(row.statutBoutique) }}
+                  </span>
+                </div>
+              </div>
+              <div class="mt-4 pt-4 border-t border-slate-100">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <p class="text-sm font-medium text-slate-700">
+                    Progression globale — {{ onboardingStepsValides(row) }}/{{ onboardingStepsTotal(row) }} étapes validées
+                  </p>
+                  <span class="text-lg font-bold text-slate-900 tabular-nums">{{ row.progressPercent }} %</span>
+                </div>
+                <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-gradient-to-r from-amber-400 via-orange-500 to-emerald-500 rounded-full" [style.width.%]="row.progressPercent"></div>
+                </div>
+              </div>
+              <p *ngIf="row.notes" class="mt-3 text-xs text-slate-600 rounded-lg bg-amber-50/80 border border-amber-100 px-3 py-2">{{ row.notes }}</p>
+              <p class="mt-3 text-[11px] text-slate-500 leading-relaxed">
+                <span class="font-bold text-slate-600">Avant activation :</span> vérifiez chaque étape ci-dessous, ouvrez les pièces KYC, puis validez manuellement si besoin.
+              </p>
+            </section>
+
+            <!-- Étapes -->
+            <section class="space-y-3">
+              <h3 class="text-sm font-bold text-slate-800 px-1">Étapes d’onboarding</h3>
+              <article
+                *ngFor="let st of row.steps; let i = index"
+                class="rounded-xl border bg-white shadow-sm overflow-hidden"
+                [class.border-emerald-200]="st.valide"
+                [class.border-amber-200]="!st.valide"
+              >
+                <header class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b"
+                  [class.bg-emerald-50/70]="st.valide"
+                  [class.bg-amber-50/50]="!st.valide"
+                  [class.border-emerald-100]="st.valide"
+                  [class.border-amber-100]="!st.valide"
+                >
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span
+                      class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                      [class.bg-emerald-600]="st.valide"
+                      [class.text-white]="st.valide"
+                      [class.bg-amber-200]="!st.valide"
+                      [class.text-amber-900]="!st.valide"
+                    >{{ i + 1 }}</span>
+                    <h4 class="font-bold text-slate-900 text-sm">{{ st.label }}</h4>
+                  </div>
+                  <span
+                    class="text-[11px] font-bold px-2.5 py-1 rounded-full"
+                    [class.bg-emerald-100]="st.valide"
+                    [class.text-emerald-800]="st.valide"
+                    [class.bg-amber-100]="!st.valide"
+                    [class.text-amber-900]="!st.valide"
+                  >{{ st.valide ? 'Validée' : 'À contrôler' }}</span>
+                </header>
+
+                <div class="p-4 space-y-4">
+                  <div>
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-1.5">Aperçu des données</p>
+                    <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50 rounded-lg border border-slate-100 px-3 py-2.5">{{ st.apercu || '—' }}</p>
+                  </div>
+
+                  <div *ngIf="st.preuves?.length">
+                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Pièces &amp; références</p>
+                    <ul class="grid gap-2 sm:grid-cols-2">
+                      <li
+                        *ngFor="let p of st.preuves"
+                        class="rounded-lg border px-3 py-2.5 flex flex-col gap-2"
+                        [ngClass]="etatPreuveClass(p.etat)"
+                      >
+                        <div class="flex items-start justify-between gap-2">
+                          <span class="text-sm font-medium leading-snug">{{ p.libelle }}</span>
+                          <span class="text-[10px] font-mono font-bold uppercase shrink-0">{{ p.etat }}</span>
+                        </div>
+                        <button
+                          *ngIf="p.ref"
+                          type="button"
+                          (click)="ouvrirPreuveOnboarding(row, p); $event.stopPropagation()"
+                          class="self-start text-[11px] font-bold text-indigo-700 underline decoration-indigo-300 hover:text-indigo-900"
+                        >
+                          Ouvrir le fichier
+                        </button>
+                        <span *ngIf="!p.ref" class="text-[11px] text-slate-500">Aucun fichier joint</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-dashed border-slate-100">
+                    <span class="text-[11px] text-slate-500">Validation manuelle opérateur</span>
+                    <button
+                      type="button"
+                      (click)="forcerEtapeOnboarding(row, st.id, !st.valide)"
+                      [disabled]="adminActionBusy"
+                      class="text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-50"
+                      [class.border-emerald-300]="st.valide"
+                      [class.text-emerald-800]="st.valide"
+                      [class.bg-emerald-50]="st.valide"
+                      [class.border-indigo-300]="!st.valide"
+                      [class.text-indigo-800]="!st.valide"
+                      [class.bg-indigo-50]="!st.valide"
+                    >
+                      {{ st.valide ? 'Invalider l’étape' : 'Valider l’étape' }}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            </section>
+          </div>
+
+          <p *ngIf="!onboardingDetailLoading && !selectedOnboardingRow && !onboardingApiError" class="text-sm text-slate-600">
+            Dossier introuvable —
+            <button type="button" (click)="backToOnboardingList()" class="text-indigo-600 font-semibold underline">retour à la liste</button>.
+          </p>
+        </ng-container>
+
+        <!-- Profil & vérifications (e-mail, téléphone) -->
+        <ng-container *ngSwitchCase="'profil-vendeur-verify'">
+          <p class="text-sm text-slate-600 mb-4">Aligné <code class="text-xs bg-slate-100 px-1 rounded">profils_vendeur</code> (courriel_verifie, telephone_verifie). Forçage manuel en cas de bug SMS / lien.</p>
+          <div class="rounded-xl border border-slate-200 bg-white overflow-x-auto">
+            <table class="w-full text-sm min-w-[720px]">
+              <thead class="bg-slate-50 text-xs font-bold uppercase text-slate-600 border-b">
+                <tr>
+                  <th class="px-3 py-2 text-left">Boutique</th>
+                  <th class="px-3 py-2 text-left">E-mail pro</th>
+                  <th class="px-3 py-2 text-left">Téléphone</th>
+                  <th class="px-3 py-2">E-mail vérifié</th>
+                  <th class="px-3 py-2">Tél. vérifié</th>
+                  <th class="px-3 py-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of filteredSellers()" class="border-b border-slate-100 hover:bg-slate-50/80">
+                  <td class="px-3 py-2 font-medium">{{ s.name }}</td>
+                  <td class="px-3 py-2 text-xs font-mono">{{ s.email }}</td>
+                  <td class="px-3 py-2 text-xs">{{ s.phone }}</td>
+                  <td class="px-3 py-2 text-center">
+                    <span [class]="s.emailVerif ? 'text-emerald-600 font-bold' : 'text-rose-600'">{{ s.emailVerif ? 'Oui' : 'Non' }}</span>
+                  </td>
+                  <td class="px-3 py-2 text-center">
+                    <span [class]="s.telVerif ? 'text-emerald-600 font-bold' : 'text-rose-600'">{{ s.telVerif ? 'Oui' : 'Non' }}</span>
+                  </td>
+                  <td class="px-3 py-2 text-right space-x-1">
+                    <button type="button" (click)="forcerVerifEmail(s)" [disabled]="s.emailVerif" class="text-[10px] font-bold text-indigo-600 disabled:opacity-30">Valider e-mail</button>
+                    <button type="button" (click)="forcerVerifTelephone(s)" [disabled]="s.telVerif" class="text-[10px] font-bold text-indigo-600 disabled:opacity-30">Valider tél.</button>
+                    <button type="button" (click)="openVendorFiche(s)" class="text-[10px] font-bold text-slate-500">Fiche</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredSellers().length" class="p-8 text-center text-slate-500 text-sm">Aucun vendeur enregistré.</p>
+          </div>
+        </ng-container>
+
+        <!-- Santé du compte — critères -->
+        <ng-container *ngSwitchCase="'sante-vendeurs'">
+          <p class="text-sm text-slate-600 mb-4">
+            Scores enregistrés dans <code class="text-xs bg-slate-100 px-1">sante_compte_courant</code> (MySQL).
+          </p>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-4">
+            <div *ngFor="let kv of santePoidsFields" class="rounded-lg border border-slate-200 bg-white p-2">
+              <p class="text-[10px] font-bold text-slate-500 uppercase">{{ kv.l }}</p>
+              <input
+                type="number"
+                step="0.05"
+                min="0"
+                max="1"
+                [ngModel]="getSantePoids(kv.k)"
+                (ngModelChange)="onSantePoidsChange(kv.k, $event)"
+                class="w-full mt-1 text-sm border rounded px-1 py-0.5"
+              />
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <button type="button" (click)="recalculateAllSanteVendeurs()" class="text-xs font-bold px-3 py-2 rounded-lg bg-indigo-600 text-white">Recalculer toutes les boutiques</button>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-white p-3 text-sm">
+            <p class="text-xs text-slate-500 mb-2">Annuaire (score après dernière formule) :</p>
+            <p *ngIf="!sellersDirectory.length" class="text-xs text-slate-500 text-center py-4">Aucun vendeur enregistré.</p>
+            <ul *ngIf="sellersDirectory.length" class="space-y-1 text-xs">
+              <li *ngFor="let s of sellersDirectory" class="flex justify-between">
+                <span>{{ s.name }}</span>
+                <span class="font-mono font-bold text-indigo-700">{{ s.health }} %</span>
+                <button type="button" (click)="recalculateHealthVendeur(s)" class="text-indigo-600 font-semibold">Recalculer</button>
+              </li>
+            </ul>
+          </div>
+        </ng-container>
+
+        <!-- Fiche détail vendeur (plein contenu) -->
+        <ng-container *ngSwitchCase="'vendor-detail'">
+          <div *ngIf="selectedVendor as v" class="space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <button type="button" (click)="backToSellerDirectory()" class="text-sm text-indigo-600 font-semibold flex items-center gap-1">
+                ← Retour annuaire
+              </button>
+              <span class="text-xs font-mono text-slate-500">{{ v.id }}</span>
+            </div>
+            <div class="grid lg:grid-cols-3 gap-4">
+              <div class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-4">
+                <h3 class="text-sm font-bold text-slate-900 mb-3">Identité &amp; légale</h3>
+                <dl class="grid sm:grid-cols-2 gap-2 text-sm">
+                  <div><dt class="text-slate-500 text-xs">Raison sociale</dt><dd class="font-medium">{{ v.raisonSociale }}</dd></div>
+                  <div><dt class="text-slate-500 text-xs">SIRET</dt><dd class="font-mono">{{ v.siret }}</dd></div>
+                  <div><dt class="text-slate-500 text-xs">E-mail</dt><dd>{{ v.email }} <span *ngIf="v.emailVerif" class="text-emerald-600 text-xs">(vérifié)</span></dd></div>
+                  <div><dt class="text-slate-500 text-xs">Téléphone</dt><dd>{{ v.phone }} <span *ngIf="v.telVerif" class="text-emerald-600 text-xs">(vérifié)</span></dd></div>
+                  <div><dt class="text-slate-500 text-xs">Formule</dt><dd>{{ v.plan }}</dd></div>
+                  <div><dt class="text-slate-500 text-xs">Dernier versement</dt><dd>{{ v.dernierVersement }}</dd></div>
+                </dl>
+                <h4 class="text-xs font-bold text-slate-700 mt-4 mb-1">Conformité documents</h4>
+                <p class="text-sm text-slate-700 bg-slate-50 rounded-lg p-2">{{ v.docsRecus }}</p>
+              </div>
+              <div class="rounded-xl border border-slate-200 bg-white p-4">
+                <h3 class="text-sm font-bold text-slate-900 mb-2">Opérationnel</h3>
+                <p class="text-xs text-slate-500">Santé</p>
+                <p class="text-2xl font-bold text-indigo-700">{{ v.health }} %</p>
+                <p class="text-xs text-slate-500 mt-2">Annonces actives : {{ v.listings | number }}</p>
+                <p class="text-xs text-slate-500">Statut : <strong>{{ v.status }}</strong></p>
+                <div class="mt-3 space-y-1">
+                  <button type="button" (click)="recalculateHealthVendeur(v)" class="w-full text-xs py-1.5 rounded border border-slate-200 hover:bg-slate-50">Recalculer santé</button>
+                  <button type="button" (click)="setSection('queue-kyc')" class="w-full text-xs py-1.5 rounded border border-amber-200 text-amber-800 hover:bg-amber-50">Voir file KYC</button>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-white p-4">
+              <h3 class="text-sm font-bold text-slate-900 mb-2">Commandes récentes</h3>
+              <p class="text-xs text-slate-500">Historique des commandes boutique — branchement API commandes à prévoir.</p>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Clients -->
+        <ng-container *ngSwitchCase="'buyers'">
+          <p class="text-sm text-slate-600 mb-4">Lecture seule côté conformité (email masqué). Scoring et segment.</p>
+          <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase border-b">
+                <tr>
+                  <th class="px-4 py-3">ID</th>
+                  <th class="px-4 py-3">E-mail (masqué)</th>
+                  <th class="px-4 py-3">Commandes</th>
+                  <th class="px-4 py-3">Segment</th>
+                  <th class="px-4 py-3">Risque</th>
+                  <th class="px-4 py-3">Pays</th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let b of filteredBuyers()" class="border-b border-slate-100 hover:bg-slate-50">
+                  <td class="px-4 py-3 font-mono text-xs">{{ b.id }}</td>
+                  <td class="px-4 py-3 text-xs font-mono">{{ b.email }}</td>
+                  <td class="px-4 py-3">{{ b.orders }}</td>
+                  <td class="px-4 py-3 capitalize">{{ b.segment }}</td>
+                  <td class="px-4 py-3">
+                    <span [class]="b.risk === 'élevé' ? 'text-rose-600 font-bold' : 'text-emerald-600'">{{ b.risk }}</span>
+                  </td>
+                  <td class="px-4 py-3">{{ b.country }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <button type="button" (click)="openCase('Client', b.id)" class="text-xs text-indigo-600 font-semibold">Détail</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredBuyers().length" class="p-8 text-center text-slate-500">Aucun client — API annuaire acheteurs à brancher.</p>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'client-orders'">
+          <p class="text-sm text-slate-600 mb-4">Détail des commandes acheteurs (lignes, coordonnées, statuts).</p>
+          <div *ngFor="let o of filteredAdminOrders()" class="rounded-2xl border border-cyan-200 bg-white shadow-sm mb-4 overflow-hidden">
+            <div class="bg-cyan-50/80 border-b border-cyan-200 px-4 py-3 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="text-[0.65rem] font-mono text-cyan-800">{{ o.ref }} · {{ o.id }}</p>
+                <p class="text-base font-bold text-slate-900">
+                  {{ o.firstName }} {{ o.lastName }}
+                  <span
+                    [class]="
+                      o.status === 'livrée'
+                        ? 'ml-2 text-[0.65rem] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800'
+                        : o.status === 'annulée'
+                          ? 'ml-2 text-[0.65rem] px-2 py-0.5 rounded-full bg-rose-100 text-rose-800'
+                          : 'ml-2 text-[0.65rem] px-2 py-0.5 rounded-full bg-sky-100 text-sky-800'
+                    "
+                    >{{ o.status }}</span
+                  >
+                </p>
+                <p class="text-sm text-slate-600 mt-1">{{ o.email }} · {{ o.phone }}</p>
+                <p class="text-sm text-slate-500 max-w-2xl">{{ o.address }}</p>
+                <p class="text-xs text-slate-400 mt-1">Commandée le {{ o.placedAt }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-sm text-slate-500">Total TTC</p>
+                <p class="text-xl font-black text-slate-900">{{ o.total }}</p>
+              </div>
+            </div>
+            <div class="p-4 space-y-3">
+              <p class="text-xs font-bold uppercase text-slate-500">Articles</p>
+              <div *ngFor="let l of o.lines" class="flex gap-3 items-center border border-slate-100 rounded-xl p-2">
+                <img [src]="l.image" [alt]="l.productTitle" class="w-16 h-16 rounded-lg object-cover bg-slate-100" />
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-slate-900">{{ l.productTitle }}</p>
+                  <p class="text-xs text-slate-500">SKU {{ l.sku }} · Qté {{ l.qty }}</p>
+                </div>
+                <p class="text-sm font-bold text-slate-800 shrink-0">{{ l.lineTotal }}</p>
+              </div>
+            </div>
+          </div>
+          <p *ngIf="!filteredAdminOrders().length" class="p-8 text-center text-slate-500 rounded-xl border border-dashed border-slate-300 bg-white">
+            Aucune commande — connectez l’API commandes acheteurs pour afficher les dossiers ici.
+          </p>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'client-returns'">
+          <p class="text-sm text-slate-600 mb-4">Workflow retours acheteurs : demande → validation → colis → remboursement.</p>
+          <div class="rounded-xl border border-cyan-200 bg-white overflow-x-auto">
+            <table class="w-full text-sm min-w-[900px]">
+              <thead class="bg-cyan-50 text-cyan-950 text-xs font-semibold uppercase border-b">
+                <tr>
+                  <th class="px-3 py-3">Retour</th>
+                  <th class="px-3 py-3">Commande</th>
+                  <th class="px-3 py-3">Client</th>
+                  <th class="px-3 py-3">Article</th>
+                  <th class="px-3 py-3">Statut</th>
+                  <th class="px-3 py-3">Ouvert</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of filteredClientReturns()" class="border-b border-slate-100 hover:bg-cyan-50/40">
+                  <td class="px-3 py-3 font-mono text-xs">{{ r.id }}</td>
+                  <td class="px-3 py-3 text-indigo-600 font-mono text-xs">{{ r.orderRef }}</td>
+                  <td class="px-3 py-3">{{ r.customer }}</td>
+                  <td class="px-3 py-3">
+                    <div class="flex items-center gap-2">
+                      <img [src]="r.image" alt="" class="w-10 h-10 rounded object-cover" />
+                      <span class="text-xs max-w-[160px]">{{ r.item }} — <span class="text-slate-500">{{ r.reason }}</span></span>
+                    </div>
+                  </td>
+                  <td class="px-3 py-3 text-xs font-semibold text-cyan-900">{{ clientReturnLabel(r.status) }}</td>
+                  <td class="px-3 py-3 text-slate-500 text-xs whitespace-nowrap">{{ r.openedAt }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredClientReturns().length" class="p-6 text-center text-slate-500">
+              Aucun retour client — branchement API retours acheteurs requis.
+            </p>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'client-comms'">
+          <p class="text-sm text-slate-600 mb-4">Historique des messages et notifications envoyés aux acheteurs.</p>
+          <div class="rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <table class="w-full text-sm min-w-[720px]">
+              <thead class="bg-slate-50 text-xs uppercase font-semibold border-b">
+                <tr>
+                  <th class="px-3 py-2">ID</th>
+                  <th class="px-3 py-2">Canal</th>
+                  <th class="px-3 py-2">Vers</th>
+                  <th class="px-3 py-2">Sujet</th>
+                  <th class="px-3 py-2">Aperçu</th>
+                  <th class="px-3 py-2">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of filteredCommsClient()" class="border-b border-slate-100">
+                  <td class="px-3 py-2 font-mono text-xs">{{ c.id }}</td>
+                  <td class="px-3 py-2">{{ c.channel }} · {{ c.direction }}</td>
+                  <td class="px-3 py-2 text-xs">{{ c.to }}</td>
+                  <td class="px-3 py-2 font-medium">{{ c.subject }}</td>
+                  <td class="px-3 py-2 text-slate-600 text-xs max-w-xs truncate" [title]="c.preview">{{ c.preview }}</td>
+                  <td class="px-3 py-2 text-slate-500 text-xs">{{ c.sentAt }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredCommsClient().length" class="p-6 text-center text-slate-500">Aucun message — API communications client à brancher.</p>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'client-insights'">
+          <p class="text-sm text-slate-600 mb-4">Indicateurs CSAT et volume de sessions (source analytics).</p>
+          <ng-container *ngIf="insightWeeks.length; else noInsights">
+            <div class="grid md:grid-cols-2 gap-6">
+            <div class="rounded-2xl border border-slate-200 bg-white p-5">
+              <p class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <lucide-angular [img]="LineChart" class="w-4 h-4 text-cyan-600"></lucide-angular>
+                CSAT moyen (hebdo)
+              </p>
+              <div class="flex items-end justify-between gap-1 h-40 px-1 border-b border-slate-200">
+                <div *ngFor="let w of insightWeeks" class="flex-1 flex flex-col items-center gap-1">
+                  <div
+                    class="w-full max-w-[28px] rounded-t bg-cyan-500/90 transition-all"
+                    [style.height.%]="(w.csat / maxCsatForChart()) * 100"
+                    [attr.title]="w.csat + ' %'"
+                  ></div>
+                  <span class="text-[0.6rem] text-slate-500 -rotate-45 origin-top-left mt-1">{{ w.week }}</span>
+                </div>
+              </div>
+              <p class="text-xs text-slate-500 mt-2">Dernière valeur : {{ insightWeeks[insightWeeks.length - 1]?.csat }} %</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-5">
+              <p class="text-sm font-bold text-slate-900 mb-4">Sessions (k / sem.)</p>
+              <div class="flex items-end justify-between gap-1 h-40 px-1 border-b border-slate-200">
+                <div *ngFor="let w of insightWeeks" class="flex-1 flex flex-col items-center gap-1">
+                  <div
+                    class="w-full max-w-[28px] rounded-t bg-slate-500/80"
+                    [style.height.%]="(w.sessionsK / maxSessionsForChart()) * 100"
+                  ></div>
+                  <span class="text-[0.6rem] text-slate-500">{{ w.sessionsK }}k</span>
+                </div>
+              </div>
+            </div>
+            </div>
+          </ng-container>
+          <ng-template #noInsights>
+            <div class="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500 text-sm">
+              Aucune métrique disponible — connectez votre source analytics (CSAT, sessions).
+            </div>
+          </ng-template>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'client-tickets'">
+          <p class="text-sm text-slate-600 mb-4">Filtre : requêtes <strong>acheteur</strong> uniquement. Ouverts : {{ openTicketsCount('client') }}.</p>
+          <div class="rounded-xl border border-cyan-200 bg-white overflow-x-auto">
+            <table class="w-full text-sm min-w-[720px]">
+              <thead class="bg-cyan-50 text-xs font-semibold uppercase">
+                <tr>
+                  <th class="px-3 py-2">Ticket</th>
+                  <th class="px-3 py-2">Compte</th>
+                  <th class="px-3 py-2">Sujet</th>
+                  <th class="px-3 py-2">Priorité</th>
+                  <th class="px-3 py-2">Statut</th>
+                  <th class="px-3 py-2 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let t of filteredTicketsClient()" class="border-b">
+                  <td class="px-3 py-2 font-mono text-xs">{{ t.id }}</td>
+                  <td class="px-3 py-2">{{ t.from }}</td>
+                  <td class="px-3 py-2">{{ t.topic }}</td>
+                  <td class="px-3 py-2">{{ t.priority }}</td>
+                  <td class="px-3 py-2">{{ t.status }}</td>
+                  <td class="px-3 py-2 text-right">
+                    <button
+                      *ngIf="t.status !== 'fermé'"
+                      type="button"
+                      (click)="closeTicketRow(t)"
+                      class="text-xs text-cyan-700 font-semibold"
+                    >Clôturer</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredTicketsClient().length" class="p-6 text-center text-slate-500">Aucun ticket.</p>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'vendor-returns'">
+          <p class="text-sm text-slate-600 mb-4">Suivi plateforme ↔ vendeur : remboursements et reversements (MySQL).</p>
+          <div class="rounded-xl border border-amber-200 bg-white overflow-x-auto">
+            <table class="w-full text-sm min-w-[800px]">
+              <thead class="bg-amber-50 text-xs font-semibold uppercase text-amber-950">
+                <tr>
+                  <th class="px-3 py-2">Dossier</th>
+                  <th class="px-3 py-2">Retour / commande</th>
+                  <th class="px-3 py-2">Boutique</th>
+                  <th class="px-3 py-2">Acheteur</th>
+                  <th class="px-3 py-2">Charge</th>
+                  <th class="px-3 py-2">Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let v of filteredVendorReturns()" class="border-b">
+                  <td class="px-3 py-2 font-mono text-xs">{{ v.id }}</td>
+                  <td class="px-3 py-2 text-xs">
+                    <span class="text-indigo-600">{{ v.returnRef }}</span> / {{ v.orderRef }}
+                  </td>
+                  <td class="px-3 py-2 font-medium">{{ v.shopName }}</td>
+                  <td class="px-3 py-2">{{ v.buyer }}</td>
+                  <td class="px-3 py-2">{{ v.charge }}</td>
+                  <td class="px-3 py-2 text-xs max-w-xs">{{ v.status }} · {{ v.updatedAt }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredVendorReturns().length" class="p-6 text-center">Aucun dossier.</p>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'vendor-comms'">
+          <p class="text-sm text-slate-600 mb-4">
+            Conversations directes avec les vendeurs (onboarding, KYC, modération). 
+            <span *ngIf="operatorNeedsReplyCount" class="font-bold text-amber-700">{{ operatorNeedsReplyCount }} en attente de réponse</span>
+          </p>
+
+          <div class="grid lg:grid-cols-5 gap-4 min-h-[28rem]">
+            <!-- Liste conversations -->
+            <div class="lg:col-span-2 rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col">
+              <div class="px-3 py-2 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <p class="text-xs font-bold uppercase text-slate-600">Vendeurs</p>
+                <button type="button" (click)="loadOperatorThreadsFromApi()" class="text-[11px] font-semibold text-indigo-600 hover:underline">Actualiser</button>
+              </div>
+              <p *ngIf="operatorThreadsLoading && !operatorThreads.length" class="p-4 text-sm text-slate-500">Chargement…</p>
+              <p *ngIf="!operatorThreadsLoading && !operatorThreads.length" class="p-4 text-sm text-slate-500 text-center">Aucun message vendeur pour le moment.</p>
+              <div class="flex-1 overflow-y-auto divide-y divide-slate-100">
+                <button
+                  *ngFor="let t of operatorThreads"
+                  type="button"
+                  (click)="selectOperatorThread(t.ticketId)"
+                  class="w-full text-left px-3 py-3 hover:bg-indigo-50/50 transition-colors"
+                  [class.bg-indigo-50]="selectedOperatorThread?.ticketId === t.ticketId"
+                >
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="font-semibold text-sm text-slate-900 truncate">{{ t.shopName }}</p>
+                    <span *ngIf="t.needsReply" class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900">À répondre</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 truncate">{{ t.sellerEmail }}</p>
+                  <p class="text-xs text-slate-600 mt-1 line-clamp-2">{{ t.lastMessage || '—' }}</p>
+                  <p class="text-[10px] text-slate-400 mt-1">{{ t.lastAt }}</p>
+                </button>
+              </div>
+            </div>
+
+            <!-- Fil conversation -->
+            <div class="lg:col-span-3 rounded-xl border border-slate-200 bg-white flex flex-col min-h-[24rem]">
+              <ng-container *ngIf="selectedOperatorThread as thread; else noThreadSelected">
+                <div class="px-4 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p class="font-bold text-slate-900">{{ thread.shopName }}</p>
+                    <p class="text-xs text-slate-500">{{ thread.sellerEmail }} · Ticket #{{ thread.ticketId }}</p>
+                  </div>
+                  <span class="text-[11px] font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-700">{{ thread.status }}</span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+                  <p *ngIf="!thread.messages.length" class="text-sm text-slate-500 text-center py-8">Aucun message dans ce fil.</p>
+                  <div
+                    *ngFor="let m of thread.messages"
+                    [class]="'max-w-[85%] rounded-2xl px-3 py-2 text-sm ' + (m.from === 'vendeur' ? 'bg-white border border-slate-200 text-slate-800' : 'ml-auto bg-indigo-600 text-white')"
+                  >
+                    <p class="whitespace-pre-wrap">{{ m.body }}</p>
+                    <p [class]="'text-[9px] mt-1 ' + (m.from === 'vendeur' ? 'text-slate-400' : 'text-indigo-200')">{{ m.at }} · {{ m.from }}</p>
+                  </div>
+                </div>
+                <div class="p-3 border-t border-slate-100 space-y-2">
+                  <label class="text-xs font-semibold text-slate-600">Votre réponse au vendeur</label>
+                  <textarea
+                    [(ngModel)]="operatorReplyText"
+                    rows="3"
+                    class="w-full text-sm px-3 py-2 border border-slate-200 rounded-xl resize-y focus:ring-2 focus:ring-indigo-300"
+                    placeholder="Réponse sur KYC, onboarding, modération produit…"
+                  ></textarea>
+                  <div class="flex justify-end">
+                    <button
+                      type="button"
+                      (click)="sendOperatorReply()"
+                      [disabled]="!operatorReplyText.trim() || operatorReplySending"
+                      class="text-sm font-bold px-4 py-2 rounded-xl bg-indigo-600 text-white disabled:opacity-40 hover:bg-indigo-500"
+                    >{{ operatorReplySending ? 'Envoi…' : 'Envoyer au vendeur' }}</button>
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #noThreadSelected>
+                <div class="flex-1 flex items-center justify-center p-8 text-sm text-slate-500 text-center">
+                  Sélectionnez un vendeur dans la liste pour lire et répondre à sa messagerie.
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'vendor-tickets'">
+          <p class="text-sm text-slate-600 mb-4">Tickets <strong>vendeur</strong> (catalogue, technique, pénalités). Ouverts : {{ openTicketsCount('vendeur') }}.</p>
+          <div class="rounded-xl border border-amber-200 bg-white overflow-x-auto">
+            <table class="w-full text-sm min-w-[700px]">
+              <thead class="bg-amber-50 text-xs font-semibold uppercase">
+                <tr>
+                  <th class="px-3 py-2">Ticket</th>
+                  <th class="px-3 py-2">Boutique / ID</th>
+                  <th class="px-3 py-2">Sujet</th>
+                  <th class="px-3 py-2">Priorité</th>
+                  <th class="px-3 py-2">Statut</th>
+                  <th class="px-3 py-2 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let t of filteredTicketsVendor()" class="border-b">
+                  <td class="px-3 py-2 font-mono text-xs">{{ t.id }}</td>
+                  <td class="px-3 py-2">{{ t.from }}</td>
+                  <td class="px-3 py-2">{{ t.topic }}</td>
+                  <td class="px-3 py-2">{{ t.priority }}</td>
+                  <td class="px-3 py-2">{{ t.status }}</td>
+                  <td class="px-3 py-2 text-right">
+                    <button *ngIf="t.status !== 'fermé'" type="button" (click)="closeTicketRow(t)" class="text-xs text-amber-800 font-semibold">Clôturer</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredTicketsVendor().length" class="p-6 text-center text-slate-500">Aucun ticket.</p>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'transverse-ops'">
+          <p class="text-sm text-slate-600 mb-2">
+            Utilisez la barre de recherche en haut pour un <strong>aperçu unifié</strong> (commandes, retours, boutiques, tickets).
+          </p>
+          <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+            Journal d’audit : piste de conformité (RGPD) — toute consultation ou export sensible devrait y figurer.
+          </p>
+          <h3 class="text-sm font-bold text-slate-800 mb-2">Résultats recherche ({{ searchQuery ? globalSearchHits().length : 0 }})</h3>
+          <ul *ngIf="searchQuery" class="space-y-2 mb-6">
+            <li *ngFor="let h of globalSearchHits()" class="text-sm border border-slate-200 rounded-lg px-3 py-2 flex gap-2">
+              <span class="text-xs font-mono text-indigo-600 shrink-0 w-28">{{ h.cat }}</span>
+              <span class="text-slate-700">{{ h.line }}</span>
+            </li>
+          </ul>
+          <p *ngIf="searchQuery && !globalSearchHits().length" class="text-slate-500 text-sm mb-6">Aucun résultat — essayez un autre terme.</p>
+          <h3 class="text-sm font-bold text-slate-800 mb-2">Journal d’audit (filtré)</h3>
+          <div class="rounded-xl border border-slate-200 overflow-hidden">
+            <table class="w-full text-sm min-w-[640px]">
+              <thead class="bg-slate-100 text-xs font-semibold uppercase">
+                <tr>
+                  <th class="px-3 py-2">ID</th>
+                  <th class="px-3 py-2">Date / heure</th>
+                  <th class="px-3 py-2">Opérateur</th>
+                  <th class="px-3 py-2">Type</th>
+                  <th class="px-3 py-2">Cible</th>
+                  <th class="px-3 py-2">Détail</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of filteredAuditLog()" class="border-b">
+                  <td class="px-3 py-2 font-mono text-xs">{{ a.id }}</td>
+                  <td class="px-3 py-2 text-slate-500 text-xs whitespace-nowrap">{{ a.at }}</td>
+                  <td class="px-3 py-2">{{ a.adminUser }}</td>
+                  <td class="px-3 py-2">{{ a.kind }}</td>
+                  <td class="px-3 py-2 text-xs">{{ a.target }}</td>
+                  <td class="px-3 py-2 text-xs text-slate-600">{{ a.detail }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p *ngIf="!filteredAuditLog().length" class="p-6 text-center text-slate-500">Aucune entrée d’audit — journal à connecter (conformité RGPD).</p>
+          </div>
+        </ng-container>
+      </ng-container>
+    </main>
+  </div>
+</div>
+
+<!-- Toast bas de page -->
+<div
+  *ngIf="toast"
+  class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] max-w-md px-4"
+>
+  <div class="bg-slate-900 text-white text-sm font-medium py-3 px-5 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2">
+    <lucide-angular [img]="FileCheck" class="w-4 h-4 text-emerald-400 flex-shrink-0"></lucide-angular>
+    {{ toast }}
+  </div>
+</div>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { CatalogService } from '../../services/catalog.service';
 import { LucideAngularModule, Sparkles, Gift, Ticket, Zap, X, Copy, CheckCircle2, ArrowRight, PartyPopper, Volume2, VolumeX, Timer, Flame } from 'lucide-angular';
 
 interface PromoItem {
@@ -29,41 +30,7 @@ export class WelcomePromoComponent implements OnInit, OnDestroy {
   countdown = 60 * 60 * 2 + 37 * 60; // 2h 37min
   stars: { id: number; left: number; top: number; delay: number; size: number; }[] = [];
 
-  readonly promos: PromoItem[] = [
-    {
-      type: 'coupon',
-      title: '-15% sur votre prochaine commande',
-      subtitle: 'Toutes catégories • Dès 49€ d\'achat',
-      badge: 'Code exclusif',
-      code: 'HELIX15',
-      gradient: 'from-pink-500 via-rose-500 to-fuchsia-600',
-      icon: Ticket
-    },
-    {
-      type: 'flash',
-      title: 'Vente flash -70%',
-      subtitle: 'Jusqu\'à -70% sur 128 produits premium',
-      badge: 'Chrono 2h',
-      gradient: 'from-red-500 via-red-600 to-pink-600',
-      icon: Zap
-    },
-    {
-      type: 'cashback',
-      title: '2% de cashback immédiat',
-      subtitle: 'Sur tous vos achats jusqu\'au 30 avril',
-      badge: 'Automatique',
-      gradient: 'from-emerald-500 via-teal-500 to-cyan-600',
-      icon: Gift
-    },
-    {
-      type: 'freeship',
-      title: 'Livraison offerte dès 49€',
-      subtitle: 'Premium gratuite durant 7 jours',
-      badge: 'Premium',
-      gradient: 'from-indigo-500 via-purple-600 to-violet-700',
-      icon: Sparkles
-    }
-  ];
+  promos: PromoItem[] = [];
 
   // Lucide icons
   readonly Sparkles = Sparkles;
@@ -86,12 +53,14 @@ export class WelcomePromoComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
+    private catalogService: CatalogService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     private zone: NgZone
   ) {}
 
   ngOnInit(): void {
+    this.loadPromosFromApi();
     // Generate stars once
     for (let i = 0; i < 28; i++) {
       this.stars.push({
@@ -238,6 +207,84 @@ export class WelcomePromoComponent implements OnInit, OnDestroy {
   goToPromotions(): void {
     this.close();
     this.router.navigate(['/offres']);
+  }
+
+  private loadPromosFromApi(): void {
+    Promise.all([
+      this.catalogService.loadPromoCodes(),
+      this.catalogService.loadFlashProducts()
+    ]).then(([codes, flashProducts]) => {
+      const items: PromoItem[] = [];
+      const primary = codes[0];
+      if (primary) {
+        items.push({
+          type: 'coupon',
+          title: primary.label,
+          subtitle:
+            primary.minAmount > 0
+              ? `${primary.category} • Dès ${primary.minAmount}€ d'achat`
+              : primary.category,
+          badge: primary.seller ? `Vendeur ${primary.seller}` : 'Code exclusif',
+          code: primary.code,
+          gradient: 'from-pink-500 via-rose-500 to-fuchsia-600',
+          icon: Ticket
+        });
+      }
+      if (flashProducts.length) {
+        const maxDiscount = flashProducts.reduce((max, p) => {
+          if (!p.originalPrice || p.originalPrice <= p.price) return max;
+          const pct = Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100);
+          return Math.max(max, pct);
+        }, 0);
+        items.push({
+          type: 'flash',
+          title: maxDiscount ? `Ventes flash jusqu'à -${maxDiscount}%` : 'Ventes flash en cours',
+          subtitle: `${flashProducts.length} produit(s) en promotion limitée`,
+          badge: 'Chrono actif',
+          gradient: 'from-red-500 via-red-600 to-pink-600',
+          icon: Zap
+        });
+      }
+      const freeship = codes.find((c) => c.type === 'livraison');
+      if (freeship) {
+        items.push({
+          type: 'freeship',
+          title: freeship.label,
+          subtitle:
+            freeship.minAmount > 0 ? `Dès ${freeship.minAmount}€ d'achat` : 'Sur la marketplace',
+          badge: 'Livraison',
+          code: freeship.code,
+          gradient: 'from-indigo-500 via-purple-600 to-violet-700',
+          icon: Sparkles
+        });
+      } else {
+        items.push({
+          type: 'cashback',
+          title: '2% de cashback immédiat',
+          subtitle: 'Sur tous vos achats éligibles',
+          badge: 'Automatique',
+          gradient: 'from-emerald-500 via-teal-500 to-cyan-600',
+          icon: Gift
+        });
+      }
+      this.promos = items.length ? items : this.defaultPromos();
+      this.cdr.markForCheck();
+    }).catch(() => {
+      this.promos = this.defaultPromos();
+    });
+  }
+
+  private defaultPromos(): PromoItem[] {
+    return [
+      {
+        type: 'coupon',
+        title: 'Offres marketplace',
+        subtitle: 'Découvrez les codes promo partenaires',
+        badge: 'Catalogue live',
+        gradient: 'from-pink-500 via-rose-500 to-fuchsia-600',
+        icon: Ticket
+      }
+    ];
   }
 
   get countdownLabel(): string {

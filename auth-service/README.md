@@ -1,45 +1,75 @@
-# Auth Microservice
+# Auth Service (Heligxiam)
 
-Service d'authentification (`:3001`) pour la marketplace.
+Service Node/Express pour l'authentification et les fonctionnalités vendeur.
 
-## Responsabilites
+## Ce que fait le service
 
-- inscription et connexion utilisateur,
-- emission JWT + refresh token,
-- gestion profil (`/me`, update, changement mot de passe),
-- journalisation NoSQL des evenements d'authentification.
+- Auth (`/api/auth`) : inscription, connexion, refresh token, profil courant.
+- Vendeur (`/api/seller`) : messagerie opérateur et upload KYC.
+- Health check : `/health`.
 
-## Donnees et persistance
+## Modes de persistance
 
-- SQL (PostgreSQL): table `UTILISATEUR`, table `auth_refresh_tokens`.
-- NoSQL (MongoDB): collection `auth_events` (register/login/refresh/password_changed).
+- **Vendeur + MySQL configuré (`MYSQL_HOST`)** :
+  - inscription persistée en base (`comptes_vendeur`, `profils_vendeur`, `boutiques`, `etapes_onboarding_boutique`)
+  - tokens JWT avec claims `vendeur_id` / `boutique_id`
+  - accès aux routes `/api/seller` protégé par JWT vendeur
+- **Client (ou vendeur sans MySQL)** :
+  - données conservées en mémoire (mode démo)
 
-## Lancement
+## Installation
 
 ```bash
 npm install
 npm start
 ```
 
-## Variables d'environnement principales
+## Configuration `.env`
 
-- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- `JWT_SECRET`, `JWT_REFRESH_SECRET`
-- `MONGO_HOST`, `MONGO_PORT`, `MONGO_USER`, `MONGO_PASSWORD`, `MONGO_DB_NAME`
-- `ALLOWED_ORIGINS`
+Variables utilisées actuellement :
 
-Voir `auth-service/.env.example`.
+```env
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=...
+MYSQL_DATABASE=heligxiam_marketplace
+
+JWT_SECRET=...
+JWT_REFRESH_SECRET=...
+
+PORT=3001
+NODE_ENV=development
+BCRYPT_ROUNDS=12
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+```
 
 ## Endpoints principaux
 
+### Auth
+
+- `GET /api/auth/challenge`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/refresh-token`
-- `POST /api/auth/logout`
 - `GET /api/auth/me`
-- `PUT /api/auth/user/:id`
-- `PUT /api/auth/change-password`
-- `GET /health`
-- `GET /ready`
 
-Contrat complet: `auth-service/openapi.yaml`.
+### Seller (JWT vendeur requis)
+
+- `GET /api/seller/operator-thread`
+- `POST /api/seller/operator-thread/messages`
+- `POST /api/seller/documents` (multipart : `kbis`, `cni`, `rib`)
+- `GET /api/seller/files/:filename` (fichiers KYC servis en statique)
+
+### Santé
+
+- `GET /health`
+
+## Notes de sécurité
+
+- Rate limiting sur `/api/*`
+- Validation d'entrée (`express-validator`)
+- Mots de passe hashés (`bcrypt`)
+- Headers de sécurité (`helmet`)
+- CORS limité aux UIs locales (`localhost` / `127.0.0.1` ports `4200/4201`)

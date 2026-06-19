@@ -129,9 +129,10 @@
           <!-- Submit Button -->
           <button
             type="submit"
-            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+            [disabled]="isLoading"
+            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Se connecter
+            {{ isLoading ? 'Connexion…' : 'Se connecter' }}
           </button>
         </form>
 
@@ -151,6 +152,27 @@
 
       <!-- Register Form -->
       <div *ngIf="currentView === 'register'" class="bg-white shadow-lg rounded-lg p-8">
+
+        <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p class="text-sm font-semibold text-slate-900 mb-1">Type de compte</p>
+          <p class="text-xs text-slate-600 mb-3">
+            Pour voir une ligne dans <strong>MySQL / Workbench</strong> (schéma <code class="text-[11px] bg-white px-1 rounded">heligxiam_marketplace</code>,
+            tables <code class="text-[11px] bg-white px-1 rounded">comptes_vendeur</code>, <code class="text-[11px] bg-white px-1 rounded">boutiques</code>),
+            choisissez <strong>Vendeur</strong>. Le compte <strong>acheteur</strong> reste en mémoire sur le serveur (pas de table acheteur dans ce schéma).
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              (click)="sellerMode = false"
+              [class]="sellerMode ? 'px-4 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-700 hover:bg-slate-50' : 'px-4 py-2 rounded-lg text-sm border-2 border-indigo-600 bg-indigo-50 text-indigo-900 font-semibold'"
+            >Acheteur</button>
+            <button
+              type="button"
+              (click)="sellerMode = true"
+              [class]="sellerMode ? 'px-4 py-2 rounded-lg text-sm border-2 border-amber-500 bg-amber-50 text-amber-950 font-semibold' : 'px-4 py-2 rounded-lg text-sm border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
+            >Vendeur (enregistrement MySQL)</button>
+          </div>
+        </div>
 
         <!-- Bannière "Mode vendeur" -->
         <div *ngIf="sellerMode"
@@ -461,9 +483,10 @@
           <!-- Submit Button -->
           <button
             type="submit"
-            class="mt-6 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium py-2.5 px-4 rounded-md hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md transition duration-200"
+            [disabled]="isLoading"
+            class="mt-6 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium py-2.5 px-4 rounded-md hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            S'inscrire
+            {{ isLoading ? 'Inscription…' : "S'inscrire" }}
           </button>
         </form>
 
@@ -653,26 +676,30 @@
     >
       <!-- Icône de succès -->
       <div [class]="'mx-auto mb-5 flex items-center justify-center w-20 h-20 rounded-full shadow-lg ' +
-                    (sellerMode
+                    (registerSuccessWasVendeur
                       ? 'bg-gradient-to-br from-amber-400 to-orange-600'
                       : 'bg-gradient-to-br from-green-400 to-emerald-600')">
-        <svg *ngIf="!sellerMode" class="w-12 h-12 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+        <svg *ngIf="!registerSuccessWasVendeur" class="w-12 h-12 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
         </svg>
-        <svg *ngIf="sellerMode" class="w-11 h-11 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <svg *ngIf="registerSuccessWasVendeur" class="w-11 h-11 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16l-1 10a2 2 0 01-2 2H7a2 2 0 01-2-2L4 7zm4 0V5a4 4 0 118 0v2"></path>
         </svg>
       </div>
 
       <h2 id="register-success-title" class="text-2xl font-bold text-gray-900 mb-2">
-        <span *ngIf="!sellerMode">Bienvenue{{ registeredUserName ? ', ' + registeredUserName : '' }} !</span>
-        <span *ngIf="sellerMode">Candidature vendeur envoyée{{ registeredUserName ? ', ' + registeredUserName : '' }} !</span>
+        <span *ngIf="!registerSuccessWasVendeur">Bienvenue{{ registeredUserName ? ', ' + registeredUserName : '' }} !</span>
+        <span *ngIf="registerSuccessWasVendeur">Candidature vendeur envoyée{{ registeredUserName ? ', ' + registeredUserName : '' }} !</span>
       </h2>
-      <p *ngIf="!sellerMode" class="text-gray-600 mb-6">
-        Votre compte a été créé avec succès.<br />
-        Vous pouvez maintenant vous connecter pour accéder à votre espace.
+      <p *ngIf="!registerSuccessWasVendeur" class="text-gray-600 mb-6">
+        Votre compte <strong>acheteur</strong> a été créé (démo : stocké en mémoire sur auth-service, pas dans MySQL).<br />
+        Vous pouvez vous connecter pour accéder à votre espace.
       </p>
-      <div *ngIf="sellerMode" class="text-left bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-2">
+      <div *ngIf="registerSuccessWasVendeur" class="text-left bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-gray-700 space-y-2">
+        <p class="text-xs text-amber-900/90 rounded-lg bg-white/60 border border-amber-100 px-2 py-1.5">
+          Si MySQL est configuré sur auth-service, votre compte est en base : table <strong>comptes_vendeur</strong> et boutique brouillon dans <strong>boutiques</strong>.
+          Dans Workbench, sélectionnez le schéma <strong>heligxiam_marketplace</strong> puis « Refresh » sur les tables.
+        </p>
         <p class="font-semibold text-gray-900">Prochaines étapes :</p>
         <ol class="space-y-1.5">
           <li class="flex gap-2"><span class="font-bold text-amber-600">1.</span> Connectez-vous à votre espace vendeur.</li>

@@ -1,15 +1,19 @@
 import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpResponse, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, switchMap, filter, take, finalize } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
+import { AdminAuthService } from '../services/admin-auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
   private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private adminAuthService: AdminAuthService
+  ) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Ne pas intercepter les requêtes vers l'authentification (login/register)
@@ -23,8 +27,20 @@ export class AuthInterceptor implements HttpInterceptor {
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
         // Gérer les erreurs 401 (token expiré)
-        if (error.status === 401 && !this.isRefreshing) {
-          return this.handle401Error(authReq, next);
+        if (error.status === 401) {
+          if (this.shouldBypass401Retry(req.url)) {
+            return throwError(() => error);
+          }
+          if (this.isRefreshing) {
+            return this.refreshTokenSubject.pipe(
+              filter((token) => token != null),
+              take(1),
+              switchMap(() => next.handle(this.addTokenToRequest(authReq)))
+            );
+          }
+          if (!this.isRefreshing) {
+            return this.handle401Error(authReq, next);
+          }
         }
 
         // Gérer les erreurs 403 (accès refusé)
@@ -50,13 +66,44 @@ export class AuthInterceptor implements HttpInterceptor {
     return url.includes('/api/auth/login') || 
            url.includes('/api/auth/register') || 
            url.includes('/api/auth/challenge') ||
-           url.includes('/api/auth/refresh-token');
+           url.includes('/api/auth/refresh-token') ||
+           url.includes('/api/admin/login');
+  }
+
+  /** Pas de double refresh sur /me — géré par AuthService.validateSession(). */
+  private shouldBypass401Retry(url: string): boolean {
+    return url.includes('/api/auth/me') || url.includes('/api/auth/refresh-token');
+  }
+
+  private isAdminRequest(url: string): boolean {
+    return url.includes('/api/admin/') && !url.includes('/api/admin/login');
   }
 
   private addTokenToRequest(req: HttpRequest<any>): HttpRequest<any> {
+    if (this.isAdminRequest(req.url)) {
+      const adminToken = this.adminAuthService.token;
+      if (adminToken) {
+        return req.clone({
+          setHeaders: {
+            Authorization: `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+      return req;
+    }
+
     const token = this.authService.token;
-    
+
     if (token) {
+      // Ne pas forcer Content-Type sur FormData (boundary multipart requis).
+      if (req.body instanceof FormData) {
+        return req.clone({
+          setHeaders: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+      }
       return req.clone({
         setHeaders: {
           Authorization: `Bearer ${token}`,
@@ -69,6 +116,14 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    if (this.isAdminRequest(request.url)) {
+      this.adminAuthService.logout();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/admin/login';
+      }
+      return throwError(() => new HttpErrorResponse({ status: 401 }));
+    }
+
     this.isRefreshing = true;
     this.refreshTokenSubject.next(null);
 

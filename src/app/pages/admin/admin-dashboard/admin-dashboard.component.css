@@ -1,0 +1,20 @@
+.admin-app {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+}
+
+/* Scrollbar propre (WebKit) */
+.admin-app main::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.admin-app main::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.admin-app main::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.onboarding-dossier article {
+  scroll-margin-top: 1rem;
+}

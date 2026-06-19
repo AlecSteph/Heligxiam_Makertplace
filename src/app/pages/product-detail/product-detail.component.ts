@@ -1,14 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { LucideAngularModule, Heart, Share2, Check, Link2, Facebook, Twitter, Mail, MessageCircle, ChevronLeft, ChevronRight, Star, ThumbsUp, BadgeCheck, Filter } from 'lucide-angular';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
-import { PRODUCTS } from '../../data/products.data';
+import { CatalogService } from '../../services/catalog.service';
 import { Product } from '../../models/product.model';
 import { CartService } from '../../services/cart.service';
 import { WishlistService } from '../../services/wishlist.service';
+import { firstValueFrom } from 'rxjs';
 
 interface ReviewItem {
   id: number;
@@ -35,6 +36,8 @@ export class ProductDetailComponent implements OnInit {
   product: Product | undefined;
   relatedProducts: Product[] = [];
   quantity = 1;
+  loading = true;
+  loadError = false;
 
   // Galerie
   galleryImages: string[] = [];
@@ -110,17 +113,33 @@ export class ProductDetailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private cartService: CartService,
-    private wishlistService: WishlistService
+    private wishlistService: WishlistService,
+    private catalogService: CatalogService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe(async (params) => {
       const id = params.get('id');
-      if (id) {
-        this.product = PRODUCTS.find(p => p.id === id);
-        if (this.product) {
-          this.relatedProducts = PRODUCTS
-            .filter(p => p.category === this.product!.category && p.id !== this.product!.id)
+      this.loading = true;
+      this.loadError = false;
+      this.product = undefined;
+      this.cdr.markForCheck();
+      if (!id) {
+        this.loading = false;
+        this.cdr.markForCheck();
+        return;
+      }
+      try {
+        await this.catalogService.loadProducts();
+        const product = await firstValueFrom(this.catalogService.getProductById(id));
+        this.product = product ?? undefined;
+        if (!this.product) {
+          this.loadError = true;
+        } else {
+          const all = this.catalogService.getProductsSnapshot();
+          this.relatedProducts = all
+            .filter((p) => p.category === this.product!.category && p.id !== this.product!.id)
             .slice(0, 4);
           this.isFavorite = this.wishlistService.isInWishlist(this.product.id);
           this.buildGallery();
@@ -129,6 +148,11 @@ export class ProductDetailComponent implements OnInit {
           this.visibleReviewsCount = 4;
           this.filterRating = null;
         }
+      } catch {
+        this.loadError = true;
+      } finally {
+        this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -136,8 +160,7 @@ export class ProductDetailComponent implements OnInit {
   // ========== Galerie ==========
   private buildGallery(): void {
     if (!this.product) return;
-    const extras = this.categoryGallery[this.product.category] || [];
-    this.galleryImages = [this.product.image, ...extras].slice(0, 4);
+    this.galleryImages = [this.product.image];
   }
 
   setImage(i: number): void {

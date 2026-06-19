@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -23,7 +23,7 @@ import {
   Star
 } from 'lucide-angular';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
-import { PRODUCTS } from '../../data/products.data';
+import { CatalogService } from '../../services/catalog.service';
 import { Product } from '../../models/product.model';
 
 interface UniverseTile {
@@ -59,12 +59,12 @@ interface PromoCard {
 export class HomeComponent implements OnInit, OnDestroy {
   @ViewChildren('carousel') carousels!: QueryList<ElementRef<HTMLElement>>;
 
-  featuredProducts: Product[];
-  bestSellers: Product[];
-  promoProducts: Product[];
-  premiumProducts: Product[];
-  allProducts: Product[];
-  budgetProducts: Product[];
+  featuredProducts: Product[] = [];
+  bestSellers: Product[] = [];
+  promoProducts: Product[] = [];
+  premiumProducts: Product[] = [];
+  allProducts: Product[] = [];
+  budgetProducts: Product[] = [];
 
   // Hero carousel
   heroSlides: Array<{
@@ -227,7 +227,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   promoCardsBottom: PromoCard[] = [
     {
       title: 'Livraison Gratuite',
-      subtitle: 'Dès 99€ d\'achat, partout en France',
+      subtitle: 'Dès 49€ d\'achat, partout en France',
       cta: 'En savoir plus',
       gradient: 'from-indigo-500 via-blue-500 to-cyan-500',
       accent: 'bg-white/20',
@@ -261,14 +261,11 @@ export class HomeComponent implements OnInit, OnDestroy {
   private readonly showcaseVideo1Start = 0;
   private readonly showcaseVideo2Start = 120;
 
-  constructor(private sanitizer: DomSanitizer) {
-    this.allProducts = PRODUCTS;
-    this.featuredProducts = PRODUCTS.slice(0, 6);
-    this.bestSellers = PRODUCTS.filter(p => p.badge === 'Bestseller' || p.rating >= 4.8);
-    this.promoProducts = PRODUCTS.filter(p => p.originalPrice);
-    this.premiumProducts = PRODUCTS.filter(p => p.badge === 'Premium' || p.badge === 'Exclusif' || p.badge === 'Pro');
-    this.budgetProducts = [...PRODUCTS].sort((a, b) => a.price - b.price).slice(0, 4);
-    this.buildHeroSlides();
+  constructor(
+    private sanitizer: DomSanitizer,
+    private catalogService: CatalogService,
+    private cdr: ChangeDetectorRef
+  ) {
     this.showcaseVideo1Url = this.buildYoutubeUrl(this.showcaseVideo1Id, this.showcaseVideo1Start);
     this.showcaseVideo2Url = this.buildYoutubeUrl(this.showcaseVideo2Id, this.showcaseVideo2Start);
   }
@@ -296,6 +293,18 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.catalogService.loadProducts().then((products) => {
+      this.allProducts = products;
+      this.featuredProducts = products.slice(0, 6);
+      this.bestSellers = products.filter((p) => p.badge === 'Bestseller' || p.rating >= 4.8);
+      this.promoProducts = products.filter((p) => p.originalPrice);
+      this.premiumProducts = products.filter(
+        (p) => p.badge === 'Premium' || p.badge === 'Exclusif' || p.badge === 'Pro'
+      );
+      this.budgetProducts = [...products].sort((a, b) => a.price - b.price).slice(0, 4);
+      this.buildHeroSlides();
+      this.cdr.markForCheck();
+    });
     this.startAutoPlay();
   }
 
@@ -305,7 +314,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
 
   private buildHeroSlides(): void {
-    const heroProducts = PRODUCTS.slice(0, 4);
+    const heroProducts = this.allProducts.slice(0, 4);
     this.heroSlides = [
       {
         badge: 'Nouveauté',

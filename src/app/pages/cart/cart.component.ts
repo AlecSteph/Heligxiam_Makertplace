@@ -11,8 +11,8 @@ import {
 } from 'lucide-angular';
 import { CartService } from '../../services/cart.service';
 import { WishlistService } from '../../services/wishlist.service';
+import { CatalogService } from '../../services/catalog.service';
 import { CartItem, Product } from '../../models/product.model';
-import { PRODUCTS } from '../../data/products.data';
 
 type DeliveryOption = 'standard' | 'express' | 'premium';
 
@@ -41,11 +41,7 @@ export class CartComponent implements OnInit, OnDestroy {
   promoInput = '';
   promoError = '';
   appliedPromo: Promo | null = null;
-  readonly availablePromos: Promo[] = [
-    { code: 'WELCOME10', label: '-10% sur votre commande', type: 'percent', value: 10 },
-    { code: 'FREESHIP', label: 'Livraison offerte', type: 'amount', value: 0 },
-    { code: 'HELI20',    label: '-20€ dès 150€ d\'achat', type: 'amount', value: 20, minAmount: 150 }
-  ];
+  availablePromos: Promo[] = [];
 
   // Delivery
   delivery: DeliveryOption = 'standard';
@@ -86,16 +82,27 @@ export class CartComponent implements OnInit, OnDestroy {
 
   constructor(
     private cartService: CartService,
-    private wishlistService: WishlistService
+    private wishlistService: WishlistService,
+    private catalogService: CatalogService
   ) {
     this.deliveryOptions = [
-      { id: 'standard', label: 'Livraison Standard', sub: '3 à 5 jours ouvrés', price: 0, eta: 'Gratuite dès 99€', icon: this.Truck },
+      { id: 'standard', label: 'Livraison Standard', sub: '3 à 5 jours ouvrés', price: 0, eta: 'Gratuite dès 49€', icon: this.Truck },
       { id: 'express',  label: 'Livraison Express',  sub: '24 à 48h',         price: 9.90, eta: '24-48h', icon: this.Zap, recommended: true },
       { id: 'premium',  label: 'Premium Same-Day',   sub: 'Aujourd\'hui avant 22h (zones éligibles)', price: 19.90, eta: 'Aujourd\'hui', icon: this.Sparkles }
     ];
   }
 
   ngOnInit(): void {
+    this.catalogService.loadPromoCodes().then((codes) => {
+      this.availablePromos = codes.map((c) => ({
+        code: c.code,
+        label: c.label,
+        type: c.type === 'pourcentage' ? 'percent' as const : 'amount' as const,
+        value: c.value,
+        minAmount: c.minAmount > 0 ? c.minAmount : undefined
+      }));
+    });
+
     this.subs.add(this.cartService.cart$.subscribe(cart => {
       this.cart = cart;
       this.subtotal = this.cartService.getCartTotal();
@@ -163,14 +170,18 @@ export class CartComponent implements OnInit, OnDestroy {
   private refreshRecommendations(): void {
     const cartIds = new Set(this.cart.map(i => i.id));
     const categoriesInCart = new Set(this.cart.map(i => i.category));
-    const pool = PRODUCTS.filter(p => !cartIds.has(p.id));
+    const pool = this.catalogService.getProductsSnapshot().filter(p => !cartIds.has(p.id));
+    if (!pool.length) {
+      this.catalogService.loadProducts().then((products) => this.setRecommendations(products, cartIds, categoriesInCart));
+      return;
+    }
+    this.setRecommendations(pool, cartIds, categoriesInCart);
+  }
 
-    // Prefer products in same categories
+  private setRecommendations(pool: Product[], cartIds: Set<string>, categoriesInCart: Set<string>): void {
     const relevant = pool.filter(p => categoriesInCart.has(p.category));
     const others = pool.filter(p => !categoriesInCart.has(p.category));
-
-    const ordered = [...relevant, ...others].sort((a, b) => b.rating - a.rating);
-    this.recommendations = ordered.slice(0, 6);
+    this.recommendations = [...relevant, ...others].sort((a, b) => b.rating - a.rating).slice(0, 6);
   }
 
   addRecommendation(product: Product): void {
@@ -235,7 +246,7 @@ export class CartComponent implements OnInit, OnDestroy {
     if (!chosen) return 0;
     // FREESHIP code → always free; standard free over 99€
     if (this.appliedPromo?.code === 'FREESHIP') return 0;
-    if (this.delivery === 'standard' && this.subtotal >= 99) return 0;
+    if (this.delivery === 'standard' && this.subtotal >= 49) return 0;
     return chosen.price;
   }
 
@@ -253,11 +264,11 @@ export class CartComponent implements OnInit, OnDestroy {
   }
 
   get shippingProgress(): number {
-    return Math.min((this.subtotal / 99) * 100, 100);
+    return Math.min((this.subtotal / 49) * 100, 100);
   }
 
   get remainingForFreeShipping(): number {
-    return Math.max(99 - this.subtotal, 0);
+    return Math.max(49 - this.subtotal, 0);
   }
 
   // ==========================================================================

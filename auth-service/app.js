@@ -4,35 +4,43 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const db = require('./config/database');
 
 const authRoutes = require('./routes/auth');
+const { router: sellerRoutes, uploadDir: sellerUploadDir } = require('./routes/seller');
+const { router: adminRoutes } = require('./routes/admin');
+const { router: catalogRoutes } = require('./routes/catalog');
+const { router: buyerRoutes } = require('./routes/buyer');
 
 const app = express();
-app.use((req, res, next) => {
-  req.requestId = req.headers['x-request-id'] || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  res.setHeader('x-request-id', req.requestId);
-  next();
-});
-const requiredVars = ['JWT_SECRET', 'JWT_REFRESH_SECRET'];
-const missingVars = requiredVars.filter((key) => !process.env[key]);
-if (missingVars.length > 0) {
-  throw new Error(`Variables d'environnement manquantes: ${missingVars.join(', ')}`);
-}
-
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
-  : ['http://localhost:4200', 'http://localhost:4201'];
 
 // Middlewares de sécurité
 app.use(helmet());
 app.use(cors({
-  origin: allowedOrigins,
+  origin(origin, callback) {
+    if (!origin) {
+      return callback(null, true);
+    }
+    try {
+      const url = new URL(origin);
+      const isLocalUi =
+        ['localhost', '127.0.0.1'].includes(url.hostname) &&
+        (!url.port || /^42\d{2,3}$/.test(url.port) || url.port === '4200' || url.port === '4201');
+      if (isLocalUi) {
+        return callback(null, true);
+      }
+    } catch (_e) {
+      // Origine invalide : rejetée ci-dessous.
+    }
+    return callback(new Error(`Origine CORS non autorisée: ${origin}`));
+  },
   credentials: true
 }));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Fichiers téléversés (KYC vendeur) — servis sous /api/seller/files/...
+app.use('/api/seller/files', express.static(sellerUploadDir));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -50,6 +58,10 @@ app.use('/api/', limiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/seller', sellerRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/catalog', catalogRoutes);
+app.use('/api/buyer', buyerRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -57,26 +69,14 @@ app.get('/health', (req, res) => {
     success: true,
     message: 'Auth service is healthy',
     timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    db: 'up'
+    version: '1.0.0'
   });
-});
-
-app.get('/ready', async (req, res) => {
-  try {
-    await db.testConnection();
-    return res.status(200).json({ success: true, ready: true });
-  } catch (error) {
-    return res.status(503).json({ success: false, ready: false });
-  }
 });
 
 // Route 404
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    code: 'NOT_FOUND',
-    requestId: req.requestId,
     message: 'Route non trouvée'
   });
 });
@@ -87,8 +87,6 @@ app.use((err, req, res, next) => {
   
   res.status(err.status || 500).json({
     success: false,
-    code: err.code || 'INTERNAL_ERROR',
-    requestId: req.requestId,
     message: err.message || 'Erreur serveur',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });

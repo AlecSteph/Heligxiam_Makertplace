@@ -68,7 +68,7 @@
       <div class="rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 p-2.5">
         <div class="flex items-center justify-between mb-1.5">
           <p class="text-[11px] font-bold text-amber-300">Activation</p>
-          <span class="text-[11px] font-bold text-amber-400">{{ onboardingProgress }}%</span>
+          <span class="text-[11px] font-bold text-amber-400">{{ onboardingLoading && !onboardingHydrated ? '…' : onboardingProgress + '%' }}</span>
         </div>
         <div class="h-1 bg-slate-800 rounded-full overflow-hidden mb-1.5">
           <div class="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all"
@@ -150,12 +150,6 @@
 
       <!-- Right actions -->
       <div class="flex items-center gap-1">
-        <a routerLink="/" target="_blank" rel="noopener"
-           class="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-lg transition">
-          <lucide-angular [img]="ExternalLink" class="w-3.5 h-3.5"></lucide-angular>
-          Marketplace
-        </a>
-
         <!-- Help -->
         <div class="relative">
           <button type="button" (click)="showHelpMenu = !showHelpMenu; showNotifications = false"
@@ -173,10 +167,10 @@
                 <lucide-angular [img]="BookOpen" class="w-4 h-4 text-indigo-600"></lucide-angular>
                 Seller University
               </a>
-              <a class="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition">
+              <button type="button" (click)="openSupportMessaging()" class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition text-left">
                 <lucide-angular [img]="Headphones" class="w-4 h-4 text-emerald-600"></lucide-angular>
                 Contacter le support
-              </a>
+              </button>
               <a class="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 transition">
                 <lucide-angular [img]="FileText" class="w-4 h-4 text-fuchsia-600"></lucide-angular>
                 Centre d'aide &amp; FAQ
@@ -203,17 +197,23 @@
                class="absolute right-0 mt-1 w-80 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50 max-h-[500px] flex flex-col">
             <div class="flex items-center justify-between p-3 border-b border-slate-200">
               <p class="text-sm font-bold">Notifications</p>
-              <button class="text-xs text-indigo-600 hover:underline">Tout marquer lu</button>
+              <button type="button" class="text-xs text-indigo-600 hover:underline" (click)="markAllNotificationsRead()">Tout marquer lu</button>
             </div>
             <div class="flex-1 overflow-y-auto divide-y divide-slate-100">
-              <div *ngFor="let n of notifications" class="flex items-start gap-3 p-3 hover:bg-slate-50 cursor-pointer">
+              <p *ngIf="!notifications.length" class="p-4 text-sm text-slate-500 text-center">Aucune notification.</p>
+              <div
+                *ngFor="let n of notifications"
+                (click)="openSellerNotification(n)"
+                class="flex items-start gap-3 p-3 hover:bg-slate-50 cursor-pointer"
+                [class.bg-indigo-50/40]="!n.read"
+              >
                 <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
                   <lucide-angular [img]="n.icon" class="w-4 h-4 text-slate-600"></lucide-angular>
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-semibold text-slate-900">{{ n.title }}</p>
                   <p class="text-xs text-slate-600 truncate">{{ n.text }}</p>
-                  <p class="text-[10px] text-slate-400 mt-0.5">Il y a {{ n.time }}</p>
+                  <p class="text-[10px] text-slate-400 mt-0.5">{{ n.time }}</p>
                 </div>
               </div>
             </div>
@@ -247,6 +247,10 @@
     <!-- Page content -->
     <main class="flex-1 p-4 lg:p-6 space-y-5">
 
+      <div *ngIf="pageFeedback" class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900 font-medium">
+        {{ pageFeedback }}
+      </div>
+
       <!-- Page header (for non-dashboard sections) -->
       <div *ngIf="activeNav !== 'dashboard'" class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
@@ -261,11 +265,11 @@
           <p class="text-xs text-slate-500 mt-0.5">{{ getPageHeader(activeNav).subtitle }}</p>
         </div>
         <div class="flex items-center gap-2">
-          <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
+          <button type="button" (click)="openQuickAction('support')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
             <lucide-angular [img]="HelpCircle" class="w-3.5 h-3.5"></lucide-angular>
             Aide
           </button>
-          <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
+          <button type="button" (click)="exportSectionData()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
             <lucide-angular [img]="Download" class="w-3.5 h-3.5"></lucide-angular>
             Exporter
           </button>
@@ -289,26 +293,32 @@
           </p>
         </div>
         <div class="flex items-center gap-2">
-          <button class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
+          <button type="button" (click)="exportSectionData()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50 transition">
             <lucide-angular [img]="Download" class="w-3.5 h-3.5"></lucide-angular>
             Exporter
           </button>
           <div class="inline-flex bg-white border border-slate-200 rounded-lg p-0.5 text-xs font-semibold">
-            <button (click)="selectedPeriod = '7d'"
+            <button type="button" (click)="selectedPeriod = '7d'; reloadDashboard()"
                     [class]="'px-2.5 py-1 rounded-md transition ' + (selectedPeriod === '7d' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50')">7j</button>
-            <button (click)="selectedPeriod = '30d'"
+            <button type="button" (click)="selectedPeriod = '30d'; reloadDashboard()"
                     [class]="'px-2.5 py-1 rounded-md transition ' + (selectedPeriod === '30d' ? 'bg-amber-500 text-white' : 'text-slate-600 hover:bg-slate-50')">30j</button>
-            <button (click)="selectedPeriod = '90d'"
+            <button type="button" (click)="selectedPeriod = '90d'; reloadDashboard()"
                     [class]="'px-2.5 py-1 rounded-md transition ' + (selectedPeriod === '90d' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50')">90j</button>
-            <button (click)="selectedPeriod = 'ytd'"
+            <button type="button" (click)="selectedPeriod = 'ytd'; reloadDashboard()"
                     [class]="'px-2.5 py-1 rounded-md transition ' + (selectedPeriod === 'ytd' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50')">Année</button>
           </div>
         </div>
       </div>
 
       <!-- Onboarding checklist -->
-      <div *ngIf="onboardingProgress < 100"
+      <div *ngIf="!onboardingActivationTerminee"
            class="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 p-4 lg:p-5">
+        <div *ngIf="onboardingFeedback" class="mb-3 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
+          {{ onboardingFeedback }}
+        </div>
+        <div *ngIf="currentUser?.role === 'vendeur' && !sellerMysqlContext" class="mb-3 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-900">
+          <strong>Session vendeur invalide.</strong> Déconnectez-vous puis inscrivez-vous ou reconnectez-vous avec un compte vendeur enregistré en base.
+        </div>
         <div class="flex items-start gap-3 mb-3">
           <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-md flex-shrink-0">
             <lucide-angular [img]="Sparkles" class="w-5 h-5 text-white"></lucide-angular>
@@ -316,30 +326,163 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center flex-wrap gap-2 mb-0.5">
               <h2 class="text-base font-bold text-slate-900">Activation de votre boutique</h2>
-              <span class="text-[10px] font-bold bg-orange-600 text-white px-1.5 py-0.5 rounded-full">{{ onboardingProgress }}%</span>
+              <span class="text-[10px] font-bold bg-orange-600 text-white px-1.5 py-0.5 rounded-full">{{ onboardingLoading && !onboardingHydrated ? '…' : onboardingProgress + '%' }}</span>
             </div>
-            <p class="text-xs text-slate-600">Complétez ces étapes pour débloquer vos <strong>47 250€ d'avantages</strong>.</p>
+            <p class="text-xs text-slate-600">Complétez et <strong>envoyez chaque étape</strong> : le statut passe en <em>en attente de validation</em> jusqu’à traitement par l’admin HELIGXIAM.</p>
           </div>
         </div>
+
+        <p *ngIf="onboardingLoading && !onboardingHydrated" class="text-xs text-slate-500 mb-3 animate-pulse">Chargement de votre dossier depuis la base…</p>
+
+        <!-- Choix de formule -->
+        <div id="seller-onboarding-plan" class="mb-4 rounded-xl border border-amber-300/60 bg-white/80 p-3 sm:p-4">
+          <p class="text-[11px] font-bold text-amber-900 uppercase tracking-wide mb-2">Étape 1 — Choisissez votre abonnement</p>
+          <p class="text-xs text-slate-600 mb-3">Sélectionnez une formule puis <strong>Soumettre pour validation</strong> (comptabilité / conformité).</p>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              (click)="selectSellerPlan('particulier')"
+              [disabled]="getOnboardingStepById('plan')?.status !== 'a_faire'"
+              [class]="'w-full text-left rounded-xl border-2 p-3 transition-all ' + (sellerPlan === 'particulier' ? 'border-amber-500 bg-amber-50/90 shadow-md ring-2 ring-amber-300/50' : 'border-slate-200 bg-white hover:border-amber-200') + (getOnboardingStepById('plan')?.status !== 'a_faire' ? ' opacity-60 pointer-events-none' : '')"
+            >
+              <p class="text-xs font-bold text-slate-900">Particulier</p>
+              <p class="text-lg font-extrabold text-slate-900 mt-0.5">0,50€ <span class="text-xs font-semibold text-slate-500">/ article vendu</span></p>
+              <p class="text-[11px] text-slate-600 mt-1">Jusqu’à 40 ventes / mois · Expédition par vous</p>
+            </button>
+            <button
+              type="button"
+              (click)="selectSellerPlan('professionnel')"
+              [disabled]="getOnboardingStepById('plan')?.status !== 'a_faire'"
+              [class]="'w-full text-left rounded-xl border-2 p-3 relative transition-all ' + (sellerPlan === 'professionnel' ? 'border-indigo-500 bg-indigo-50/90 shadow-md ring-2 ring-indigo-300/50' : 'border-slate-200 bg-white hover:border-indigo-200') + (getOnboardingStepById('plan')?.status !== 'a_faire' ? ' opacity-60 pointer-events-none' : '')"
+            >
+              <span class="absolute top-2 right-2 text-[9px] font-bold uppercase bg-indigo-600 text-white px-1.5 py-0.5 rounded">Recommandé</span>
+              <p class="text-xs font-bold text-slate-900 pr-16">Professionnel</p>
+              <p class="text-lg font-extrabold text-slate-900 mt-0.5">29€ <span class="text-xs font-semibold text-slate-500">/ mois (HT) + commission</span></p>
+              <p class="text-[11px] text-slate-600 mt-1">Ventes illimitées · FBA · Analyses temps réel</p>
+            </button>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              *ngIf="getOnboardingStepById('plan')?.status === 'a_faire'"
+              type="button"
+              (click)="soumettreOnboardingPlan()"
+              [disabled]="planSubmitting || !sellerPlan || (onboardingLoading && !onboardingHydrated)"
+              class="text-xs font-bold px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >{{ planSubmitting ? 'Envoi…' : 'Soumettre pour validation' }}</button>
+          </div>
+          <p *ngIf="getOnboardingStepById('plan')?.status === 'en_attente_validation'" class="text-[11px] text-amber-800 mt-2">
+            En attente de validation par l’équipe HELIGXIAM (console <code class="text-[10px]">/admin</code>).
+          </p>
+          <p *ngIf="getOnboardingStepById('plan')?.status === 'en_attente_validation' || getOnboardingStepById('plan')?.status === 'valide'" class="text-[11px] text-slate-600 mt-2">
+            <span *ngIf="getOnboardingStepById('plan')?.fileReference as ref" class="font-mono text-indigo-800">{{ ref }}</span>
+            <span *ngIf="getOnboardingStepById('plan')?.submittedAt as d" class="ml-1">· {{ d }}</span>
+          </p>
+        </div>
+
         <div class="h-1.5 bg-white/70 rounded-full overflow-hidden mb-4">
           <div class="h-full bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 transition-all"
                [style.width.%]="onboardingProgress"></div>
         </div>
+
+        <p class="text-[10px] text-slate-500 mb-2">Cliquez une ligne pour afficher le formulaire et les actions (ou le bloc formule ci-dessus pour l’étape 1).</p>
         <div class="grid md:grid-cols-2 gap-2">
           <button *ngFor="let step of onboardingSteps"
                   type="button"
-                  (click)="toggleOnboardingStep(step.id)"
-                  [class]="'flex items-center gap-2.5 p-2.5 rounded-lg border text-left transition-all ' +
-                    (step.done ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200 hover:border-orange-300')">
-            <div [class]="'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ' +
-                    (step.done ? 'bg-green-500' : 'bg-white border-2 border-slate-300')">
-              <lucide-angular *ngIf="step.done" [img]="CheckCircle2" class="w-3.5 h-3.5 text-white"></lucide-angular>
+                  (click)="step.id === 'plan' ? scrollToOnboardingPlan() : selectOnboardingRow(step.id)"
+                  [class]="'flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-lg border text-left transition-all ' +
+                    (stepOnboardingValide(step) ? 'bg-green-50 border-green-200' :
+                     step.status === 'en_attente_validation' ? 'bg-amber-50/80 border-amber-300' : 'bg-white border-slate-200 hover:border-orange-300')">
+            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+              <div [class]="'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ' +
+                      (stepOnboardingValide(step) ? 'bg-green-500' : 'bg-white border-2 border-slate-300')">
+                <lucide-angular *ngIf="stepOnboardingValide(step)" [img]="CheckCircle2" class="w-3.5 h-3.5 text-white"></lucide-angular>
+                <lucide-angular *ngIf="!stepOnboardingValide(step) && step.status === 'en_attente_validation'" [img]="Clock" class="w-3.5 h-3.5 text-amber-600"></lucide-angular>
+              </div>
+              <span [class]="'text-xs flex-1 min-w-0 ' + (stepOnboardingValide(step) ? 'text-slate-500 line-through' : 'font-semibold text-slate-800')">
+                {{ step.label }}
+              </span>
             </div>
-            <span [class]="'text-xs flex-1 ' + (step.done ? 'text-slate-500 line-through' : 'font-semibold text-slate-800')">
-              {{ step.label }}
-            </span>
-            <lucide-angular *ngIf="!step.done" [img]="ChevronRight" class="w-3.5 h-3.5 text-slate-400"></lucide-angular>
+            <div class="flex items-center justify-end gap-1.5 flex-shrink-0 pl-7 sm:pl-0">
+              <span [class]="'text-[9px] font-bold px-1.5 py-0.5 rounded ' + onboardingBadgeClass(step.status)">
+                {{ onboardingLoading && !onboardingHydrated ? '…' : onboardingStatusLabel(step.status) }}
+              </span>
+              <lucide-angular *ngIf="step.id !== 'plan'" [img]="ChevronRight" class="w-3.5 h-3.5 text-slate-400"></lucide-angular>
+              <span *ngIf="step.id === 'plan'" class="text-[9px] text-amber-800 font-bold">Formule</span>
+            </div>
           </button>
+        </div>
+
+        <!-- Panneau formulaire (étapes 2–6) -->
+        <div *ngIf="onboardingOpenPanel && onboardingOpenPanel !== 'plan'" class="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <p class="text-sm font-bold text-slate-900">Saisie — {{ getOnboardingStepById(onboardingOpenPanel)?.label }}</p>
+            <button type="button" (click)="onboardingOpenPanel = null" class="text-xs text-slate-500 hover:text-slate-800">Fermer</button>
+          </div>
+
+          <ng-container [ngSwitch]="onboardingOpenPanel">
+            <div *ngSwitchCase="'docs'" class="space-y-2 text-xs">
+              <p class="text-slate-500">Téléversez vos 3 documents (PDF, image, etc. max 10MB/fichier).</p>
+              <label class="block">
+                <span class="block mb-1 text-slate-700 font-semibold">Fichier Kbis</span>
+                <input type="file" (change)="onDocFileSelected('kbis', $event)" class="w-full border rounded-lg px-2 py-1.5 bg-white" [disabled]="getOnboardingStepById('docs')?.status !== 'a_faire' || docsUploading" />
+                <p *ngIf="onboardingFormDocs.fichierKbis" class="mt-1 text-[11px] text-emerald-700">{{ onboardingFormDocs.fichierKbis }}</p>
+              </label>
+              <label class="block">
+                <span class="block mb-1 text-slate-700 font-semibold">CNI / passeport</span>
+                <input type="file" (change)="onDocFileSelected('cni', $event)" class="w-full border rounded-lg px-2 py-1.5 bg-white" [disabled]="getOnboardingStepById('docs')?.status !== 'a_faire' || docsUploading" />
+                <p *ngIf="onboardingFormDocs.fichierCni" class="mt-1 text-[11px] text-emerald-700">{{ onboardingFormDocs.fichierCni }}</p>
+              </label>
+              <label class="block">
+                <span class="block mb-1 text-slate-700 font-semibold">RIB</span>
+                <input type="file" (change)="onDocFileSelected('rib', $event)" class="w-full border rounded-lg px-2 py-1.5 bg-white" [disabled]="getOnboardingStepById('docs')?.status !== 'a_faire' || docsUploading" />
+                <p *ngIf="onboardingFormDocs.fichierRib" class="mt-1 text-[11px] text-emerald-700">{{ onboardingFormDocs.fichierRib }}</p>
+              </label>
+              <textarea [(ngModel)]="onboardingFormDocs.commentaire" rows="2" placeholder="Commentaire" class="w-full border rounded-lg px-2 py-1.5" [disabled]="getOnboardingStepById('docs')?.status !== 'a_faire'"></textarea>
+            </div>
+            <div *ngSwitchCase="'profile'" class="space-y-2 text-xs">
+              <input [(ngModel)]="onboardingFormProfile.raisonSociale" class="w-full border rounded-lg px-2 py-1.5" placeholder="Raison sociale" [disabled]="getOnboardingStepById('profile')?.status !== 'a_faire'" />
+              <input [(ngModel)]="onboardingFormProfile.nomAffichage" class="w-full border rounded-lg px-2 py-1.5" placeholder="Nom d’affichage boutique" [disabled]="getOnboardingStepById('profile')?.status !== 'a_faire'" />
+              <div class="grid sm:grid-cols-2 gap-2">
+                <input [(ngModel)]="onboardingFormProfile.siret" class="w-full border rounded-lg px-2 py-1.5" placeholder="SIRET" [disabled]="getOnboardingStepById('profile')?.status !== 'a_faire'" />
+                <input [(ngModel)]="onboardingFormProfile.tva" class="w-full border rounded-lg px-2 py-1.5" placeholder="N° TVA" [disabled]="getOnboardingStepById('profile')?.status !== 'a_faire'" />
+              </div>
+              <input [(ngModel)]="onboardingFormProfile.emailPro" type="email" class="w-full border rounded-lg px-2 py-1.5" placeholder="E-mail pro" [disabled]="getOnboardingStepById('profile')?.status !== 'a_faire'" />
+              <input [(ngModel)]="onboardingFormProfile.telephone" class="w-full border rounded-lg px-2 py-1.5" placeholder="Téléphone" [disabled]="getOnboardingStepById('profile')?.status !== 'a_faire'" />
+              <input [(ngModel)]="onboardingFormProfile.adresse" class="w-full border rounded-lg px-2 py-1.5" placeholder="Adresse du siège" [disabled]="getOnboardingStepById('profile')?.status !== 'a_faire'" />
+            </div>
+            <div *ngSwitchCase="'shipping'" class="space-y-2 text-xs">
+              <input [(ngModel)]="onboardingFormShipping.colissimo" class="w-full border rounded-lg px-2 py-1.5" placeholder="Colissimo" [disabled]="getOnboardingStepById('shipping')?.status !== 'a_faire'" />
+              <input [(ngModel)]="onboardingFormShipping.chronopost" class="w-full border rounded-lg px-2 py-1.5" placeholder="Chronopost" [disabled]="getOnboardingStepById('shipping')?.status !== 'a_faire'" />
+              <input [(ngModel)]="onboardingFormShipping.relais" class="w-full border rounded-lg px-2 py-1.5" placeholder="Point relais" [disabled]="getOnboardingStepById('shipping')?.status !== 'a_faire'" />
+              <label class="flex items-center gap-2">
+                <input type="checkbox" [(ngModel)]="onboardingFormShipping.hxLogistics" [disabled]="getOnboardingStepById('shipping')?.status !== 'a_faire'" />
+                <span>Intéressé(e) par la logistique HELIGXIAM (FBA)</span>
+              </label>
+              <textarea [(ngModel)]="onboardingFormShipping.remarque" rows="2" class="w-full border rounded-lg px-2 py-1.5" [disabled]="getOnboardingStepById('shipping')?.status !== 'a_faire'"></textarea>
+            </div>
+            <div *ngSwitchCase="'payout'" class="space-y-2 text-xs">
+              <input [(ngModel)]="onboardingFormPayout.titulaire" class="w-full border rounded-lg px-2 py-1.5" placeholder="Titulaire du compte" [disabled]="getOnboardingStepById('payout')?.status !== 'a_faire'" />
+              <input [(ngModel)]="onboardingFormPayout.iban" class="w-full border rounded-lg px-2 py-1.5 font-mono" placeholder="IBAN" [disabled]="getOnboardingStepById('payout')?.status !== 'a_faire'" />
+              <input [(ngModel)]="onboardingFormPayout.bic" class="w-full border rounded-lg px-2 py-1.5 font-mono" placeholder="BIC" [disabled]="getOnboardingStepById('payout')?.status !== 'a_faire'" />
+              <input [(ngModel)]="onboardingFormPayout.referenceInterne" class="w-full border rounded-lg px-2 py-1.5" placeholder="Réf. interne" [disabled]="getOnboardingStepById('payout')?.status !== 'a_faire'" />
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="onboardingOpenPanel && getOnboardingStepById(onboardingOpenPanel)?.status === 'a_faire'">
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                (click)="soumettreEtapeOnboarding(onboardingOpenPanel!)"
+                [disabled]="docsUploading || stepSubmitting || (onboardingLoading && !onboardingHydrated)"
+                class="text-xs font-bold px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >{{ docsUploading ? 'Téléversement en cours...' : stepSubmitting ? 'Envoi…' : 'Envoyer pour validation admin' }}</button>
+            </div>
+          </ng-container>
+          <div *ngIf="onboardingOpenPanel && getOnboardingStepById(onboardingOpenPanel)?.status === 'en_attente_validation'" class="mt-3 text-xs text-amber-900 space-y-1">
+            <p><span class="font-mono font-bold">{{ getOnboardingStepById(onboardingOpenPanel!)?.fileReference }}</span> — soumis le {{ getOnboardingStepById(onboardingOpenPanel!)?.submittedAt }}</p>
+            <p class="text-slate-600">Validation par l’opérateur dans la console admin. <button type="button" (click)="loadOnboardingFromApi()" class="font-semibold text-indigo-700 underline">Actualiser le statut</button></p>
+          </div>
+          <p *ngIf="onboardingOpenPanel && getOnboardingStepById(onboardingOpenPanel!)?.status === 'valide'" class="mt-2 text-xs text-emerald-700 font-medium">Cette étape a été validée par l’administrateur.</p>
         </div>
       </div>
 
@@ -485,7 +628,7 @@
                 <span class="font-bold">{{ payoutSummary.lastPayout.toFixed(2) }}€</span>
               </div>
             </div>
-            <button class="w-full mt-4 px-3 py-2 bg-white text-green-700 text-xs font-bold rounded-lg hover:bg-white/90 transition">
+            <button type="button" (click)="requestPayout(true)" class="w-full mt-4 px-3 py-2 bg-white text-green-700 text-xs font-bold rounded-lg hover:bg-white/90 transition">
               Versement anticipé
             </button>
           </div>
@@ -502,7 +645,7 @@
               <h3 class="text-sm font-bold text-slate-900">Cas à traiter</h3>
               <span class="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full">{{ casesCount }}</span>
             </div>
-            <a class="text-[11px] font-bold text-indigo-600 hover:underline">Voir tout →</a>
+            <button type="button" (click)="openCasesList()" class="text-[11px] font-bold text-indigo-600 hover:underline">Voir tout →</button>
           </div>
           <div class="divide-y divide-slate-100">
             <div *ngFor="let c of cases" class="p-3 hover:bg-slate-50 cursor-pointer">
@@ -547,7 +690,7 @@
                 </div>
               </div>
               <p class="text-[11px] text-slate-600 leading-relaxed mb-2">{{ tip.text }}</p>
-              <button class="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+              <button type="button" (click)="applyCoachTip(tip)" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
                 {{ tip.ctaLabel }}
                 <lucide-angular [img]="ChevronRight" class="w-3 h-3"></lucide-angular>
               </button>
@@ -564,11 +707,11 @@
             <p class="text-[11px] text-slate-500">{{ unshippedCount }} à préparer • SLA 24h</p>
           </div>
           <div class="flex items-center gap-2">
-            <button class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 rounded-md border border-slate-200 transition">
+            <button type="button" (click)="openOrdersList('all')" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 rounded-md border border-slate-200 transition">
               <lucide-angular [img]="Filter" class="w-3 h-3"></lucide-angular>
               Filtrer
             </button>
-            <a class="text-[11px] font-bold text-indigo-600 hover:underline">Voir tout →</a>
+            <button type="button" (click)="openOrdersList('all')" class="text-[11px] font-bold text-indigo-600 hover:underline">Voir tout →</button>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -662,7 +805,7 @@
         <!-- Inventory health -->
         <div class="lg:col-span-3 bg-white rounded-xl border border-slate-200 p-4">
           <h3 class="text-sm font-bold text-slate-900 mb-1">État du stock</h3>
-          <p class="text-[11px] text-slate-500 mb-3">18 produits au catalogue</p>
+          <p class="text-[11px] text-slate-500 mb-3">{{ topProducts.length }} produits au catalogue</p>
           <!-- Stacked bar -->
           <div class="h-2 bg-slate-100 rounded-full overflow-hidden flex mb-3">
             <div *ngFor="let b of inventoryBreakdown"
@@ -676,7 +819,7 @@
               <span class="font-bold text-slate-900">{{ b.value }}</span>
             </div>
           </div>
-          <button class="mt-3 w-full px-3 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-md hover:bg-slate-800 transition">
+          <button type="button" (click)="setActiveNav('inventory')" class="mt-3 w-full px-3 py-1.5 bg-slate-900 text-white text-[11px] font-bold rounded-md hover:bg-slate-800 transition">
             Gérer le stock
           </button>
         </div>
@@ -729,27 +872,27 @@
         <div class="bg-white rounded-xl border border-slate-200 p-4">
           <h3 class="text-sm font-bold text-slate-900 mb-3">Actions rapides</h3>
           <div class="grid grid-cols-2 gap-2">
-            <button class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-amber-300 hover:bg-amber-50 transition group">
+            <button type="button" (click)="openQuickAction('add-product')" class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-amber-300 hover:bg-amber-50 transition group">
               <lucide-angular [img]="Plus" class="w-5 h-5 text-amber-600 group-hover:scale-110 transition"></lucide-angular>
               <span class="text-[10px] font-bold text-slate-700 text-center">Ajouter<br/>produit</span>
             </button>
-            <button class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition group">
+            <button type="button" (click)="openQuickAction('bulk-upload')" class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition group">
               <lucide-angular [img]="Upload" class="w-5 h-5 text-indigo-600 group-hover:scale-110 transition"></lucide-angular>
               <span class="text-[10px] font-bold text-slate-700 text-center">Import<br/>CSV</span>
             </button>
-            <button class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-red-300 hover:bg-red-50 transition group">
+            <button type="button" (click)="openQuickAction('flash-deal')" class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-red-300 hover:bg-red-50 transition group">
               <lucide-angular [img]="Flame" class="w-5 h-5 text-red-600 group-hover:scale-110 transition"></lucide-angular>
               <span class="text-[10px] font-bold text-slate-700 text-center">Créer<br/>vente flash</span>
             </button>
-            <button class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-fuchsia-300 hover:bg-fuchsia-50 transition group">
+            <button type="button" (click)="openQuickAction('campaign')" class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-fuchsia-300 hover:bg-fuchsia-50 transition group">
               <lucide-angular [img]="Megaphone" class="w-5 h-5 text-fuchsia-600 group-hover:scale-110 transition"></lucide-angular>
               <span class="text-[10px] font-bold text-slate-700 text-center">Lancer<br/>campagne</span>
             </button>
-            <button class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 transition group">
+            <button type="button" (click)="openQuickAction('export')" class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 transition group">
               <lucide-angular [img]="Download" class="w-5 h-5 text-emerald-600 group-hover:scale-110 transition"></lucide-angular>
               <span class="text-[10px] font-bold text-slate-700 text-center">Export<br/>rapports</span>
             </button>
-            <button class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50 transition group">
+            <button type="button" (click)="openCreateCouponModal()" class="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50 transition group">
               <lucide-angular [img]="Gift" class="w-5 h-5 text-violet-600 group-hover:scale-110 transition"></lucide-angular>
               <span class="text-[10px] font-bold text-slate-700 text-center">Créer<br/>coupon</span>
             </button>
@@ -772,7 +915,7 @@
               <strong class="bg-white/20 px-1.5 py-0.5 rounded">850€ de crédits offerts</strong>.
             </p>
           </div>
-          <button class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-indigo-700 text-sm font-bold rounded-lg hover:scale-105 transition-transform whitespace-nowrap">
+          <button type="button" (click)="openQuickAction('campaign')" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-indigo-700 text-sm font-bold rounded-lg hover:scale-105 transition-transform whitespace-nowrap">
             Créer une campagne
             <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
           </button>
@@ -790,6 +933,7 @@
         <div class="flex items-center gap-2">
           <lucide-angular [img]="Search" class="w-4 h-4 text-slate-400"></lucide-angular>
           <input type="text" placeholder="Rechercher un produit, SKU, ASIN…"
+                 [(ngModel)]="catalogSearch"
                  class="text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500 w-64" />
         </div>
         <select class="text-xs font-semibold px-3 py-2 border border-slate-200 rounded-lg bg-white">
@@ -804,7 +948,7 @@
           <option>Mode & Accessoires</option>
         </select>
         <div class="ml-auto flex items-center gap-2">
-          <button class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50">
+          <button type="button" (click)="setActiveNav('bulk-upload')" class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 text-xs font-semibold rounded-lg hover:bg-slate-50">
             <lucide-angular [img]="Upload" class="w-3.5 h-3.5"></lucide-angular> Import
           </button>
           <button (click)="setActiveNav('add-product')"
@@ -829,11 +973,11 @@
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-200 flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-bold text-slate-900">Catalogue — 12 références</h3>
+            <h3 class="text-sm font-bold text-slate-900">Catalogue — {{ topProducts.length }} références</h3>
             <p class="text-[11px] text-slate-500">Mise à jour il y a 2 min</p>
           </div>
           <div class="flex items-center gap-2">
-            <button class="text-[11px] px-2 py-1 bg-slate-100 rounded-md hover:bg-slate-200">Actions groupées</button>
+            <button type="button" (click)="showCatalogBulkActions()" class="text-[11px] px-2 py-1 bg-slate-100 rounded-md hover:bg-slate-200">Actions groupées</button>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -852,7 +996,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let p of topProducts" class="border-b border-slate-100 hover:bg-slate-50">
+              <tr *ngFor="let p of filteredCatalogProducts()" class="border-b border-slate-100 hover:bg-slate-50">
                 <td class="p-3"><input type="checkbox" class="rounded" /></td>
                 <td class="p-3">
                   <div class="flex items-center gap-2">
@@ -883,8 +1027,11 @@
                   </span>
                 </td>
                 <td class="p-3 text-right">
-                  <button class="text-[10px] px-2 py-1 bg-slate-100 rounded-md hover:bg-slate-200">Éditer</button>
+                  <button type="button" (click)="editCatalogProduct(p)" class="text-[10px] px-2 py-1 bg-slate-100 rounded-md hover:bg-slate-200">Éditer</button>
                 </td>
+              </tr>
+              <tr *ngIf="!filteredCatalogProducts().length">
+                <td colspan="9" class="p-4 text-center text-slate-500">Aucun produit ne correspond à votre recherche.</td>
               </tr>
             </tbody>
           </table>
@@ -904,17 +1051,19 @@
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Nom du produit *</label>
                 <input type="text" placeholder="Ex : Casque Audio sans fil Aurora Pro"
+                       [(ngModel)]="addProductForm.name"
                        class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-indigo-500" />
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-xs font-semibold text-slate-700 mb-1">Marque</label>
-                  <input type="text" value="HXstore"
+                  <input type="text"
+                         [(ngModel)]="addProductForm.brand"
                          class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-700 mb-1">Catégorie *</label>
-                  <select class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg bg-white">
+                  <select [(ngModel)]="addProductForm.category" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg bg-white">
                     <option>Électronique</option>
                     <option>Mode & Accessoires</option>
                     <option>Maison & Déco</option>
@@ -924,6 +1073,7 @@
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Description</label>
                 <textarea rows="4" placeholder="Décrivez votre produit en détail…"
+                          [(ngModel)]="addProductForm.description"
                           class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg"></textarea>
               </div>
             </div>
@@ -934,7 +1084,7 @@
             <div class="grid grid-cols-3 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Prix HT (€) *</label>
-                <input type="number" placeholder="0.00" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+                <input type="number" placeholder="0.00" [(ngModel)]="addProductForm.price" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">TVA</label>
@@ -946,7 +1096,7 @@
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1">Stock</label>
-                <input type="number" placeholder="0" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+                <input type="number" placeholder="0" [(ngModel)]="addProductForm.stock" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
               </div>
             </div>
           </div>
@@ -955,14 +1105,23 @@
             <h3 class="text-sm font-bold text-slate-900 mb-4">Photos du produit</h3>
             <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center">
               <lucide-angular [img]="Upload" class="w-8 h-8 text-slate-400 mx-auto mb-2"></lucide-angular>
-              <p class="text-sm font-semibold text-slate-700">Glissez vos images ici ou cliquez pour téléverser</p>
+              <p class="text-sm font-semibold text-slate-700">Cliquez pour téléverser la photo principale</p>
               <p class="text-[11px] text-slate-500 mt-1">JPG / PNG — jusqu'à 8 images — 2000×2000 px minimum</p>
+              <label class="inline-flex mt-3 cursor-pointer px-3 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-500">
+                Choisir une image
+                <input type="file" accept="image/*" class="hidden" (change)="onAddProductImageSelected($event)" />
+              </label>
+              <div *ngIf="addProductForm.imagePreview" class="mt-4 flex flex-col items-center gap-2">
+                <img [src]="addProductForm.imagePreview" alt="Aperçu photo produit" class="w-32 h-32 rounded-lg object-cover border border-slate-200" />
+                <p class="text-[11px] text-emerald-700 font-semibold">{{ addProductForm.imageName }}</p>
+              </div>
             </div>
           </div>
 
+          <p *ngIf="addProductFeedback" class="text-xs font-semibold text-emerald-700 text-right">{{ addProductFeedback }}</p>
           <div class="flex items-center gap-3 justify-end">
-            <button class="px-4 py-2 bg-white border border-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50">Enregistrer brouillon</button>
-            <button class="px-5 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-bold rounded-lg hover:shadow-lg">Publier le produit</button>
+            <button (click)="saveAddProduct('draft')" class="px-4 py-2 bg-white border border-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50">Enregistrer brouillon</button>
+            <button (click)="saveAddProduct('publish')" class="px-5 py-2 bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm font-bold rounded-lg hover:shadow-lg">Publier le produit</button>
           </div>
         </div>
 
@@ -1006,25 +1165,28 @@
             <lucide-angular [img]="ShieldCheck" class="w-6 h-6"></lucide-angular>
             <span class="text-[11px] uppercase tracking-wider font-bold bg-white/20 px-2 py-0.5 rounded">Marque enregistrée</span>
           </div>
-          <h2 class="text-2xl font-bold mb-2">Protégez votre marque HXstore</h2>
+          <h2 class="text-2xl font-bold mb-2">Protégez votre marque {{ storeSettings.displayName || storeSettings.name || 'boutique' }}</h2>
           <p class="text-sm text-white/90 max-w-xl">Accès aux outils anti-contrefaçon, contenu A+, Stores, analyses Marque et vidéo Sponsored Brands.</p>
           <div class="mt-5 flex gap-3">
-            <button class="px-5 py-2 bg-white text-indigo-700 text-sm font-bold rounded-lg hover:scale-105 transition">Enregistrer ma marque</button>
-            <button class="px-5 py-2 bg-white/20 text-white text-sm font-bold rounded-lg hover:bg-white/30">En savoir plus</button>
+            <input [(ngModel)]="brandFormLabel" placeholder="Nom de la marque" class="px-3 py-2 rounded-lg text-slate-900 text-sm flex-1 max-w-xs" />
+            <button type="button" (click)="submitBrandRegistration()" class="px-5 py-2 bg-white text-indigo-700 text-sm font-bold rounded-lg hover:scale-105 transition">Enregistrer ma marque</button>
           </div>
+          <p *ngIf="brandRegistryFeedback" class="mt-2 text-xs text-white/90">{{ brandRegistryFeedback }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <h4 class="text-sm font-bold text-slate-900 mb-3">Votre statut</h4>
           <div class="flex items-center gap-2 mb-3">
-            <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-            <span class="text-sm font-semibold text-green-700">Marque enregistrée</span>
+            <span class="w-2.5 h-2.5 rounded-full" [class]="primaryBrandRegistration ? 'bg-green-500' : 'bg-slate-300'"></span>
+            <span class="text-sm font-semibold" [class]="primaryBrandRegistration ? 'text-green-700' : 'text-slate-600'">
+              {{ primaryBrandRegistration ? ('Statut : ' + primaryBrandRegistration.statut_dossier) : 'Aucune marque enregistrée' }}
+            </span>
           </div>
-          <dl class="space-y-2 text-xs">
-            <div class="flex justify-between"><dt class="text-slate-600">Marque</dt><dd class="font-semibold">HXstore</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-600">INPI</dt><dd class="font-semibold">FR-4738192</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-600">Classes</dt><dd class="font-semibold">9, 28, 35</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-600">Enregistrée le</dt><dd class="font-semibold">12 janv. 2025</dd></div>
+          <dl class="space-y-2 text-xs" *ngIf="primaryBrandRegistration as b">
+            <div class="flex justify-between"><dt class="text-slate-600">Marque</dt><dd class="font-semibold">{{ b.libelle_marque }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-600">Statut dossier</dt><dd class="font-semibold">{{ b.statut_dossier }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-600">Soumis le</dt><dd class="font-semibold">{{ b.date_soumission | date:'mediumDate' }}</dd></div>
           </dl>
+          <p *ngIf="!primaryBrandRegistration" class="text-xs text-slate-500">Soumettez une demande pour protéger votre marque sur la marketplace.</p>
         </div>
       </div>
 
@@ -1035,7 +1197,7 @@
           </div>
           <h4 class="text-sm font-bold text-slate-900 mb-1">Signaler une contrefaçon</h4>
           <p class="text-xs text-slate-500 mb-3">Protection proactive contre les listings non autorisés.</p>
-          <button class="text-xs font-bold text-indigo-600 hover:underline">Ouvrir un signalement →</button>
+          <button type="button" (click)="openBrandRegistryAction('report')" class="text-xs font-bold text-indigo-600 hover:underline">Ouvrir un signalement →</button>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center mb-3">
@@ -1043,7 +1205,7 @@
           </div>
           <h4 class="text-sm font-bold text-slate-900 mb-1">Contenu A+</h4>
           <p class="text-xs text-slate-500 mb-3">Enrichissez vos fiches avec des visuels premium.</p>
-          <button class="text-xs font-bold text-indigo-600 hover:underline">Créer du contenu A+ →</button>
+          <button type="button" (click)="openBrandRegistryAction('aplus')" class="text-xs font-bold text-indigo-600 hover:underline">Créer du contenu A+ →</button>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center mb-3">
@@ -1051,7 +1213,7 @@
           </div>
           <h4 class="text-sm font-bold text-slate-900 mb-1">Vitrine de marque</h4>
           <p class="text-xs text-slate-500 mb-3">Personnalisez votre page boutique HELIGXIAM.</p>
-          <button class="text-xs font-bold text-indigo-600 hover:underline">Construire ma vitrine →</button>
+          <button type="button" (click)="openBrandRegistryAction('storefront')" class="text-xs font-bold text-indigo-600 hover:underline">Construire ma vitrine →</button>
         </div>
       </div>
     </ng-container>
@@ -1065,9 +1227,16 @@
           <lucide-angular [img]="Upload" class="w-12 h-12 text-indigo-500 mx-auto mb-3"></lucide-angular>
           <h3 class="text-lg font-bold text-slate-900 mb-1">Téléversez votre fichier CSV</h3>
           <p class="text-xs text-slate-500 mb-4">Format UTF-8 — virgule comme séparateur — taille max 10 Mo</p>
-          <button class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg hover:shadow-lg">
-            Sélectionner un fichier
-          </button>
+          <div class="flex items-center justify-center gap-2">
+            <button type="button" (click)="bulkUploadInput.click()" class="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg hover:shadow-lg">
+              Sélectionner un fichier
+            </button>
+            <input #bulkUploadInput type="file" accept=".csv,text/csv" class="hidden" (change)="onBulkCsvSelected($event)" />
+            <button type="button" (click)="uploadBulkCsv()" class="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-800">
+              Importer
+            </button>
+          </div>
+          <p *ngIf="bulkUploadFeedback" class="mt-3 text-xs font-semibold text-indigo-700">{{ bulkUploadFeedback }}</p>
         </div>
       </div>
 
@@ -1078,7 +1247,7 @@
             <lucide-angular [img]="FileText" class="w-6 h-6 text-indigo-600 mb-2"></lucide-angular>
             <p class="text-sm font-bold text-slate-900">{{ t.label }}</p>
             <p class="text-[11px] text-slate-500 mt-1">{{ t.cols }} colonnes • {{ t.samples }} exemples</p>
-            <button class="mt-2 text-[11px] font-bold text-indigo-600 hover:underline">Télécharger →</button>
+            <button type="button" (click)="downloadCsvTemplate(t)" class="mt-2 text-[11px] font-bold text-indigo-600 hover:underline">Télécharger →</button>
           </div>
         </div>
       </div>
@@ -1094,6 +1263,9 @@
               <th class="p-3">Erreurs</th><th class="p-3">Date</th><th class="p-3">Statut</th>
             </tr></thead>
             <tbody>
+              <tr *ngIf="!bulkHistory.length">
+                <td colspan="6" class="p-4 text-center text-slate-500">Aucun import CSV pour le moment.</td>
+              </tr>
               <tr *ngFor="let h of bulkHistory" class="border-b border-slate-100 hover:bg-slate-50">
                 <td class="p-3 font-semibold">{{ h.file }}</td>
                 <td class="p-3">{{ h.items }}</td>
@@ -1133,7 +1305,7 @@
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-200 flex items-center justify-between">
           <h3 class="text-sm font-bold text-slate-900">Niveaux de stock</h3>
-          <button class="text-xs px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-lg">
+          <button type="button" (click)="openQuickAction('shipment')" class="text-xs px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-lg">
             Créer un réapprovisionnement
           </button>
         </div>
@@ -1141,7 +1313,7 @@
           <table class="w-full text-xs">
             <thead class="bg-slate-50"><tr class="text-left text-slate-600">
               <th class="p-3">Produit</th><th class="p-3">SKU</th><th class="p-3">Disponible</th>
-              <th class="p-3">Réservé</th><th class="p-3">À réappro.</th><th class="p-3">Statut</th>
+              <th class="p-3">Réservé</th><th class="p-3">À réappro.</th><th class="p-3">Statut</th><th class="p-3 text-right">Actions</th>
             </tr></thead>
             <tbody>
               <tr *ngFor="let p of topProducts" class="border-b border-slate-100 hover:bg-slate-50">
@@ -1155,13 +1327,16 @@
                 <td class="p-3 font-bold" [ngClass]="p.stock === 0 ? 'text-red-600' : p.stock < 10 ? 'text-amber-600' : 'text-green-700'">
                   {{ p.stock }}
                 </td>
-                <td class="p-3">3</td>
+                <td class="p-3">—</td>
                 <td class="p-3 text-indigo-600 font-bold">{{ p.stock < 10 ? (50 - p.stock) : 0 }}</td>
                 <td class="p-3">
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
                         [ngClass]="p.stock === 0 ? 'bg-red-100 text-red-700' : p.stock < 10 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'">
                     {{ p.stock === 0 ? 'Rupture' : p.stock < 10 ? 'Stock faible' : 'OK' }}
                   </span>
+                </td>
+                <td class="p-3 text-right">
+                  <button type="button" (click)="editProductStock(p)" class="text-[10px] px-2 py-1 rounded border border-slate-200 hover:bg-slate-50">Modifier stock</button>
                 </td>
               </tr>
             </tbody>
@@ -1179,7 +1354,7 @@
           <h3 class="text-lg font-bold mb-1">Logistique HELIGXIAM (HX Fulfillment)</h3>
           <p class="text-xs text-white/90">Stockez, emballez et expédiez depuis nos centres. Livraison Prime automatique.</p>
         </div>
-        <button class="px-5 py-2 bg-white text-blue-700 text-sm font-bold rounded-lg whitespace-nowrap hover:scale-105 transition">
+        <button type="button" (click)="openQuickAction('shipment')" class="px-5 py-2 bg-white text-blue-700 text-sm font-bold rounded-lg whitespace-nowrap hover:scale-105 transition">
           Créer une expédition
         </button>
       </div>
@@ -1205,7 +1380,10 @@
                   </span>
                 </td>
                 <td class="p-3 text-slate-500">{{ s.expected }}</td>
-                <td class="p-3"><button class="text-[11px] text-indigo-600 font-bold hover:underline">Suivre →</button></td>
+                <td class="p-3"><button type="button" (click)="trackShipment(s)" class="text-[11px] text-indigo-600 font-bold hover:underline">Suivre →</button></td>
+              </tr>
+              <tr *ngIf="!shipments.length">
+                <td colspan="6" class="p-4 text-center text-slate-500">Aucune expédition pour le moment.</td>
               </tr>
             </tbody>
           </table>
@@ -1220,19 +1398,19 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Retours en attente</p>
-          <p class="text-2xl font-bold text-amber-600">1</p>
+          <p class="text-2xl font-bold text-amber-600">0</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Taux de retours</p>
-          <p class="text-2xl font-bold text-slate-900">3,1 %</p>
+          <p class="text-2xl font-bold text-slate-900">0 %</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Remboursé (30j)</p>
-          <p class="text-2xl font-bold text-slate-900">418 €</p>
+          <p class="text-2xl font-bold text-slate-900">0 €</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Délai moyen</p>
-          <p class="text-2xl font-bold text-slate-900">1,8 j</p>
+          <p class="text-2xl font-bold text-slate-900">0 j</p>
         </div>
       </div>
 
@@ -1259,8 +1437,11 @@
                   </span>
                 </td>
                 <td class="p-3">
-                  <button class="text-[11px] text-indigo-600 font-bold hover:underline">Traiter →</button>
+                  <button type="button" (click)="openQuickAction('returns')" class="text-[11px] text-indigo-600 font-bold hover:underline">Traiter →</button>
                 </td>
+              </tr>
+              <tr *ngIf="!returnsList.length">
+                <td colspan="7" class="p-4 text-center text-slate-500">Aucun retour à traiter pour le moment.</td>
               </tr>
             </tbody>
           </table>
@@ -1316,11 +1497,11 @@
     <ng-container *ngIf="activeNav === 'auto-pricing'">
       <div class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl p-5 flex items-center justify-between gap-4">
         <div>
-          <span class="text-[11px] uppercase tracking-wider font-bold bg-white/20 px-2 py-0.5 rounded">Nouveau</span>
+          <span class="text-[11px] uppercase tracking-wider font-bold bg-white/20 px-2 py-0.5 rounded">Configuration</span>
           <h3 class="text-lg font-bold mt-2 mb-1">Retarification automatique</h3>
-          <p class="text-xs text-white/90">Gagnez la Buy Box 24/7 avec des règles intelligentes — +18% de ventes en moyenne.</p>
+          <p class="text-xs text-white/90">Créez vos règles de prix pour automatiser la retarification.</p>
         </div>
-        <button class="px-5 py-2 bg-white text-teal-700 text-sm font-bold rounded-lg whitespace-nowrap">Créer une règle</button>
+        <button type="button" (click)="createPricingRule()" class="px-5 py-2 bg-white text-teal-700 text-sm font-bold rounded-lg whitespace-nowrap">Créer une règle</button>
       </div>
 
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
@@ -1346,6 +1527,9 @@
               </button>
             </div>
           </div>
+          <div *ngIf="!pricingRules.length" class="p-4 text-sm text-slate-500">
+            Aucune règle de retarification pour le moment.
+          </div>
         </div>
       </div>
     </ng-container>
@@ -1354,47 +1538,135 @@
     <!-- ============= PROMOTIONS & COUPONS ============================== -->
     <!-- ================================================================= -->
     <ng-container *ngIf="activeNav === 'promotions'">
+      <div *ngIf="promoFeedback" class="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900 font-medium">
+        {{ promoFeedback }}
+      </div>
+
+      <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
+        <strong>Validation admin :</strong> chaque coupon ou promotion créé est soumis à l'équipe HELIGXIAM.
+        Tant qu'il n'est pas approuvé, le statut reste <em>En attente admin</em> et n'est pas visible côté clients.
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Coupons actifs</p>
-          <p class="text-2xl font-bold text-slate-900">2</p>
+          <p class="text-2xl font-bold text-slate-900">{{ promotionsSummary.activeCoupons }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
-          <p class="text-xs text-slate-600 mb-1">Utilisations (30j)</p>
-          <p class="text-2xl font-bold text-slate-900">1 051</p>
+          <p class="text-xs text-slate-600 mb-1">Utilisations totales</p>
+          <p class="text-2xl font-bold text-slate-900">{{ promotionsSummary.uses30d }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
-          <p class="text-xs text-slate-600 mb-1">CA généré</p>
-          <p class="text-2xl font-bold text-green-600">4 218 €</p>
+          <p class="text-xs text-slate-600 mb-1">Produits en promo</p>
+          <p class="text-2xl font-bold text-green-600">{{ promotionsSummary.promoProductCount }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
-          <p class="text-xs text-slate-600 mb-1">ROI moyen</p>
-          <p class="text-2xl font-bold text-slate-900">3,4×</p>
+          <p class="text-xs text-slate-600 mb-1">Remise moyenne</p>
+          <p class="text-2xl font-bold text-slate-900">{{ promotionsSummary.avgDiscountPct }}%</p>
         </div>
       </div>
 
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-          <h3 class="text-sm font-bold text-slate-900">Mes promotions</h3>
-          <button class="text-xs px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold rounded-lg">+ Créer une promotion</button>
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Coupons boutique</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Codes créés pour votre boutique — utilisables au panier client</p>
+          </div>
+          <button type="button" (click)="openCreateCouponModal()"
+            class="text-xs px-3 py-1.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold rounded-lg hover:opacity-90 transition">
+            + Créer un coupon
+          </button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-xs">
             <thead class="bg-slate-50"><tr class="text-left text-slate-600">
-              <th class="p-3">Code</th><th class="p-3">Remise</th><th class="p-3">Portée</th>
-              <th class="p-3">Utilisations</th><th class="p-3">Expire</th><th class="p-3">Statut</th>
+              <th class="p-3">Code</th><th class="p-3">Libellé</th><th class="p-3">Remise</th><th class="p-3">Portée</th>
+              <th class="p-3">Utilisations</th><th class="p-3">Expire</th><th class="p-3">Statut</th><th class="p-3 text-right">Actions</th>
             </tr></thead>
             <tbody>
               <tr *ngFor="let c of sellerCoupons" class="border-b border-slate-100 hover:bg-slate-50">
                 <td class="p-3"><span class="px-2 py-1 bg-slate-900 text-white font-mono font-bold rounded">{{ c.code }}</span></td>
+                <td class="p-3 text-slate-700">{{ c.label || c.code }}</td>
                 <td class="p-3 font-bold text-rose-600">{{ c.discount }}</td>
                 <td class="p-3 text-slate-600">{{ c.scope }}</td>
                 <td class="p-3">{{ c.used }} / {{ c.max }}</td>
                 <td class="p-3 text-slate-500">{{ c.expires }}</td>
                 <td class="p-3">
                   <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getCouponStatusClass(c.status)">
-                    {{ c.status === 'active' ? 'Active' : c.status === 'scheduled' ? 'Programmée' : 'Expirée' }}
+                    {{ getPromoStatusLabel(c.status) }}
                   </span>
+                </td>
+                <td class="p-3 text-right space-x-1 whitespace-nowrap">
+                  <button type="button" (click)="openEditCouponModal(c)"
+                    class="text-[10px] px-2 py-1 rounded border border-slate-200 hover:bg-slate-50">Modifier</button>
+                  <button type="button" (click)="deleteCoupon(c)"
+                    class="text-[10px] px-2 py-1 rounded border border-rose-200 text-rose-700 hover:bg-rose-50">Supprimer</button>
+                </td>
+              </tr>
+              <tr *ngIf="!sellerCoupons.length">
+                <td colspan="8" class="p-6 text-center text-slate-500">
+                  Aucun coupon pour le moment. Cliquez sur « Créer un coupon » pour en ajouter un.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Promotions produits</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              {{ promotionsSummary.flashProductCount }} vente(s) flash · {{ promotionsSummary.standardPromoCount }} promo(s) classique(s)
+            </p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" (click)="openCreateProductPromoModal()"
+              class="text-xs px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold rounded-lg hover:opacity-90 transition">
+              + Créer une promotion
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50"><tr class="text-left text-slate-600">
+              <th class="p-3">Produit</th><th class="p-3">SKU</th><th class="p-3">Prix promo</th>
+              <th class="p-3">Prix barré</th><th class="p-3">Remise</th><th class="p-3">Type</th>
+              <th class="p-3">Statut</th><th class="p-3 text-right">Actions</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let p of sellerProductPromos" class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="p-3">
+                  <div class="flex items-center gap-2">
+                    <img *ngIf="p.image" [src]="p.image" [alt]="p.name" class="w-8 h-8 rounded object-cover border border-slate-200" />
+                    <span class="font-medium text-slate-800">{{ p.name }}</span>
+                  </div>
+                </td>
+                <td class="p-3 font-mono text-slate-500">{{ p.sku }}</td>
+                <td class="p-3 font-bold text-slate-900">{{ p.price | number:'1.2-2' }} €</td>
+                <td class="p-3 text-slate-400 line-through">{{ p.originalPrice ? (p.originalPrice | number:'1.2-2') + ' €' : '—' }}</td>
+                <td class="p-3 font-bold text-rose-600">{{ p.discountPct != null ? '-' + p.discountPct + '%' : '—' }}</td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getProductPromoTypeClass(p.type)">
+                    {{ p.badge || (p.type === 'flash' ? 'Flash' : 'Promo') }}
+                  </span>
+                </td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold" [ngClass]="getCouponStatusClass(p.status)">
+                    {{ getPromoStatusLabel(p.status) }}
+                  </span>
+                </td>
+                <td class="p-3 text-right space-x-1 whitespace-nowrap">
+                  <button *ngIf="p.dbId" type="button" (click)="openEditProductPromoModal(p)"
+                    class="text-[10px] px-2 py-1 rounded border border-slate-200 hover:bg-slate-50">Modifier</button>
+                  <button *ngIf="p.dbId" type="button" (click)="deleteProductPromo(p)"
+                    class="text-[10px] px-2 py-1 rounded border border-rose-200 text-rose-700 hover:bg-rose-50">Supprimer</button>
+                </td>
+              </tr>
+              <tr *ngIf="!sellerProductPromos.length">
+                <td colspan="8" class="p-6 text-center text-slate-500">
+                  Aucun produit en promotion pour le moment.
                 </td>
               </tr>
             </tbody>
@@ -1430,20 +1702,20 @@
         <div class="p-4 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
           <h3 class="text-sm font-bold text-slate-900">Toutes les commandes</h3>
           <div class="flex items-center gap-2">
-            <select class="text-xs px-2 py-1 border border-slate-200 rounded">
-              <option>Tous statuts</option><option>À préparer</option><option>Expédiées</option><option>Livrées</option>
+            <select [(ngModel)]="orderStatusFilter" class="text-xs px-2 py-1 border border-slate-200 rounded">
+              <option value="all">Tous statuts</option><option value="pending">À préparer</option><option value="shipped">Expédiées</option><option value="delivered">Livrées</option>
             </select>
-            <button class="text-[11px] px-3 py-1.5 bg-slate-900 text-white font-bold rounded">Imprimer étiquettes</button>
+            <button type="button" (click)="printShippingLabels()" class="text-[11px] px-3 py-1.5 bg-slate-900 text-white font-bold rounded">Imprimer étiquettes</button>
           </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-xs">
             <thead class="bg-slate-50"><tr class="text-left text-slate-600">
               <th class="p-3">Commande</th><th class="p-3">Client</th><th class="p-3">Produit</th>
-              <th class="p-3">Qté</th><th class="p-3">Total</th><th class="p-3">SLA</th><th class="p-3">Statut</th>
+              <th class="p-3">Qté</th><th class="p-3">Total</th><th class="p-3">SLA</th><th class="p-3">Statut</th><th class="p-3 text-right">Actions</th>
             </tr></thead>
             <tbody>
-              <tr *ngFor="let o of orders" class="border-b border-slate-100 hover:bg-slate-50">
+              <tr *ngFor="let o of filteredOrders()" class="border-b border-slate-100 hover:bg-slate-50">
                 <td class="p-3 font-mono font-semibold">{{ o.id }}</td>
                 <td class="p-3">{{ o.customer }}</td>
                 <td class="p-3">
@@ -1463,6 +1735,10 @@
                     {{ getOrderStatusLabel(o.status) }}
                   </span>
                 </td>
+                <td class="p-3 text-right space-x-1 whitespace-nowrap">
+                  <button *ngIf="o.status === 'pending'" type="button" (click)="shipOrder(o)" class="text-[10px] px-2 py-1 rounded bg-slate-900 text-white">Expédier</button>
+                  <button *ngIf="o.status === 'shipped'" type="button" (click)="updateOrderStatus(o, 'delivered')" class="text-[10px] px-2 py-1 rounded border border-slate-200">Marquer livrée</button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -1480,7 +1756,7 @@
           <p class="text-sm font-bold text-amber-900">{{ unshippedCount }} commandes à expédier</p>
           <p class="text-xs text-amber-800">Expédiez avant la fin du SLA pour éviter toute pénalité sur la santé du compte.</p>
         </div>
-        <button class="px-4 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700">Expédier toutes</button>
+        <button type="button" (click)="shipAllPendingOrders()" class="px-4 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700">Expédier toutes</button>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1503,8 +1779,8 @@
             </div>
           </div>
           <div class="flex gap-2 mt-3">
-            <button class="flex-1 text-xs py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800">Acheter étiquette</button>
-            <button class="text-xs py-2 px-3 bg-slate-100 font-semibold rounded-lg hover:bg-slate-200">Imprimer</button>
+            <button type="button" (click)="shipOrder(o)" class="flex-1 text-xs py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800">Expédier</button>
+            <button type="button" (click)="printShippingLabels()" class="text-xs py-2 px-3 bg-slate-100 font-semibold rounded-lg hover:bg-slate-200">Imprimer</button>
           </div>
         </div>
       </div>
@@ -1516,9 +1792,9 @@
     <ng-container *ngIf="activeNav === 'messages'">
       <div class="bg-white rounded-2xl border border-slate-200 flex items-center justify-between p-4">
         <div class="flex gap-4 text-xs">
-          <div><span class="font-bold text-slate-900">3</span> <span class="text-slate-500">non lus</span></div>
-          <div><span class="font-bold text-slate-900">14h</span> <span class="text-slate-500">temps de réponse moyen</span></div>
-          <div><span class="font-bold text-green-600">100%</span> <span class="text-slate-500">sous 24h</span></div>
+          <div><span class="font-bold text-slate-900">{{ buyerMessagesUnread }}</span> <span class="text-slate-500">non lus</span></div>
+          <div><span class="font-bold text-slate-900">—</span> <span class="text-slate-500">temps de réponse moyen</span></div>
+          <div><span class="font-bold text-green-600">—</span> <span class="text-slate-500">sous 24h</span></div>
         </div>
         <button (click)="markAllMessagesRead()" class="text-xs font-bold text-indigo-600 hover:underline">Tout marquer lu</button>
       </div>
@@ -1545,6 +1821,9 @@
               </span>
             </div>
           </div>
+          <div *ngIf="!buyerMessages.length" class="p-4 text-sm text-slate-500">
+            Aucun message acheteur pour le moment.
+          </div>
         </div>
       </div>
     </ng-container>
@@ -1556,26 +1835,26 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Dépenses (30j)</p>
-          <p class="text-2xl font-bold text-slate-900">121,25 €</p>
+          <p class="text-2xl font-bold text-slate-900">0,00 €</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Ventes pub</p>
-          <p class="text-2xl font-bold text-green-600">3 058 €</p>
+          <p class="text-2xl font-bold text-green-600">0,00 €</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">ACOS moyen</p>
-          <p class="text-2xl font-bold text-slate-900">18,4 %</p>
+          <p class="text-2xl font-bold text-slate-900">0 %</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">ROAS</p>
-          <p class="text-2xl font-bold text-indigo-600">5,4×</p>
+          <p class="text-2xl font-bold text-indigo-600">0×</p>
         </div>
       </div>
 
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-200 flex items-center justify-between">
           <h3 class="text-sm font-bold text-slate-900">Mes campagnes</h3>
-          <button class="text-xs px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-lg">+ Nouvelle campagne</button>
+          <button type="button" (click)="setActiveNav('campaigns')" class="text-xs px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-lg">+ Nouvelle campagne</button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-xs">
@@ -1602,6 +1881,9 @@
                   </button>
                 </td>
               </tr>
+              <tr *ngIf="!adCampaigns.length">
+                <td colspan="9" class="p-4 text-center text-slate-500">Aucune campagne publicitaire pour le moment.</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1617,7 +1899,7 @@
           <h3 class="text-lg font-bold mb-1">Sponsored Brands — boostez votre marque</h3>
           <p class="text-xs text-white/90">Bannières vidéo et catalogue en haut des résultats de recherche.</p>
         </div>
-        <button class="px-5 py-2 bg-white text-purple-700 text-sm font-bold rounded-lg whitespace-nowrap">Créer une créativité</button>
+        <button type="button" (click)="setActiveNav('sponsored-brands')" class="px-5 py-2 bg-white text-purple-700 text-sm font-bold rounded-lg whitespace-nowrap">Créer une créativité</button>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1641,6 +1923,9 @@
             </div>
           </div>
         </div>
+        <div *ngIf="!sbCreatives.length" class="md:col-span-3 bg-white rounded-2xl border border-slate-200 p-5 text-sm text-slate-500">
+          Aucune créativité Sponsored Brands pour le moment.
+        </div>
       </div>
     </ng-container>
 
@@ -1656,7 +1941,7 @@
           </div>
           <p class="text-xs text-white/90">Augmentez la visibilité et le volume avec des deals limités dans le temps.</p>
         </div>
-        <button class="px-5 py-2 bg-white text-red-700 text-sm font-bold rounded-lg whitespace-nowrap">+ Soumettre un deal</button>
+        <button type="button" (click)="openQuickAction('flash-deal')" class="px-5 py-2 bg-white text-red-700 text-sm font-bold rounded-lg whitespace-nowrap">+ Soumettre un deal</button>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1681,6 +1966,9 @@
             </div>
           </div>
           <p class="text-[11px] text-slate-500">Frais de deal : <strong class="text-slate-700">{{ d.fee }} €</strong></p>
+        </div>
+        <div *ngIf="!sellerDeals.length" class="md:col-span-3 bg-white rounded-2xl border border-slate-200 p-5 text-sm text-slate-500">
+          Aucun deal en cours.
         </div>
       </div>
     </ng-container>
@@ -1714,7 +2002,7 @@
                 </div>
                 <h4 class="font-bold text-slate-900 text-sm mb-1">{{ tip.title }}</h4>
                 <p class="text-xs text-slate-600 mb-3">{{ tip.text }}</p>
-                <button class="text-xs font-bold text-indigo-600 hover:underline">{{ tip.ctaLabel }} →</button>
+                <button type="button" (click)="applyCoachTip(tip)" class="text-xs font-bold text-indigo-600 hover:underline">{{ tip.ctaLabel }} →</button>
               </div>
             </div>
           </div>
@@ -1785,6 +2073,9 @@
             Disponible bientôt
           </button>
         </div>
+        <div *ngIf="!internationalMarkets.length" class="md:col-span-2 lg:col-span-3 bg-white rounded-2xl border border-slate-200 p-5 text-sm text-slate-500">
+          Aucun marché international activé pour le moment.
+        </div>
       </div>
     </ng-container>
 
@@ -1835,35 +2126,26 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Sessions (30j)</p>
-          <p class="text-2xl font-bold text-slate-900">8 420</p>
-          <p class="text-[11px] text-green-600">+12%</p>
+          <p class="text-2xl font-bold text-slate-900">{{ trafficOverview.sessions }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Pages vues</p>
-          <p class="text-2xl font-bold text-slate-900">12 480</p>
-          <p class="text-[11px] text-green-600">+8%</p>
+          <p class="text-2xl font-bold text-slate-900">{{ trafficOverview.pages_vues }}</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Taux de conversion</p>
-          <p class="text-2xl font-bold text-indigo-600">4,26 %</p>
-          <p class="text-[11px] text-green-600">+0,8%</p>
+          <p class="text-2xl font-bold text-indigo-600">{{ (trafficOverview.conversion * 100) | number:'1.2-2' }} %</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-4">
           <p class="text-xs text-slate-600 mb-1">Taux Buy Box</p>
-          <p class="text-2xl font-bold text-slate-900">87 %</p>
-          <p class="text-[11px] text-green-600">+2,3%</p>
+          <p class="text-2xl font-bold text-slate-900">{{ buyBoxPercent }} %</p>
         </div>
       </div>
 
       <div class="bg-white rounded-2xl border border-slate-200 p-5">
         <h3 class="text-sm font-bold text-slate-900 mb-3">Sources de trafic</h3>
-        <div class="space-y-3">
-          <div *ngFor="let src of [
-            {name:'Recherche organique', value: 52, color: 'bg-green-500'},
-            {name:'Publicité Sponsored', value: 28, color: 'bg-indigo-500'},
-            {name:'Recommandations', value: 12, color: 'bg-amber-500'},
-            {name:'Direct', value: 8, color: 'bg-slate-500'}
-          ]" class="space-y-1">
+        <div class="space-y-3" *ngIf="trafficSources.length; else noTraffic">
+          <div *ngFor="let src of trafficSources" class="space-y-1">
             <div class="flex justify-between text-xs">
               <span class="font-semibold">{{ src.name }}</span>
               <span class="text-slate-600">{{ src.value }}%</span>
@@ -1873,6 +2155,9 @@
             </div>
           </div>
         </div>
+        <ng-template #noTraffic>
+          <p class="text-sm text-slate-500">Aucune donnée de trafic disponible pour le moment.</p>
+        </ng-template>
       </div>
     </ng-container>
 
@@ -1885,7 +2170,7 @@
           <h3 class="text-sm font-bold text-slate-900">Top termes de recherche</h3>
           <div class="flex items-center gap-2">
             <input type="text" placeholder="Filtrer…" class="text-xs px-3 py-1.5 border border-slate-200 rounded" />
-            <button class="text-xs px-3 py-1.5 bg-slate-100 font-bold rounded hover:bg-slate-200">Exporter</button>
+            <button type="button" (click)="exportSectionData()" class="text-xs px-3 py-1.5 bg-slate-100 font-bold rounded hover:bg-slate-200">Exporter</button>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -1902,8 +2187,11 @@
                 <td class="p-3 font-semibold" [class.text-green-600]="t.conv >= 5">{{ t.conv }}%</td>
                 <td class="p-3 font-bold">{{ t.sales.toFixed(2) }} €</td>
                 <td class="p-3">
-                  <button class="text-[11px] text-indigo-600 font-bold hover:underline">Ajouter à une campagne →</button>
+                  <button type="button" (click)="addSearchTermToCampaign(t.term)" class="text-[11px] text-indigo-600 font-bold hover:underline">Ajouter à une campagne →</button>
                 </td>
+              </tr>
+              <tr *ngIf="!searchTerms.length">
+                <td colspan="6" class="p-4 text-center text-slate-500">Aucun terme de recherche disponible.</td>
               </tr>
             </tbody>
           </table>
@@ -1918,9 +2206,9 @@
       <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl p-6">
         <div class="flex items-center gap-3 mb-2">
           <lucide-angular [img]="ShieldCheck" class="w-7 h-7"></lucide-angular>
-          <h2 class="text-2xl font-bold">Santé du compte : Excellente</h2>
+          <h2 class="text-2xl font-bold">Santé du compte : En initialisation</h2>
         </div>
-        <p class="text-sm text-white/90">Score : <strong class="text-2xl">248 / 250</strong> — tous les indicateurs sont au vert.</p>
+        <p class="text-sm text-white/90">Score : <strong class="text-2xl">{{ healthScore || 0 }} / 100</strong> — basé sur vos indicateurs de performance.</p>
       </div>
 
       <div class="bg-white rounded-2xl border border-slate-200 p-5">
@@ -1950,11 +2238,11 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div class="bg-white rounded-2xl border border-slate-200 p-5 text-center">
           <p class="text-xs text-slate-600 mb-2">Note globale</p>
-          <p class="text-5xl font-black text-slate-900">4,7</p>
+          <p class="text-5xl font-black text-slate-900">{{ feedbackSummary.average | number:'1.1-1' }}</p>
           <div class="flex items-center justify-center gap-0.5 mt-2">
             <lucide-angular *ngFor="let s of [1,2,3,4,5]" [img]="Star" class="w-4 h-4 text-amber-500"></lucide-angular>
           </div>
-          <p class="text-xs text-slate-500 mt-2">147 avis au total</p>
+          <p class="text-xs text-slate-500 mt-2">{{ feedbackSummary.total }} avis au total</p>
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 p-5 lg:col-span-2">
@@ -1990,6 +2278,9 @@
             <p class="text-xs text-slate-700">{{ f.comment }}</p>
             <p class="text-[11px] text-slate-500 mt-1">Sur : <span class="font-semibold">{{ f.product }}</span></p>
           </div>
+          <div *ngIf="!sellerFeedback.length" class="p-4 text-sm text-slate-500">
+            Aucun avis pour le moment.
+          </div>
         </div>
       </div>
     </ng-container>
@@ -2001,7 +2292,7 @@
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-200 flex items-center justify-between">
           <h3 class="text-sm font-bold text-slate-900">Cas ouverts avec le support</h3>
-          <button class="text-xs px-3 py-1.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700">+ Ouvrir un nouveau cas</button>
+          <button type="button" (click)="openQuickAction('support')" class="text-xs px-3 py-1.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700">+ Ouvrir un nouveau cas</button>
         </div>
         <div class="divide-y divide-slate-100">
           <div *ngFor="let c of cases" class="p-4 hover:bg-slate-50 flex items-start gap-3">
@@ -2023,6 +2314,9 @@
               {{ c.status === 'open' ? 'Ouvert' : c.status === 'pending' ? 'En attente' : 'Résolu' }}
             </span>
           </div>
+          <div *ngIf="!cases.length" class="p-4 text-sm text-slate-500">
+            Aucun cas ouvert.
+          </div>
         </div>
       </div>
     </ng-container>
@@ -2035,7 +2329,7 @@
         <div class="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-2xl p-5">
           <p class="text-xs text-white/80 mb-1">Disponible maintenant</p>
           <p class="text-3xl font-bold">{{ payoutSummary.available.toFixed(2) }} €</p>
-          <button class="mt-3 w-full py-2 bg-white text-emerald-700 text-xs font-bold rounded-lg">Demander un versement</button>
+          <button type="button" (click)="requestPayout()" class="mt-3 w-full py-2 bg-white text-emerald-700 text-xs font-bold rounded-lg">Demander un versement</button>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <p class="text-xs text-slate-600 mb-1">En attente (J+14)</p>
@@ -2045,7 +2339,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <p class="text-xs text-slate-600 mb-1">Dernier versement</p>
           <p class="text-3xl font-bold text-slate-900">{{ payoutSummary.lastPayout.toFixed(2) }} €</p>
-          <p class="text-[11px] text-green-600 mt-2">✓ Reçu le 12 avr. 2026</p>
+          <p class="text-[11px] text-slate-500 mt-2">Aucun versement reçu pour le moment</p>
         </div>
       </div>
 
@@ -2072,6 +2366,9 @@
                   </span>
                 </td>
               </tr>
+              <tr *ngIf="!payoutsHistory.length">
+                <td colspan="6" class="p-4 text-center text-slate-500">Aucun versement enregistré.</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -2085,22 +2382,22 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <p class="text-xs text-slate-600 mb-1">Total facturé (YTD)</p>
-          <p class="text-2xl font-bold text-slate-900">2 184,55 €</p>
+          <p class="text-2xl font-bold text-slate-900">0,00 €</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <p class="text-xs text-slate-600 mb-1">TVA collectée</p>
-          <p class="text-2xl font-bold text-slate-900">4 287,10 €</p>
+          <p class="text-2xl font-bold text-slate-900">0,00 €</p>
         </div>
         <div class="bg-white rounded-2xl border border-slate-200 p-5">
           <p class="text-xs text-slate-600 mb-1">Prochaine déclaration</p>
-          <p class="text-2xl font-bold text-amber-600">15 mai 2026</p>
+          <p class="text-2xl font-bold text-amber-600">—</p>
         </div>
       </div>
 
       <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
         <div class="p-4 border-b border-slate-200 flex items-center justify-between">
           <h3 class="text-sm font-bold text-slate-900">Factures HELIGXIAM</h3>
-          <button class="text-xs px-3 py-1.5 bg-slate-100 font-bold rounded hover:bg-slate-200">Télécharger rapport TVA</button>
+          <button type="button" (click)="downloadVatReport()" class="text-xs px-3 py-1.5 bg-slate-100 font-bold rounded hover:bg-slate-200">Télécharger rapport TVA</button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-xs">
@@ -2120,14 +2417,288 @@
                   </span>
                 </td>
                 <td class="p-3">
-                  <button *ngIf="i.download" class="inline-flex items-center gap-1 text-[11px] text-indigo-600 font-bold hover:underline">
+                  <button *ngIf="i.download" type="button" (click)="downloadInvoice(i)" class="inline-flex items-center gap-1 text-[11px] text-indigo-600 font-bold hover:underline">
                     <lucide-angular [img]="Download" class="w-3 h-3"></lucide-angular> PDF
                   </button>
                   <span *ngIf="!i.download" class="text-slate-400 text-[11px]">—</span>
                 </td>
               </tr>
+              <tr *ngIf="!invoices.length">
+                <td colspan="6" class="p-4 text-center text-slate-500">Aucune facture disponible.</td>
+              </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= PROFIL VENDEUR (SQL profils_vendeur) ============== -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'seller-profile'">
+      <div *ngIf="profileFeedback" class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        {{ profileFeedback }}
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col items-center text-center">
+          <div class="relative">
+            <img [src]="sellerProfile.urlPhoto" alt="Photo de profil"
+                 class="w-28 h-28 rounded-2xl object-cover border-4 border-amber-100 shadow" />
+            <span *ngIf="sellerProfile.profilComplet" class="absolute -bottom-1 -right-1 rounded-full bg-emerald-500 p-1 text-white shadow" title="Profil complet">
+              <lucide-angular [img]="ShieldCheck" class="w-4 h-4"></lucide-angular>
+            </span>
+          </div>
+          <h3 class="mt-3 text-sm font-bold text-slate-900">{{ currentUser?.prenom }} {{ currentUser?.nom }}</h3>
+          <p class="text-xs text-slate-500 mt-0.5">{{ currentUser?.email }}</p>
+          <p *ngIf="sellerProfile.posteOuFonction" class="text-xs font-medium text-amber-700 mt-1">{{ sellerProfile.posteOuFonction }}</p>
+          <p class="mt-3 text-[11px] text-slate-500 leading-relaxed">Ces champs seront enregistrés dans <code class="text-[10px] bg-slate-100 px-1 rounded">profils_vendeur</code> à la connexion API.</p>
+        </div>
+
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-4">Identité &amp; visibilité</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">URL de la photo</label>
+                <input [(ngModel)]="sellerProfile.urlPhoto" type="url" placeholder="https://…"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Fonction / rôle</label>
+                <input [(ngModel)]="sellerProfile.posteOuFonction" type="text"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Site web (optionnel)</label>
+                <input [(ngModel)]="sellerProfile.siteWeb" type="url" placeholder="https://…"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Biographie</label>
+                <textarea [(ngModel)]="sellerProfile.biographie" rows="3"
+                  class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg resize-y"
+                  placeholder="Quelques lignes pour vos acheteurs…"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-2">Vérification des coordonnées</h3>
+            <p class="text-[11px] text-slate-500 mb-4">L’e-mail et le téléphone doivent être vérifiés pour la conformité (table <code class="text-[10px] bg-slate-100 px-1 rounded">profils_vendeur</code>).</p>
+            <div class="space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+                <div class="flex items-center gap-2 min-w-0">
+                  <lucide-angular [img]="Mail" class="w-4 h-4 text-slate-500 flex-shrink-0"></lucide-angular>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-slate-900 truncate">E-mail</p>
+                    <p class="text-xs text-slate-600 truncate">{{ currentUser?.email }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span *ngIf="sellerProfile.courrielVerifie" class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Vérifié</span>
+                  <button *ngIf="!sellerProfile.courrielVerifie" type="button" (click)="envoyerLienVerificationCourriel()"
+                    class="text-xs font-bold text-indigo-600 hover:underline">Vérifier</button>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+                <div class="flex items-center gap-2 min-w-0">
+                  <lucide-angular [img]="Smartphone" class="w-4 h-4 text-slate-500 flex-shrink-0"></lucide-angular>
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-slate-900">Téléphone</p>
+                    <p class="text-xs text-slate-600">À renseigner côté compte si besoin</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span *ngIf="sellerProfile.telephoneVerifie" class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Vérifié</span>
+                  <button *ngIf="!sellerProfile.telephoneVerifie" type="button" (click)="envoyerCodeVerificationTelephone()"
+                    class="text-xs font-bold text-indigo-600 hover:underline">Envoyer un code</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-4">Adresse &amp; localisation</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Ligne 1</label>
+                <input [(ngModel)]="sellerProfile.adresseLigne1" type="text"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Ligne 2</label>
+                <input [(ngModel)]="sellerProfile.adresseLigne2" type="text" placeholder="Bât., étage…"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Code postal</label>
+                <input [(ngModel)]="sellerProfile.codePostal" type="text"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Ville</label>
+                <input [(ngModel)]="sellerProfile.ville" type="text"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Pays (code)</label>
+                <input [(ngModel)]="sellerProfile.codePays" type="text" maxlength="2" placeholder="FR"
+                       class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg uppercase" />
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-2xl border border-slate-200 p-5">
+              <h3 class="text-sm font-bold text-slate-900 mb-3">Préférences d’affichage</h3>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Langue de l’interface</label>
+                <select [(ngModel)]="sellerProfile.langueInterface" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg">
+                  <option *ngFor="let l of languesInterface" [ngValue]="l.code">{{ l.libelle }}</option>
+                </select>
+              </div>
+              <div class="mt-3">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Fuseau horaire</label>
+                <select [(ngModel)]="sellerProfile.fuseauHoraire" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg">
+                  <option *ngFor="let f of fuseauxHoraire" [ngValue]="f.id">{{ f.libelle }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="bg-white rounded-2xl border border-slate-200 p-5">
+              <h3 class="text-sm font-bold text-slate-900 mb-3">Notifications</h3>
+              <label class="flex items-center justify-between p-2 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-50">
+                <span class="text-sm text-slate-800">Nouvelles commandes</span>
+                <input type="checkbox" [(ngModel)]="sellerProfile.notifCommande" class="w-4 h-4 rounded" />
+              </label>
+              <label class="flex items-center justify-between p-2 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-50 mt-2">
+                <span class="text-sm text-slate-800">Offres &amp; actus</span>
+                <input type="checkbox" [(ngModel)]="sellerProfile.notifPromo" class="w-4 h-4 rounded" />
+              </label>
+              <label class="flex items-center justify-between p-2 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-50 mt-2">
+                <span class="text-sm text-slate-800">SMS (urgent)</span>
+                <input type="checkbox" [(ngModel)]="sellerProfile.notifSmsUrgent" class="w-4 h-4 rounded" />
+              </label>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-3">Conformité</h3>
+            <p class="text-[11px] text-slate-500 mb-3">Ces accords alimentent les champs <code class="text-[10px] bg-slate-100 px-1 rounded">accepte_cgu</code> / <code class="text-[10px] bg-slate-100 px-1 rounded">accepte_donnees</code> côté base.</p>
+            <div class="space-y-2 text-xs text-slate-700">
+              <p><span class="font-semibold">CGU :</span> acceptées le {{ sellerProfile.dateAcceptationCgu }}</p>
+              <p><span class="font-semibold">Traitement des données :</span> accepté le {{ sellerProfile.dateAcceptationDonnees }}</p>
+            </div>
+            <div class="mt-4 space-y-2">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="sellerProfile.accepteCgu" class="w-4 h-4 rounded" />
+                <span>Je confirme avoir relu et accepté les conditions générales vendeur.</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="sellerProfile.accepteDonnees" class="w-4 h-4 rounded" />
+                <span>Je consens à l’utilisation de mes données pour l’exploitation du compte.</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="bg-amber-50/80 rounded-2xl border border-amber-200 p-5">
+            <h3 class="text-sm font-bold text-slate-900 mb-1">Relecture des informations (RGPD)</h3>
+            <p class="text-[11px] text-slate-600 mb-3">Chaque validation est tracée dans <code class="text-[10px] bg-white/80 px-1 rounded">historique_relectures_profil</code> (MySQL).</p>
+            <button type="button" (click)="confirmerRelectureDonnees()"
+              class="text-sm font-bold px-4 py-2.5 bg-amber-500 text-slate-900 rounded-xl hover:bg-amber-400 shadow-sm">
+              J’ai relu et je confirme l’exactitude de mes informations
+            </button>
+            <ul class="mt-4 space-y-2 border-t border-amber-200/80 pt-3">
+              <li *ngFor="let h of relectureProfilHistorique" class="text-xs text-slate-700 flex flex-wrap justify-between gap-2">
+                <span class="font-medium">{{ h.type }}</span>
+                <span class="text-slate-500 tabular-nums">{{ h.date }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-end gap-3">
+            <p class="text-xs text-slate-500 mr-auto" *ngIf="!sellerProfile.profilComplet">Complétez l’adresse et la biographie pour marquer le profil « complet ».</p>
+            <button type="button" (click)="saveSellerProfile()"
+              class="text-sm font-bold px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800">
+              Enregistrer le profil
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================================================= -->
+    <!-- ============= MESSAGERIE OPÉRATEUR / ADMIN ======================= -->
+    <!-- ================================================================= -->
+    <ng-container *ngIf="activeNav === 'admin-messaging'">
+      <div class="max-w-3xl space-y-4">
+        <div class="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 text-sm text-indigo-950">
+          <p class="font-bold mb-1">Canal direct avec la console opérateur</p>
+          <p class="text-xs text-indigo-900/90">
+            Vos messages sont rattachés à votre boutique côté <strong>admin</strong> (file KYC, modération, tickets). Réponse cible : sous 24–72h ouvrées.
+            Côté technique : <code class="text-[10px] bg-white/80 px-1 rounded">tickets_support_vendeur</code> +
+            <code class="text-[10px] bg-white/80 px-1 rounded">messages_ticket_support_vendeur</code> (API <code class="text-[10px] bg-white/80 px-1 rounded">/api/seller</code>).
+          </p>
+        </div>
+
+        <div *ngIf="sellerMysqlContext as ctx" class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+          <span class="font-semibold">Boutique</span> #{{ ctx.boutiqueId }} · <span class="font-semibold">Vendeur</span> #{{ ctx.vendeurId }}
+          <span class="text-slate-500">(dérivés de votre session, non modifiables)</span>
+        </div>
+        <p *ngIf="!sellerMysqlContext" class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          Aucun contexte vendeur MySQL : utilisez une inscription vendeur avec <code class="text-[10px]">MYSQL_*</code> configuré sur auth-service, puis reconnectez-vous.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            (click)="loadOperatorThreadFromApi()"
+            class="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50"
+          >Recharger le fil</button>
+          <span *ngIf="operatorThreadLoading" class="text-xs text-slate-500 self-center">Chargement…</span>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 flex flex-col h-[min(28rem,70vh)]">
+          <div class="p-3 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white text-xs font-bold">HX</div>
+              <div>
+                <p class="text-sm font-bold text-slate-900">Équipe HELIGXIAM — Opérateurs</p>
+                <p class="text-[10px] text-slate-500">Conformité, compte marchand, litiges</p>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Canal actif</span>
+          </div>
+          <div class="flex-1 overflow-y-auto p-4 space-y-3">
+            <div
+              *ngFor="let m of adminOperatorThread"
+              [class]="'max-w-[85%] rounded-2xl px-3 py-2 text-sm ' + (m.from === 'vendeur' ? 'ml-auto bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800')"
+            >
+              <p class="whitespace-pre-wrap">{{ m.body }}</p>
+              <p [class]="'text-[9px] mt-1 ' + (m.from === 'vendeur' ? 'text-indigo-200' : 'text-slate-500')">{{ m.at }}</p>
+            </div>
+          </div>
+          <div class="p-3 border-t border-slate-100 space-y-2">
+            <label class="text-xs font-semibold text-slate-600">Nouveau message à l’administrateur</label>
+            <textarea
+              [(ngModel)]="newMessageToOperator"
+              rows="3"
+              class="w-full text-sm px-3 py-2 border border-slate-200 rounded-xl resize-y focus:ring-2 focus:ring-indigo-300 focus:border-indigo-300"
+              placeholder="Ex. : question sur la validation de mes documents, délai KYC, statut de la modération d’un produit…"
+            ></textarea>
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                (click)="newMessageToOperator = ''"
+                class="text-xs font-semibold text-slate-500 hover:text-slate-800"
+              >Effacer</button>
+              <button
+                type="button"
+                (click)="envoyerMessageOperateur()"
+                [disabled]="!newMessageToOperator.trim()"
+                class="text-sm font-bold px-4 py-2.5 rounded-xl bg-slate-900 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800"
+              >Envoyer</button>
+            </div>
+          </div>
         </div>
       </div>
     </ng-container>
@@ -2209,8 +2780,8 @@
           </div>
 
           <div class="flex justify-end gap-2">
-            <button class="px-4 py-2 bg-white border border-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50">Annuler</button>
-            <button class="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg hover:shadow-lg">
+            <button type="button" (click)="cancelStoreSettings()" class="px-4 py-2 bg-white border border-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50">Annuler</button>
+            <button type="button" (click)="saveStoreSettings()" class="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-bold rounded-lg hover:shadow-lg">
               Enregistrer les modifications
             </button>
           </div>
@@ -2223,13 +2794,13 @@
             </div>
             <p class="font-bold text-slate-900">{{ storeSettings.displayName }}</p>
             <p class="text-[11px] text-slate-500 mt-0.5">Boutique vérifiée</p>
-            <button class="mt-3 w-full py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-lg">Changer le logo</button>
+            <button type="button" (click)="changeStoreLogo()" class="mt-3 w-full py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-lg">Changer le logo</button>
           </div>
 
           <div class="bg-white rounded-2xl border border-slate-200 p-5">
             <h4 class="text-sm font-bold text-slate-900 mb-3">Collaborateurs</h4>
             <p class="text-xs text-slate-500 mb-3">Donnez accès à votre équipe avec des permissions fines.</p>
-            <button class="w-full py-2 text-xs font-bold text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50">
+            <button type="button" (click)="inviteCollaborator()" class="w-full py-2 text-xs font-bold text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50">
               + Inviter un collaborateur
             </button>
           </div>
@@ -2268,5 +2839,135 @@
         </div>
       </div>
     </footer>
+  </div>
+</div>
+
+<!-- Modal création coupon -->
+<div *ngIf="showCouponModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" (click)="closeCouponModal()"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div>
+        <h3 class="text-base font-bold text-slate-900">{{ editingCouponId ? 'Modifier le coupon' : 'Créer un coupon' }}</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Soumis à validation admin avant activation</p>
+      </div>
+      <button type="button" (click)="closeCouponModal()" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <form class="p-5 space-y-4" (ngSubmit)="submitCreateCoupon()">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Code promo *</label>
+        <input type="text" [(ngModel)]="couponForm.code" name="couponCode" maxlength="20"
+          class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg uppercase font-mono"
+          placeholder="EX: SUMMER20" />
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Libellé (optionnel)</label>
+        <input type="text" [(ngModel)]="couponForm.label" name="couponLabel" maxlength="80"
+          class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg"
+          placeholder="Ex: -20% sur toute la boutique" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Type de remise</label>
+          <select [(ngModel)]="couponForm.typeRemise" name="couponType" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg">
+            <option value="pourcentage">Pourcentage (%)</option>
+            <option value="montant">Montant fixe (€)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Valeur *</label>
+          <input type="number" [(ngModel)]="couponForm.valeur" name="couponValeur" min="1" max="90"
+            class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Plafond d'utilisations</label>
+          <input type="number" [(ngModel)]="couponForm.plafond" name="couponPlafond" min="1"
+            class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Validité (jours)</label>
+          <input type="number" [(ngModel)]="couponForm.validDays" name="couponDays" min="1" max="365"
+            class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button type="button" (click)="closeCouponModal()"
+          class="text-sm px-4 py-2 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50">
+          Annuler
+        </button>
+        <button type="submit" [disabled]="couponSaving"
+          class="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold disabled:opacity-60">
+          {{ couponSaving ? 'Enregistrement…' : (editingCouponId ? 'Enregistrer' : 'Soumettre à validation') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal création / édition promotion produit -->
+<div *ngIf="showProductPromoModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/50" (click)="closeProductPromoModal()"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden">
+    <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div>
+        <h3 class="text-base font-bold text-slate-900">{{ editingProductPromoId ? 'Modifier la promotion' : 'Créer une promotion' }}</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Prix promo sur un produit — validation admin requise</p>
+      </div>
+      <button type="button" (click)="closeProductPromoModal()" class="text-slate-400 hover:text-slate-600 text-xl leading-none">&times;</button>
+    </div>
+    <form class="p-5 space-y-4" (ngSubmit)="submitProductPromo()">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Produit *</label>
+        <select [(ngModel)]="productPromoForm.productId" name="promoProductId" (ngModelChange)="onPromoProductSelected()"
+          [disabled]="!!editingProductPromoId"
+          class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg">
+          <option [ngValue]="0">— Choisir un produit —</option>
+          <option *ngFor="let p of promoProductOptions" [ngValue]="p.id">{{ p.name }} ({{ p.sku }}) — {{ p.price | number:'1.2-2' }} €</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Prix promo (€) *</label>
+          <input type="number" [(ngModel)]="productPromoForm.promoPrice" name="promoPrice" min="0.01" step="0.01"
+            class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Prix barré (€)</label>
+          <input type="number" [(ngModel)]="productPromoForm.originalPrice" name="promoOriginal" min="0" step="0.01"
+            class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Type</label>
+          <select [(ngModel)]="productPromoForm.typePromo" name="promoType" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg">
+            <option value="promo">Promotion</option>
+            <option value="flash">Vente flash</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Validité (jours)</label>
+          <input type="number" [(ngModel)]="productPromoForm.validDays" name="promoDays" min="1" max="90"
+            class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Libellé badge (optionnel)</label>
+        <input type="text" [(ngModel)]="productPromoForm.label" name="promoLabel" maxlength="40"
+          class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg" placeholder="Ex: -20% été" />
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button type="button" (click)="closeProductPromoModal()"
+          class="text-sm px-4 py-2 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50">
+          Annuler
+        </button>
+        <button type="submit" [disabled]="productPromoSaving"
+          class="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold disabled:opacity-60">
+          {{ productPromoSaving ? 'Enregistrement…' : (editingProductPromoId ? 'Enregistrer' : 'Soumettre à validation') }}
+        </button>
+      </div>
+    </form>
   </div>
 </div>
