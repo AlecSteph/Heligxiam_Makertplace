@@ -44,6 +44,30 @@ const {
   createPricingRule,
   requestPayout
 } = require('../lib/sellerActionsMysql');
+
+const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://localhost:3004';
+
+async function updateOrderStatusViaOrderService(ref, status, authHeader) {
+  const response = await fetch(
+    `${ORDER_SERVICE_URL}/api/seller/orders/${encodeURIComponent(ref.replace(/^#/, ''))}/status`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: authHeader || ''
+      },
+      body: JSON.stringify({ status })
+    }
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const err = new Error(payload.message || 'ORDER_SERVICE_ERROR');
+    err.code = response.status === 404 ? 'NOT_FOUND' : 'ORDER_SERVICE_ERROR';
+    throw err;
+  }
+  return payload.data;
+}
+
 const {
   getPromotionsPageData,
   createCouponForBoutique,
@@ -1768,8 +1792,15 @@ router.patch('/programs/:code', express.json(), async (req, res) => {
 router.patch('/orders/:ref/status', express.json(), async (req, res) => {
   try {
     const { boutiqueId } = req.seller;
-    const data = await updateOrderStatus(boutiqueId, req.params.ref, req.body?.status);
-    return res.json({ success: true, data });
+    const authHeader = req.headers.authorization || '';
+    try {
+      const data = await updateOrderStatus(boutiqueId, req.params.ref, req.body?.status);
+      return res.json({ success: true, data });
+    } catch (mysqlErr) {
+      if (mysqlErr.code !== 'NOT_FOUND') throw mysqlErr;
+      const data = await updateOrderStatusViaOrderService(req.params.ref, req.body?.status, authHeader);
+      return res.json({ success: true, data, source: 'order-service' });
+    }
   } catch (e) {
     if (e.code === 'NOT_FOUND') return res.status(404).json({ success: false, message: 'Commande introuvable.' });
     return res.status(503).json({ success: false, message: 'Mise à jour impossible.' });

@@ -1,11 +1,16 @@
 const app = require('./app');
 const db = require('./config/database');
 const mongo = require('./config/mongo');
+const { ensurePasswordResetSchema } = require('./lib/passwordReset');
+const { ensureClientAuthColumns, loadClientsIntoMemory } = require('./lib/clientUsersPg');
 const PORT = process.env.PORT || 3001;
 
 const startServer = async () => {
   await db.testConnection();
   await db.ensureSchema();
+  await ensureClientAuthColumns();
+  await loadClientsIntoMemory();
+  await ensurePasswordResetSchema();
   await mongo.connectMongo();
 
   app.listen(PORT, () => {

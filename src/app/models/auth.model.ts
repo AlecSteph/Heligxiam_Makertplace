@@ -25,8 +25,7 @@ export interface AuthResponse {
 export interface LoginRequest {
   email: string;
   password: string;
-  challenge?: string;
-  nonce?: string;
+  recaptchaToken?: string;
 }
 
 export interface RegisterRequest {
@@ -35,8 +34,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   role?: 'client' | 'vendeur';
-  challenge?: string;
-  nonce?: string;
+  recaptchaToken?: string;
 }
 
 export interface ChallengeResponse {
@@ -54,6 +52,21 @@ export interface ProfileUpdateRequest {
 export interface PasswordChangeRequest {
   currentPassword: string;
   newPassword: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+  recaptchaToken?: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
+export interface MessageResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface ApiError {

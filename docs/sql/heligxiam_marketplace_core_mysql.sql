@@ -779,14 +779,10 @@ CREATE TABLE metriques_trafic_boutique (
   revenu_estime DECIMAL(14,2) NOT NULL DEFAULT 0,
   taux_conversion DECIMAL(7,4) NULL,
   details_json JSON NULL,
-  marche_norm SMALLINT GENERATED ALWAYS AS (IFNULL(identifiant_marche, 0)) STORED,
+  marche_norm SMALLINT UNSIGNED GENERATED ALWAYS AS (COALESCE(identifiant_marche, 0)) STORED,
   PRIMARY KEY (identifiant),
   UNIQUE KEY uq_mtb_unicity (identifiant_boutique, marche_norm, jour, segment),
-  KEY idx_mtb_boutique_jour (identifiant_boutique, jour),
-  CONSTRAINT fk_mtb_boutique FOREIGN KEY (identifiant_boutique)
-    REFERENCES boutiques (identifiant) ON DELETE CASCADE,
-  CONSTRAINT fk_mtb_marche FOREIGN KEY (identifiant_marche)
-    REFERENCES marches (identifiant) ON DELETE SET NULL
+  KEY idx_mtb_boutique_jour (identifiant_boutique, jour)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE entonnoir_conversion_boutique (
@@ -797,14 +793,10 @@ CREATE TABLE entonnoir_conversion_boutique (
   code_etape VARCHAR(40) NOT NULL,
   libelle_etape VARCHAR(128) NULL,
   nombre INT NOT NULL DEFAULT 0,
-  marche_norm SMALLINT GENERATED ALWAYS AS (IFNULL(identifiant_marche, 0)) STORED,
+  marche_norm SMALLINT UNSIGNED GENERATED ALWAYS AS (COALESCE(identifiant_marche, 0)) STORED,
   PRIMARY KEY (identifiant),
   UNIQUE KEY uq_entonnoir_unicity (identifiant_boutique, marche_norm, jour, code_etape),
-  KEY idx_entonnoir_boutique (identifiant_boutique, jour),
-  CONSTRAINT fk_ent_boutique FOREIGN KEY (identifiant_boutique)
-    REFERENCES boutiques (identifiant) ON DELETE CASCADE,
-  CONSTRAINT fk_ent_marche FOREIGN KEY (identifiant_marche)
-    REFERENCES marches (identifiant) ON DELETE SET NULL
+  KEY idx_entonnoir_boutique (identifiant_boutique, jour)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------------

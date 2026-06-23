@@ -20,6 +20,8 @@ import {
   ArrowUp,
   Send
 } from 'lucide-angular';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LogoComponent } from '../logo/logo.component';
 
 interface FooterLink {
   label: string;
@@ -37,7 +39,7 @@ interface FooterColumn {
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule, TranslatePipe, LogoComponent],
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.css']
 })
@@ -63,10 +65,10 @@ export class FooterComponent {
   readonly Send = Send;
 
   readonly trustBadges = [
-    { icon: 'Truck', title: 'Livraison express', subtitle: 'Gratuite dès 99€' },
-    { icon: 'ShieldCheck', title: 'Paiement sécurisé', subtitle: 'SSL 256-bit' },
-    { icon: 'Headphones', title: 'Support 24/7', subtitle: 'Par chat & téléphone' },
-    { icon: 'Leaf', title: 'Éco-responsable', subtitle: 'Emballages recyclés' }
+    { icon: 'Truck', titleKey: 'footer.trust.delivery', subtitleKey: 'footer.trust.deliverySub' },
+    { icon: 'ShieldCheck', titleKey: 'footer.trust.secure', subtitleKey: 'footer.trust.secureSub' },
+    { icon: 'Headphones', titleKey: 'footer.trust.support', subtitleKey: 'footer.trust.supportSub' },
+    { icon: 'Leaf', titleKey: 'footer.trust.eco', subtitleKey: 'footer.trust.ecoSub' }
   ];
 
   readonly columns: FooterColumn[] = [
@@ -86,9 +88,9 @@ export class FooterComponent {
       links: [
         { label: 'Centre d\'aide', route: '/help' },
         { label: 'Nous contacter', route: '/contact' },
-        { label: 'Suivre ma commande', route: '/orders' },
-        { label: 'Livraison', route: '/shipping' },
-        { label: 'Retours & Remboursements', route: '/returns' },
+        { label: 'Suivre ma commande', route: '/profile', queryParams: { view: 'orders' } },
+        { label: 'Livraison', route: '/guide' },
+        { label: 'Retours & Remboursements', route: '/profile', queryParams: { view: 'returns' } },
         { label: 'FAQ', route: '/faq' }
       ]
     },
@@ -98,7 +100,7 @@ export class FooterComponent {
         { label: 'Se connecter', route: '/account' },
         { label: 'Créer un compte', route: '/account' },
         { label: 'Mon profil', route: '/profile' },
-        { label: 'Mes commandes', route: '/orders' },
+        { label: 'Mes commandes', route: '/profile', queryParams: { view: 'orders' } },
         { label: 'Ma liste de souhaits', route: '/wishlist' },
         { label: 'Cartes cadeaux', route: '/gift-cards' }
       ]

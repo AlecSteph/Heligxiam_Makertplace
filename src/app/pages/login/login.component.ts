@@ -1,106 +1,180 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, AfterViewInit, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { finalize, catchError } from 'rxjs/operators';
+import { filter, finalize, take } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
-import { LoginRequest, RegisterRequest, ChallengeResponse, UserRole } from '../../models/auth.model';
+import { RecaptchaService } from '../../services/recaptcha.service';
+import { LogoComponent } from '../../components/logo/logo.component';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { PASSWORD_PATTERN, PASSWORD_HINT } from '../../utils/password.util';
+import { LoginRequest, RegisterRequest, UserRole } from '../../models/auth.model';
+import { LucideAngularModule, Mail, Lock, Eye, EyeOff, User, Phone, ShieldCheck, Store, ShoppingBag, ArrowRight, CheckCircle2 } from 'lucide-angular';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, LucideAngularModule, LogoComponent, TranslatePipe],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
-export class LoginComponent implements OnInit {
-  currentView: 'login' | 'register' | 'forgot-password' | 'privacy' = 'login';
-  today: Date = new Date();
-  
+export class LoginComponent implements OnInit, AfterViewInit, OnDestroy {
+  currentView: 'login' | 'register' | 'forgot-password' = 'login';
+  recaptchaEnabled = false;
+  recaptchaLoading = true;
+  recaptchaReady = false;
+  recaptchaLoadError = '';
+
   loginForm: FormGroup = new FormGroup({});
   registerForm: FormGroup = new FormGroup({});
   forgotPasswordForm: FormGroup = new FormGroup({});
-  
-  showPassword: boolean = false;
-  showRegisterPassword: boolean = false;
-  showConfirmPassword: boolean = false;
-  
-  loginError: string = '';
-  registerError: string = '';
-  forgotPasswordSuccess: string = '';
-  forgotPasswordError: string = '';
 
-  // Popup de succès d'inscription
-  showRegisterSuccessModal: boolean = false;
-  registeredUserName: string = '';
-  /** Rôle réellement soumis (le modal ne doit pas dépendre d’un changement ultérieur de sellerMode). */
+  showPassword = false;
+  showRegisterPassword = false;
+  showConfirmPassword = false;
+
+  loginError = '';
+  registerError = '';
+  forgotPasswordSuccess = '';
+  forgotPasswordError = '';
+  isForgotPasswordLoading = false;
+  isLoading = false;
+
+  showRegisterSuccessModal = false;
+  registeredUserName = '';
   registerSuccessWasVendeur = false;
-
-  // Mode vendeur (pré-rempli via query param ?role=seller)
-  sellerMode: boolean = false;
-
-  isLoading: boolean = false;
-  
-  // Proof of Work
-  currentChallenge: string = '';
-  challengeDifficulty: number = 4;
-  isCalculatingProof: boolean = false;
-  
-  // Password strength
+  sellerMode = false;
   passwordStrength: 'weak' | 'medium' | 'strong' = 'weak';
-  
-  // Captcha properties pour compatibilité avec le template
-  captchaText: string = '';
-  generatedCaptcha: string = '';
+
+  private returnUrl = '/profile';
+  private readonly rememberEmailKey = 'heligxiam-remember-email';
+
+  readonly Mail = Mail;
+  readonly Lock = Lock;
+  readonly Eye = Eye;
+  readonly EyeOff = EyeOff;
+  readonly User = User;
+  readonly Phone = Phone;
+  readonly ShieldCheck = ShieldCheck;
+  readonly Store = Store;
+  readonly ShoppingBag = ShoppingBag;
+  readonly ArrowRight = ArrowRight;
+  readonly CheckCircle2 = CheckCircle2;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private recaptchaService: RecaptchaService,
     private router: Router,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {
     this.initializeForms();
-    this.generateCaptcha();
   }
 
   ngOnInit(): void {
-    // Écouter les erreurs d'authentification
-    this.authService.authState$.subscribe(state => {
-      if (state.error) {
-        if (this.currentView === 'login') {
-          this.loginError = state.error;
-        } else if (this.currentView === 'register') {
-          this.registerError = state.error;
+    this.authService.sessionReady$
+      .pipe(filter((ready) => ready), take(1))
+      .subscribe(() => {
+        if (this.authService.isAuthenticated) {
+          this.router.navigateByUrl(this.returnUrl);
         }
-        this.cdr.detectChanges();
-      }
-    });
+      });
 
-    // Lecture des query params : ?mode=register&role=seller
-    this.route.queryParamMap.subscribe(params => {
+    this.route.queryParamMap.subscribe((params) => {
       const mode = params.get('mode');
       const role = params.get('role');
-
-      if (mode === 'register') {
-        this.currentView = 'register';
+      const returnUrl = params.get('returnUrl') || params.get('redirect');
+      if (returnUrl?.startsWith('/')) {
+        this.returnUrl = returnUrl;
       }
-
+      if (mode === 'register') this.currentView = 'register';
       if (role === 'seller' || role === 'vendeur') {
         this.sellerMode = true;
         this.currentView = 'register';
-      } else {
-        this.sellerMode = false;
       }
     });
+
+    this.loadRememberedEmail();
+  }
+
+  ngAfterViewInit(): void {
+    void this.initRecaptcha();
+  }
+
+  ngOnDestroy(): void {
+    this.recaptchaService.unmount(this.getRecaptchaHostElement() ?? undefined);
+  }
+
+  private getRecaptchaHostElement(): HTMLElement | null {
+    const ids: Record<string, string> = {
+      login: 'recaptcha-login-host',
+      register: 'recaptcha-register-host',
+      'forgot-password': 'recaptcha-forgot-host'
+    };
+    const id = ids[this.currentView];
+    return id ? document.getElementById(id) : null;
+  }
+
+  private async initRecaptcha(): Promise<void> {
+    this.recaptchaLoading = true;
+    this.recaptchaLoadError = '';
+    try {
+      await this.recaptchaService.loadConfig();
+      this.recaptchaEnabled = this.recaptchaService.isEnabled();
+      this.cdr.detectChanges();
+      if (this.recaptchaEnabled) {
+        await this.mountRecaptcha();
+      }
+    } catch {
+      this.recaptchaEnabled = false;
+      this.recaptchaLoadError = 'Impossible de charger le reCAPTCHA. Réessayez ou contactez le support.';
+    } finally {
+      this.recaptchaLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private async mountRecaptcha(): Promise<void> {
+    if (!this.recaptchaEnabled) return;
+    this.recaptchaReady = false;
+    const host = this.getRecaptchaHostElement();
+    if (!host) return;
+    const submitBtn = host.closest('form')?.querySelector<HTMLElement>('[data-recaptcha-submit]') ?? null;
+    try {
+      await this.recaptchaService.mount(host, submitBtn);
+      this.recaptchaLoadError = '';
+      this.recaptchaReady = true;
+      this.cdr.detectChanges();
+    } catch {
+      this.recaptchaEnabled = false;
+      this.recaptchaReady = false;
+      this.recaptchaLoadError = 'Le widget reCAPTCHA n\'a pas pu s\'afficher.';
+      this.cdr.detectChanges();
+    }
+  }
+
+  private getRecaptchaToken(): string | undefined {
+    if (!this.recaptchaEnabled) return undefined;
+    const token = this.recaptchaService.getToken();
+    if (!token) return undefined;
+    return token;
+  }
+
+  private handleRecaptchaRequired(): boolean {
+    if (!this.recaptchaEnabled) return true;
+    if (this.getRecaptchaToken()) return true;
+    return false;
+  }
+
+  private resetRecaptchaOnError(): void {
+    this.recaptchaService.reset();
   }
 
   initializeForms(): void {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(8)]],
-      captcha: ['', [Validators.required]],
       rememberMe: [false]
     });
 
@@ -109,9 +183,8 @@ export class LoginComponent implements OnInit {
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.pattern('^[0-9]{10}$')]],
-      password: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d@$!%*?&]{8,}$')]],
+      password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(PASSWORD_PATTERN)]],
       confirmPassword: ['', [Validators.required]],
-      captcha: ['', [Validators.required]],
       acceptTerms: [false, [Validators.requiredTrue]],
       acceptPrivacy: [false, [Validators.requiredTrue]]
     }, { validators: this.passwordMatchValidator });
@@ -127,99 +200,57 @@ export class LoginComponent implements OnInit {
     if (!passwordCtrl || !confirmCtrl) return null;
 
     if (confirmCtrl.value && passwordCtrl.value !== confirmCtrl.value) {
-      const existing = confirmCtrl.errors || {};
-      confirmCtrl.setErrors({ ...existing, passwordMismatch: true });
+      confirmCtrl.setErrors({ ...(confirmCtrl.errors || {}), passwordMismatch: true });
       return { passwordMismatch: true };
     }
-
-    if (confirmCtrl.errors) {
+    if (confirmCtrl.errors?.['passwordMismatch']) {
       const { passwordMismatch, ...rest } = confirmCtrl.errors;
       confirmCtrl.setErrors(Object.keys(rest).length ? rest : null);
     }
     return null;
   }
 
-  // Générer un captcha simple pour compatibilité avec le template
-  generateCaptcha(): void {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-    this.generatedCaptcha = '';
-    for (let i = 0; i < 6; i++) {
-      this.generatedCaptcha += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    this.captchaText = this.generatedCaptcha;
-    
-    // Obtenir le challenge Proof of Work du backend
-    this.getChallenge();
-  }
-
-  // Obtenir un challenge Proof of Work
-  getChallenge(): void {
-    this.authService.getChallenge().pipe(
-      finalize(() => this.isCalculatingProof = false)
-    ).subscribe({
-      next: (response: ChallengeResponse) => {
-        this.currentChallenge = response.challenge;
-        this.challengeDifficulty = response.difficulty;
-      },
-      error: (error) => {
-        console.error('Erreur lors de l\'obtention du challenge:', error);
-        this.loginError = 'Erreur de connexion au serveur';
-        this.cdr.detectChanges();
+  private loadRememberedEmail(): void {
+    try {
+      const saved = localStorage.getItem(this.rememberEmailKey);
+      if (saved) {
+        this.loginForm.patchValue({ email: saved, rememberMe: true });
       }
-    });
+    } catch {}
   }
 
-  // Calculer la preuve de travail
-  private calculateProofOfWork(challenge: string, difficulty: number): string {
-    let nonce = 0;
-    while (true) {
-      const hash = this.sha256(challenge + nonce.toString());
-      if (hash.startsWith('0'.repeat(difficulty))) {
-        return nonce.toString();
+  private persistRememberEmail(email: string, remember: boolean): void {
+    try {
+      if (remember) {
+        localStorage.setItem(this.rememberEmailKey, email);
+      } else {
+        localStorage.removeItem(this.rememberEmailKey);
       }
-      nonce++;
-      if (nonce > 1000000) { // Protection contre boucle infinie
-        throw new Error('Preuve de travail impossible à calculer');
-      }
-    }
+    } catch {}
   }
 
-  // Hash SHA256 simplifié (en production, utiliser une librairie crypto)
-  private sha256(str: string): string {
-    // Pour l'instant, simulation simple. En production, utiliser crypto-js ou Web Crypto API
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash).toString(16).padStart(64, '0');
-  }
-
-  switchView(view: 'login' | 'register' | 'forgot-password' | 'privacy') {
+  switchView(view: 'login' | 'register' | 'forgot-password'): void {
     this.currentView = view;
     this.loginError = '';
     this.registerError = '';
     this.forgotPasswordSuccess = '';
     this.forgotPasswordError = '';
-    
-    // Obtenir un nouveau challenge pour les vues login/register
-    if (view === 'login' || view === 'register') {
-      this.getChallenge();
-    }
+    this.recaptchaService.clearWidget();
+    this.recaptchaReady = false;
+    this.cdr.detectChanges();
+    void this.mountRecaptcha();
   }
 
-  togglePassword(field: 'login' | 'register' | 'confirm') {
-    if (field === 'login') {
-      this.showPassword = !this.showPassword;
-    } else if (field === 'register') {
-      this.showRegisterPassword = !this.showRegisterPassword;
-    } else {
-      this.showConfirmPassword = !this.showConfirmPassword;
-    }
+  setAccountType(seller: boolean): void {
+    this.sellerMode = seller;
   }
 
-  // Vérifier la force du mot de passe
+  togglePassword(field: 'login' | 'register' | 'confirm'): void {
+    if (field === 'login') this.showPassword = !this.showPassword;
+    else if (field === 'register') this.showRegisterPassword = !this.showRegisterPassword;
+    else this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
   checkPasswordStrength(password: string): void {
     let score = 0;
     if (password.length >= 8) score++;
@@ -228,163 +259,145 @@ export class LoginComponent implements OnInit {
     if (/[A-Z]/.test(password)) score++;
     if (/\d/.test(password)) score++;
     if (/[@$!%*?&]/.test(password)) score++;
+    this.passwordStrength = score < 3 ? 'weak' : score < 5 ? 'medium' : 'strong';
+  }
 
-    if (score < 3) this.passwordStrength = 'weak';
-    else if (score < 5) this.passwordStrength = 'medium';
-    else this.passwordStrength = 'strong';
+  get passwordStrengthLabel(): string {
+    return this.passwordStrength === 'weak' ? 'Faible' : this.passwordStrength === 'medium' ? 'Moyen' : 'Fort';
+  }
+
+  get passwordStrengthWidth(): string {
+    return this.passwordStrength === 'weak' ? '33%' : this.passwordStrength === 'medium' ? '66%' : '100%';
   }
 
   onLogin(): void {
     this.loginError = '';
-
+    if (this.recaptchaLoading) {
+      this.loginError = 'Chargement du reCAPTCHA en cours…';
+      return;
+    }
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
-      this.loginForm.updateValueAndValidity({ onlySelf: false, emitEvent: true });
-      this.loginError = 'Veuillez remplir tous les champs obligatoires correctement.';
-      this.cdr.detectChanges();
+      this.loginError = 'Veuillez corriger les champs indiqués.';
       return;
     }
 
-    if (this.loginForm.value.captcha.toLowerCase() !== this.generatedCaptcha.toLowerCase()) {
-      this.loginError = 'Le captcha est incorrect';
-      this.generateCaptcha();
-      this.loginForm.patchValue({ captcha: '' });
-      this.cdr.detectChanges();
+    if (!this.handleRecaptchaRequired()) {
+      this.loginError = 'Veuillez cocher « Je ne suis pas un robot ».';
       return;
     }
 
     this.isLoading = true;
-    this.loginError = '';
+    const loginData: LoginRequest = {
+      email: this.loginForm.value.email.trim(),
+      password: this.loginForm.value.password,
+      recaptchaToken: this.getRecaptchaToken()
+    };
 
-    try {
-      // Calculer la preuve de travail
-      const nonce = this.calculateProofOfWork(this.currentChallenge, this.challengeDifficulty);
-      
-      const loginData: LoginRequest = {
-        email: this.loginForm.value.email,
-        password: this.loginForm.value.password,
-        challenge: this.currentChallenge,
-        nonce: nonce
-      };
-
-      this.authService.login(loginData).pipe(
-        finalize(() => this.isLoading = false)
-      ).subscribe({
-        next: () => {
-          // Redirection selon le rôle de l'utilisateur
-          const userRole = this.authService.currentUserRole;
-          if (userRole === UserRole.VENDEUR) {
-            this.router.navigate(['/seller']);
-          } else if (userRole === UserRole.ADMIN) {
-            this.router.navigate(['/admin']);
-          } else {
-            this.router.navigate(['/profile']);
-          }
-        },
-        error: (error) => {
-          console.error('Erreur de connexion:', error);
-          this.loginError = error?.message || error?.userMessage || 'Erreur de connexion';
-          this.cdr.detectChanges();
-        }
-      });
-    } catch (error) {
-      this.loginError = 'Erreur lors du calcul de la preuve de travail';
-      this.isLoading = false;
-    }
+    this.authService.login(loginData).pipe(
+      finalize(() => { this.isLoading = false; this.cdr.detectChanges(); })
+    ).subscribe({
+      next: () => {
+        this.persistRememberEmail(loginData.email, !!this.loginForm.value.rememberMe);
+        const role = this.authService.currentUserRole;
+        if (role === UserRole.VENDEUR) this.router.navigateByUrl('/seller');
+        else if (role === UserRole.ADMIN) this.router.navigateByUrl('/admin');
+        else this.router.navigateByUrl(this.returnUrl || '/profile');
+      },
+      error: (error) => {
+        this.loginError = error?.message || 'Identifiants incorrects. Vérifiez votre email et mot de passe.';
+        this.resetRecaptchaOnError();
+      }
+    });
   }
 
   onRegister(): void {
     this.registerError = '';
-
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
-      this.registerForm.updateValueAndValidity({ onlySelf: false, emitEvent: true });
-      this.registerError = 'Veuillez corriger les champs en rouge avant de continuer.';
-      this.cdr.detectChanges();
+      this.registerError = 'Veuillez corriger les champs indiqués.';
       return;
     }
 
-    if (this.registerForm.value.captcha.toLowerCase() !== this.generatedCaptcha.toLowerCase()) {
-      this.registerError = 'Le captcha est incorrect';
-      this.generateCaptcha();
-      this.registerForm.patchValue({ captcha: '' });
-      this.cdr.detectChanges();
+    if (!this.handleRecaptchaRequired()) {
+      this.registerError = 'Veuillez cocher « Je ne suis pas un robot ».';
       return;
     }
 
     this.isLoading = true;
-    this.registerError = '';
+    const registerData: RegisterRequest = {
+      nom: this.registerForm.value.lastName,
+      prenom: this.registerForm.value.firstName,
+      email: this.registerForm.value.email.trim(),
+      password: this.registerForm.value.password,
+      role: this.sellerMode ? UserRole.VENDEUR : UserRole.CLIENT,
+      recaptchaToken: this.getRecaptchaToken()
+    };
 
-    try {
-      // Calculer la preuve de travail
-      const nonce = this.calculateProofOfWork(this.currentChallenge, this.challengeDifficulty);
-      
-      const registerData: RegisterRequest = {
-        nom: this.registerForm.value.lastName,
-        prenom: this.registerForm.value.firstName,
-        email: this.registerForm.value.email,
-        password: this.registerForm.value.password,
-        role: this.sellerMode ? UserRole.VENDEUR : UserRole.CLIENT,
-        challenge: this.currentChallenge,
-        nonce: nonce
-      };
-
-      this.authService.register(registerData).pipe(
-        finalize(() => this.isLoading = false)
-      ).subscribe({
-        next: () => {
-          this.registerError = '';
-          this.registeredUserName = `${registerData.prenom} ${registerData.nom}`.trim();
-          this.registerSuccessWasVendeur = registerData.role === UserRole.VENDEUR;
-          this.showRegisterSuccessModal = true;
-          // Force un rendu immédiat du modal de confirmation
-          // (évite d'attendre une interaction utilisateur supplémentaire).
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          console.error('Erreur d\'inscription:', error);
-          this.registerError = error?.message || error?.userMessage || 'Erreur lors de l\'inscription';
-          this.cdr.detectChanges();
-        }
-      });
-    } catch (error) {
-      this.registerError = 'Erreur lors du calcul de la preuve de travail';
-      this.isLoading = false;
-    }
+    this.authService.register(registerData).pipe(
+      finalize(() => { this.isLoading = false; this.cdr.detectChanges(); })
+    ).subscribe({
+      next: () => {
+        this.registeredUserName = `${registerData.prenom} ${registerData.nom}`.trim();
+        this.registerSuccessWasVendeur = registerData.role === UserRole.VENDEUR;
+        this.showRegisterSuccessModal = true;
+      },
+      error: (error) => {
+        this.registerError = error?.message || 'Impossible de créer le compte. Réessayez.';
+        this.resetRecaptchaOnError();
+      }
+    });
   }
 
-  closeRegisterSuccessModal(goToLogin: boolean = true): void {
+  closeRegisterSuccessModal(): void {
     this.showRegisterSuccessModal = false;
     this.registerForm.reset();
-    if (goToLogin) {
-      this.switchView('login');
-    }
+    this.switchView('login');
   }
 
-  onForgotPassword() {
+  onForgotPassword(): void {
     if (this.forgotPasswordForm.invalid) {
       this.forgotPasswordForm.markAllAsTouched();
       return;
     }
 
-    // Simulation de mot de passe oublié
-    console.log('Demande de réinitialisation:', this.forgotPasswordForm.value);
-    this.forgotPasswordSuccess = 'Un email de réinitialisation a été envoyé à votre adresse.';
+    if (!this.handleRecaptchaRequired()) {
+      this.forgotPasswordError = 'Veuillez cocher « Je ne suis pas un robot ».';
+      return;
+    }
+
+    this.isForgotPasswordLoading = true;
+    this.forgotPasswordSuccess = '';
     this.forgotPasswordError = '';
+
+    this.authService.forgotPassword({
+      email: this.forgotPasswordForm.value.email.trim(),
+      recaptchaToken: this.getRecaptchaToken()
+    }).pipe(
+      finalize(() => {
+        this.isForgotPasswordLoading = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (res) => { this.forgotPasswordSuccess = res.message; },
+      error: (err: Error) => {
+        this.forgotPasswordError = err.message || 'Impossible d\'envoyer la demande.';
+        this.resetRecaptchaOnError();
+      }
+    });
   }
 
   getErrorMessage(form: FormGroup, field: string): string {
     const control = form.get(field);
-    if (control?.errors && control.touched) {
-      if (control.errors['required']) return 'Ce champ est obligatoire';
-      if (control.errors['email']) return 'Veuillez entrer une adresse email valide';
-      if (control.errors['minlength']) return `Minimum ${control.errors['minlength'].requiredLength} caractères`;
-      if (control.errors['passwordMismatch']) return 'Les mots de passe ne correspondent pas';
-      if (control.errors['pattern']) {
-        if (field === 'phone') return 'Veuillez entrer un numéro de téléphone valide (10 chiffres)';
-        if (field === 'password') return 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre';
-        return 'Format invalide';
-      }
+    if (!control?.errors || !control.touched) return '';
+    if (control.errors['required']) return 'Ce champ est obligatoire';
+    if (control.errors['email']) return 'Adresse email invalide';
+    if (control.errors['minlength']) return `Minimum ${control.errors['minlength'].requiredLength} caractères`;
+    if (control.errors['passwordMismatch']) return 'Les mots de passe ne correspondent pas';
+    if (control.errors['pattern']) {
+      if (field === 'phone') return 'Numéro à 10 chiffres requis';
+      if (field === 'password') return PASSWORD_HINT;
+      return 'Format invalide';
     }
     return '';
   }

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -7,12 +7,14 @@ import { Subscription } from 'rxjs';
 import { CartService } from '../../services/cart.service';
 import { AuthService } from '../../services/auth.service';
 import { LocaleService, LanguageOption, CountryOption } from '../../services/locale.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
+import { LogoComponent } from '../logo/logo.component';
 import { User as AuthUser } from '../../models/auth.model';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, FormsModule, LucideAngularModule, TranslatePipe, LogoComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.css']
 })
@@ -30,54 +32,53 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   private guestHoverTimeout?: ReturnType<typeof setTimeout>;
   private offersHoverTimeout?: ReturnType<typeof setTimeout>;
 
-  // "Autre" side menu — liens complémentaires importants
   readonly sideMenuSections: {
-    title: string;
-    items: { label: string; icon: any; route?: string; url?: string; queryParams?: any; fragment?: string; description?: string; badge?: string }[];
+    titleKey: string;
+    items: { labelKey: string; icon: typeof MapPin; route?: string; queryParams?: Record<string, string>; fragment?: string; descKey?: string; badgeKey?: string }[];
   }[] = [
     {
-      title: 'Livraison & retrait',
+      titleKey: 'side.delivery.title',
       items: [
-        { label: 'Points de relais',        icon: MapPin,   route: '/guide',  fragment: 'livraison', description: '+12 000 points partout en Europe' },
-        { label: 'Suivre ma commande',      icon: Package,  route: '/profile', queryParams: { view: 'orders' }, description: 'Statut en temps réel' },
-        { label: 'Retours & remboursements',icon: RefreshCw, route: '/guide', fragment: 'retours', description: 'Gratuits sous 60 jours' },
-        { label: 'Options de livraison',    icon: Truck,    route: '/guide',  fragment: 'livraison', description: 'Standard, Express, Premium' }
+        { labelKey: 'side.delivery.relay.label', icon: MapPin, route: '/guide', fragment: 'livraison', descKey: 'side.delivery.relay.desc' },
+        { labelKey: 'side.delivery.track.label', icon: Package, route: '/profile', queryParams: { view: 'orders' }, descKey: 'side.delivery.track.desc' },
+        { labelKey: 'side.delivery.returns.label', icon: RefreshCw, route: '/guide', fragment: 'retours', descKey: 'side.delivery.returns.desc' },
+        { labelKey: 'side.delivery.options.label', icon: Truck, route: '/guide', fragment: 'livraison', descKey: 'side.delivery.options.desc' }
       ]
     },
     {
-      title: 'Services HELIGXIAM',
+      titleKey: 'side.services.title',
       items: [
-        { label: 'Application mobile',      icon: Smartphone, route: '/guide', description: 'iOS & Android' },
-        { label: 'Cartes cadeaux',          icon: Gift,       route: '/offres', fragment: 'coupons', description: 'Dès 10€', badge: 'Nouveau' },
-        { label: 'HELIGXIAM Plus',          icon: Crown,      route: '/offres', fragment: 'cashback', description: 'Cashback jusqu\'à 8%' },
-        { label: 'Moyens de paiement',      icon: CreditCard, route: '/guide', description: 'Paiement 3x/4x sans frais' }
+        { labelKey: 'side.services.app.label', icon: Smartphone, route: '/guide', descKey: 'side.services.app.desc' },
+        { labelKey: 'side.services.gift.label', icon: Gift, route: '/offres', fragment: 'coupons', descKey: 'side.services.gift.desc', badgeKey: 'badge.new' },
+        { labelKey: 'side.services.plus.label', icon: Crown, route: '/offres', fragment: 'cashback', descKey: 'side.services.plus.desc' },
+        { labelKey: 'side.services.pay.label', icon: CreditCard, route: '/guide', descKey: 'side.services.pay.desc' }
       ]
     },
     {
-      title: 'Espaces pro',
+      titleKey: 'side.pro.title',
       items: [
-        { label: 'Devenir vendeur',         icon: Store,     route: '/sell',    description: 'Jusqu\'à 47 250€ d\'avantages' },
-        { label: 'Tableau de bord vendeur', icon: Briefcase, route: '/seller',  description: 'Espace partenaire' },
-        { label: 'HELIGXIAM Business',      icon: Building2, route: '/guide',   description: 'Solution B2B', badge: 'Pro' },
-        { label: 'Programme affiliation',   icon: HandCoins, route: '/guide',   description: 'Gagnez jusqu\'à 10%' }
+        { labelKey: 'side.pro.sell.label', icon: Store, route: '/sell', descKey: 'side.pro.sell.desc' },
+        { labelKey: 'side.pro.dashboard.label', icon: Briefcase, route: '/seller', descKey: 'side.pro.dashboard.desc' },
+        { labelKey: 'side.pro.business.label', icon: Building2, route: '/guide', descKey: 'side.pro.business.desc', badgeKey: 'badge.pro' },
+        { labelKey: 'side.pro.affiliate.label', icon: HandCoins, route: '/guide', descKey: 'side.pro.affiliate.desc' }
       ]
     },
     {
-      title: 'Aide & contact',
+      titleKey: 'side.help.title',
       items: [
-        { label: 'Centre d\'aide',          icon: HelpCircle,    route: '/guide', fragment: 'aide', description: 'FAQ et tutoriels' },
-        { label: 'Chat en direct',          icon: MessageCircle, route: '/guide', fragment: 'aide', description: '24/7 — < 2 min' },
-        { label: 'Nous contacter',          icon: Phone,         route: '/guide', fragment: 'aide', description: 'Lun-Dim 8h-22h' },
-        { label: 'Accessibilité',           icon: Accessibility, route: '/guide', description: 'Site accessible à tous' }
+        { labelKey: 'side.help.center.label', icon: HelpCircle, route: '/guide', fragment: 'aide', descKey: 'side.help.center.desc' },
+        { labelKey: 'side.help.chat.label', icon: MessageCircle, route: '/guide', fragment: 'aide', descKey: 'side.help.chat.desc' },
+        { labelKey: 'side.help.contact.label', icon: Phone, route: '/guide', fragment: 'aide', descKey: 'side.help.contact.desc' },
+        { labelKey: 'side.help.a11y.label', icon: Accessibility, route: '/guide', descKey: 'side.help.a11y.desc' }
       ]
     },
     {
-      title: 'À propos',
+      titleKey: 'side.about.title',
       items: [
-        { label: 'Presse & médias',         icon: Newspaper,  route: '/guide', description: 'Communiqués & kit presse' },
-        { label: 'Carrières',               icon: Briefcase,  route: '/guide', description: 'Rejoignez-nous', badge: '+42 postes' },
-        { label: 'Engagement écologique',   icon: Leaf,       route: '/guide', description: 'Neutre en carbone 2030' },
-        { label: 'Mentions légales',        icon: FileText, route: '/legal', fragment: 'legal' }
+        { labelKey: 'side.about.press.label', icon: Newspaper, route: '/guide', descKey: 'side.about.press.desc' },
+        { labelKey: 'side.about.careers.label', icon: Briefcase, route: '/guide', descKey: 'side.about.careers.desc', badgeKey: 'badge.jobs' },
+        { labelKey: 'side.about.eco.label', icon: Leaf, route: '/guide', descKey: 'side.about.eco.desc' },
+        { labelKey: 'side.about.legal.label', icon: FileText, route: '/legal', fragment: 'legal' }
       ]
     }
   ];
@@ -97,22 +98,21 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   prefToastMessage = '';
   private prefToastTimer?: ReturnType<typeof setTimeout>;
 
-  // Dropdown filter for search (Amazon-like "Toutes catégories")
-  searchCategory: { label: string; value: string } = { label: 'Toutes catégories', value: '' };
-  readonly searchCategories: { label: string; value: string; slug?: string }[] = [
-    { label: 'Toutes catégories', value: '' },
-    { label: 'Électronique', value: 'Électronique', slug: 'electronique' },
-    { label: 'Mode & Accessoires', value: 'Mode & Accessoires', slug: 'mode' },
-    { label: 'Maison & Décoration', value: 'Maison & Décoration', slug: 'maison' },
-    { label: 'Beauté & Santé', value: 'Beauté & Santé', slug: 'beaute' },
-    { label: 'Sport & Fitness', value: 'Sport & Fitness', slug: 'sport' },
-    { label: 'Automobile', value: 'Automobile', slug: 'auto' },
-    { label: 'Meilleures ventes', value: '__bestsellers' },
-    { label: 'Nouveautés', value: '__new' },
-    { label: 'Marques Premium', value: '__brands' },
-    { label: '🔥 Promotions', value: '__promos' },
-    { label: '⚡ Ventes Flash', value: '__flash' },
-    { label: '💰 Bons plans', value: '__deals' }
+  searchCategory: { labelKey: string; value: string } = { labelKey: 'header.search.allCategories', value: '' };
+  readonly searchCategories: { labelKey: string; value: string; slug?: string }[] = [
+    { labelKey: 'header.search.allCategories', value: '' },
+    { labelKey: 'nav.electronics', value: 'Électronique', slug: 'electronique' },
+    { labelKey: 'nav.fashion', value: 'Mode & Accessoires', slug: 'mode' },
+    { labelKey: 'nav.home', value: 'Maison & Décoration', slug: 'maison' },
+    { labelKey: 'nav.beauty', value: 'Beauté & Santé', slug: 'beaute' },
+    { labelKey: 'nav.sport', value: 'Sport & Fitness', slug: 'sport' },
+    { labelKey: 'nav.auto', value: 'Automobile', slug: 'auto' },
+    { labelKey: 'nav.bestsellers', value: '__bestsellers' },
+    { labelKey: 'nav.new', value: '__new' },
+    { labelKey: 'header.search.brandsPremium', value: '__brands' },
+    { labelKey: 'nav.promos', value: '__promos' },
+    { labelKey: 'nav.flash', value: '__flash' },
+    { labelKey: 'nav.deals', value: '__deals' }
   ];
 
   private subscriptions = new Subscription();
@@ -222,7 +222,8 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     private authService: AuthService,
     private router: Router,
     private zone: NgZone,
-    private localeService: LocaleService
+    private localeService: LocaleService,
+    private cdr: ChangeDetectorRef
   ) {
     this.syncLocaleSelectionFromService();
   }
@@ -242,7 +243,10 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     );
 
     this.subscriptions.add(
-      this.localeService.prefs$.subscribe(() => this.syncLocaleSelectionFromService())
+      this.localeService.prefs$.subscribe(() => {
+        this.syncLocaleSelectionFromService();
+        this.cdr.markForCheck();
+      })
     );
   }
 
@@ -284,9 +288,28 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
     this.showSearchCategories = !this.showSearchCategories;
   }
 
-  selectSearchCategory(cat: { label: string; value: string }): void {
+  selectSearchCategory(cat: { labelKey: string; value: string }): void {
     this.searchCategory = cat;
     this.showSearchCategories = false;
+  }
+
+  countryLabel(code: string, lang?: string): string {
+    return this.localeService.countryLabel(code, lang);
+  }
+
+  deliverToLabel(country: CountryOption, lang?: string): string {
+    return this.localeService.t('header.locale.deliverTo', lang, {
+      country: this.countryLabel(country.code, lang)
+    });
+  }
+
+  searchPlaceholder(): string {
+    if (!this.searchCategory.value) {
+      return this.localeService.t('header.search.placeholder');
+    }
+    return this.localeService.t('header.search.placeholderIn', undefined, {
+      category: this.localeService.t(this.searchCategory.labelKey)
+    });
   }
 
   toggleLanguageMenu(event: Event): void {
@@ -297,11 +320,13 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   selectLanguage(lang: LanguageOption): void {
-    this.selectedLanguage = lang;
+    this.selectedLanguage = this.localeService.resolveLanguage(lang.code);
+    this.localeService.setPreferences(this.selectedLanguage, this.selectedCountry);
   }
 
   selectCountry(country: CountryOption): void {
-    this.selectedCountry = country;
+    this.selectedCountry = this.localeService.resolveCountry(country.code);
+    this.localeService.setPreferences(this.selectedLanguage, this.selectedCountry);
   }
 
   confirmLanguageChange(event?: Event): void {
@@ -455,9 +480,9 @@ export class HeaderComponent implements OnInit, OnDestroy, AfterViewInit {
 
   get roleLabel(): string {
     switch (this.currentUser?.role) {
-      case 'vendeur': return 'Vendeur partenaire';
-      case 'admin': return 'Administrateur';
-      case 'client': return 'Client';
+      case 'vendeur': return this.localeService.t('role.seller');
+      case 'admin': return this.localeService.t('role.admin');
+      case 'client': return this.localeService.t('role.client');
       default: return '';
     }
   }

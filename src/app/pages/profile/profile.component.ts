@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subscription as RxSubscription } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 import {
   LucideAngularModule,
   LayoutDashboard,
@@ -64,10 +65,11 @@ import {
   Music,
   Headphones,
   Tv,
-  Gamepad2
+  Gamepad2,
+  QrCode
 } from 'lucide-angular';
 import { AuthService } from '../../services/auth.service';
-import { BuyerService } from '../../services/buyer.service';
+import { BuyerService, BuyerReturn } from '../../services/buyer.service';
 import { CatalogService } from '../../services/catalog.service';
 import { WishlistService } from '../../services/wishlist.service';
 import { CartService } from '../../services/cart.service';
@@ -87,7 +89,8 @@ type ProfileView =
   | 'subscriptions'
   | 'settings'
   | 'security'
-  | 'help';
+  | 'help'
+  | 'returns';
 
 interface NavItem {
   id: ProfileView;
@@ -104,7 +107,7 @@ interface OrderItem {
   total: number;
   items: number;
   seller: string;
-  products: { name: string; image: string; qty: number }[];
+  products: { lineId?: string; name: string; image: string; qty: number }[];
   tracking?: string;
   eta?: string;
   progress?: number; // 0-100
@@ -262,6 +265,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
   readonly Headphones = Headphones;
   readonly Tv = Tv;
   readonly Gamepad2 = Gamepad2;
+  readonly QrCode = QrCode;
+
+  // ==== Commandes & retours (API) ====
+  returnsList: BuyerReturn[] = [];
+  qrModalOrder: string | null = null;
+  qrBlobUrl: string | null = null;
+  orderFeedback = '';
+  ordersLoadError = '';
+  buyerDataLoading = false;
 
   // ==== User ====
   userInfo = {
@@ -410,7 +422,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     {
       label: 'Achats',
       items: [
-        { id: 'orders', label: 'Mes commandes', icon: this.Package, badge: 2 },
+        { id: 'orders', label: 'Mes commandes', icon: this.Package },
+        { id: 'returns', label: 'Mes retours', icon: this.RefreshCw },
         { id: 'purchases', label: 'Historique d\'achats', icon: this.ShoppingBag },
         { id: 'wishlist', label: 'Liste d\'envies', icon: this.Heart, badge: 4 },
         { id: 'reviews', label: 'Mes avis', icon: this.Star }
@@ -449,6 +462,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   passwordForm: FormGroup = new FormGroup({});
 
   showPassword = false;
+  passwordFeedback = '';
+  passwordFeedbackError = false;
+  isPasswordChanging = false;
   securityPrefs: Record<string, boolean> = {
     twoFactor: true,
     emailNotifications: true,
@@ -472,14 +488,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    if (!this.authService.isAuthenticated) {
-      this.router.navigate(['/account']);
-      return;
-    }
-
     this.authSubscription = this.authService.authState$.subscribe(state => {
       if (!state.isAuthenticated) {
-        this.router.navigate(['/account']);
+        this.router.navigate(['/account'], { queryParams: { returnUrl: '/profile' } });
         return;
       }
       if (state.user) this.syncUserInfo(state.user);
@@ -488,12 +499,24 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe(params => {
       const view = params['view'] as ProfileView | undefined;
       if (view) this.currentView = view;
+      if (params['new']) {
+        this.orderFeedback = `Commande ${params['new']} enregistrée avec succès.`;
+      }
     });
 
-    this.loadBuyerData();
+    this.authService.sessionReady$
+      .pipe(filter((ready) => ready), take(1))
+      .subscribe(() => {
+        if (this.authService.isAuthenticated) {
+          this.loadBuyerData();
+        }
+      });
   }
 
   private loadBuyerData(): void {
+    this.buyerDataLoading = true;
+    this.ordersLoadError = '';
+
     this.buyerService.loadOrders().then((rows) => {
       this.recentOrders = rows.map((r) => ({
         id: r.id,
@@ -502,11 +525,31 @@ export class ProfileComponent implements OnInit, OnDestroy {
         total: r.total,
         items: r.items,
         seller: r.seller,
-        products: r.products,
-        progress: r.status === 'delivered' ? 100 : r.status === 'shipped' ? 70 : 25
+        products: r.products.map((p) => ({
+          lineId: p.lineId,
+          name: p.name,
+          image: p.image,
+          qty: p.qty
+        })),
+        tracking: r.tracking,
+        eta: r.eta,
+        progress: r.progress ?? (r.status === 'delivered' ? 100 : r.status === 'shipped' ? 70 : 25)
       }));
-    }).catch(() => {
+      this.stats.totalOrders = this.recentOrders.length;
+    }).catch((err: Error) => {
       this.recentOrders = [];
+      this.stats.totalOrders = 0;
+      this.ordersLoadError =
+        err?.message ||
+        'Impossible de charger vos commandes. Vérifiez que le service commandes (port 3004) est démarré.';
+    }).finally(() => {
+      this.buyerDataLoading = false;
+    });
+
+    this.buyerService.loadReturns().then((rows) => {
+      this.returnsList = rows;
+    }).catch(() => {
+      this.returnsList = [];
     });
 
     this.authSubscription?.add(
@@ -723,12 +766,33 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   changePassword(): void {
-    if (this.passwordForm.valid) {
-      const { newPassword, confirm } = this.passwordForm.value;
-      if (newPassword !== confirm) return;
-      console.log('Mot de passe changé');
-      this.passwordForm.reset();
+    if (this.passwordForm.invalid) {
+      this.passwordForm.markAllAsTouched();
+      return;
     }
+    const { current, newPassword, confirm } = this.passwordForm.value;
+    if (newPassword !== confirm) {
+      this.passwordFeedback = 'Les mots de passe ne correspondent pas.';
+      this.passwordFeedbackError = true;
+      return;
+    }
+
+    this.isPasswordChanging = true;
+    this.passwordFeedback = '';
+
+    this.authService.changePassword({ currentPassword: current, newPassword }).subscribe({
+      next: (res) => {
+        this.passwordFeedback = res.message;
+        this.passwordFeedbackError = false;
+        this.passwordForm.reset();
+        this.isPasswordChanging = false;
+      },
+      error: (err: Error) => {
+        this.passwordFeedback = err.message;
+        this.passwordFeedbackError = true;
+        this.isPasswordChanging = false;
+      }
+    });
   }
 
   logout(): void {
@@ -796,5 +860,68 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   starArray(n: number): number[] {
     return Array.from({ length: 5 }, (_, i) => (i < Math.round(n) ? 1 : 0));
+  }
+
+  downloadOrderReceipt(orderId: string): void {
+    this.buyerService.downloadReceipt(orderId).catch(() => {
+      this.orderFeedback = 'Impossible de télécharger le reçu.';
+    });
+  }
+
+  openOrderQr(orderId: string): void {
+    this.qrModalOrder = orderId;
+    this.qrBlobUrl = null;
+    this.buyerService.fetchQrImage(orderId).then((url) => {
+      this.qrBlobUrl = url;
+    }).catch(() => {
+      this.orderFeedback = 'QR code indisponible.';
+      this.qrModalOrder = null;
+    });
+  }
+
+  closeOrderQr(): void {
+    if (this.qrBlobUrl) URL.revokeObjectURL(this.qrBlobUrl);
+    this.qrModalOrder = null;
+    this.qrBlobUrl = null;
+  }
+
+  qrImageUrl(_orderId: string): string {
+    return this.qrBlobUrl || '';
+  }
+
+  async cancelOrder(orderId: string): Promise<void> {
+    if (!confirm(`Annuler la commande ${orderId} ?`)) return;
+    try {
+      await this.buyerService.cancelOrder(orderId);
+      this.orderFeedback = `Commande ${orderId} annulée.`;
+      this.loadBuyerData();
+    } catch (e: unknown) {
+      this.orderFeedback = e instanceof Error ? e.message : 'Annulation impossible.';
+    }
+  }
+
+  async requestOrderReturn(order: OrderItem): Promise<void> {
+    const motif = prompt('Motif du retour (ex. taille incorrecte, produit défectueux) :');
+    if (!motif?.trim()) return;
+    try {
+      await this.buyerService.requestReturn(order.id, motif.trim(), order.products[0]?.lineId);
+      this.orderFeedback = `Retour initié pour ${order.id}.`;
+      this.loadBuyerData();
+      this.switchView('returns');
+    } catch (e: unknown) {
+      this.orderFeedback = e instanceof Error ? e.message : 'Retour impossible.';
+    }
+  }
+
+  getReturnStatusLabel(s: string): string {
+    const map: Record<string, string> = {
+      demande: 'En attente',
+      accepte: 'Accepté',
+      colis_recu: 'Colis reçu',
+      rembourse: 'Remboursé',
+      refuse: 'Refusé',
+      annule: 'Annulé'
+    };
+    return map[s] || s;
   }
 }

@@ -1,26 +1,136 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { distinctUntilChanged, filter, map } from 'rxjs/operators';
 import { Product, CartItem } from '../models/product.model';
 import { NotificationService } from './notification.service';
+import { AuthService } from './auth.service';
+
+const LEGACY_CART_KEY = 'heligxiam-cart';
+const GUEST_CART_KEY = 'heligxiam-cart-guest';
 
 @Injectable({
   providedIn: 'root'
 })
-export class CartService {
+export class CartService implements OnDestroy {
   private cartItems = new BehaviorSubject<CartItem[]>([]);
   public cart$: Observable<CartItem[]> = this.cartItems.asObservable();
   public itemAdded = new BehaviorSubject<string>('');
 
-  constructor(private notificationService: NotificationService) {
-    // Load cart from localStorage
-    const savedCart = localStorage.getItem('heligxiam-cart');
-    if (savedCart) {
-      this.cartItems.next(JSON.parse(savedCart));
+  private authSub?: Subscription;
+  private lastUserId: string | null = null;
+
+  constructor(
+    private notificationService: NotificationService,
+    private authService: AuthService
+  ) {
+    this.authSub = this.authService.sessionReady$
+      .pipe(filter((ready) => ready))
+      .subscribe(() => this.reloadCartForUser());
+
+    this.authService.authState$
+      .pipe(
+        map((state) => state.user?.id_user ?? null),
+        distinctUntilChanged()
+      )
+      .subscribe((userId) => {
+        if (userId !== this.lastUserId) {
+          this.reloadCartForUser(userId);
+        }
+      });
+
+    this.authService.loginSuccess$.subscribe((user) => {
+      this.mergeGuestCartIntoUser(user.id_user);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.authSub?.unsubscribe();
+  }
+
+  private canUseStorage(): boolean {
+    return typeof localStorage !== 'undefined';
+  }
+
+  private storageKey(userId?: string | null): string {
+    if (userId) {
+      return `heligxiam-cart-${userId}`;
+    }
+    return GUEST_CART_KEY;
+  }
+
+  private readStorage(key: string): CartItem[] | null {
+    if (!this.canUseStorage()) return null;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeStorage(key: string, items: CartItem[]): void {
+    if (!this.canUseStorage()) return;
+    try {
+      localStorage.setItem(key, JSON.stringify(items));
+    } catch {
+      // Quota dépassé ou mode privé — panier reste en mémoire pour la session.
+    }
+  }
+
+  private reloadCartForUser(explicitUserId?: string | null): void {
+    const userId = explicitUserId ?? this.authService.currentUser?.id_user ?? null;
+    this.lastUserId = userId;
+
+    const key = this.storageKey(userId);
+    let items = this.readStorage(key);
+
+    if (!items?.length) {
+      items = this.readStorage(LEGACY_CART_KEY) ?? this.readStorage(GUEST_CART_KEY) ?? [];
+      if (items.length) {
+        this.writeStorage(key, items);
+      }
+    }
+
+    this.cartItems.next(items ?? []);
+    this.saveCart();
+  }
+
+  private mergeGuestCartIntoUser(userId: string): void {
+    const guestItems =
+      this.readStorage(GUEST_CART_KEY) ??
+      this.readStorage(LEGACY_CART_KEY) ??
+      [];
+    if (!guestItems.length) {
+      this.reloadCartForUser(userId);
+      return;
+    }
+
+    const userKey = this.storageKey(userId);
+    const userItems = this.readStorage(userKey) ?? [];
+    const merged = [...userItems];
+
+    for (const guestItem of guestItems) {
+      const existing = merged.find((item) => item.id === guestItem.id);
+      if (existing) {
+        existing.quantity += guestItem.quantity;
+      } else {
+        merged.push({ ...guestItem });
+      }
+    }
+
+    this.cartItems.next(merged);
+    this.writeStorage(userKey, merged);
+    if (this.canUseStorage()) {
+      localStorage.removeItem(GUEST_CART_KEY);
+      localStorage.removeItem(LEGACY_CART_KEY);
     }
   }
 
   private saveCart(): void {
-    localStorage.setItem('heligxiam-cart', JSON.stringify(this.cartItems.value));
+    const userId = this.authService.currentUser?.id_user ?? null;
+    this.writeStorage(this.storageKey(userId), this.cartItems.value);
   }
 
   private sameProduct(a: Product, b: Product): boolean {
@@ -43,13 +153,11 @@ export class CartService {
     }
 
     this.saveCart();
-    
-    // Utiliser le service de notification global
     this.notificationService.showNotification('Article ajouté');
   }
 
   removeFromCart(productId: string): void {
-    const currentCart = this.cartItems.value.filter(item => item.id !== productId);
+    const currentCart = this.cartItems.value.filter((item) => item.id !== productId);
     this.cartItems.next(currentCart);
     this.saveCart();
   }
@@ -60,7 +168,7 @@ export class CartService {
       return;
     }
 
-    const currentCart = this.cartItems.value.map(item =>
+    const currentCart = this.cartItems.value.map((item) =>
       item.id === productId ? { ...item, quantity } : item
     );
     this.cartItems.next(currentCart);
@@ -69,7 +177,10 @@ export class CartService {
 
   clearCart(): void {
     this.cartItems.next([]);
-    localStorage.removeItem('heligxiam-cart');
+    const userId = this.authService.currentUser?.id_user ?? null;
+    if (this.canUseStorage()) {
+      localStorage.removeItem(this.storageKey(userId));
+    }
   }
 
   getCartTotal(): number {

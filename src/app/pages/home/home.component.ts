@@ -1,7 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import {
   LucideAngularModule,
   ChevronRight,
@@ -23,6 +22,7 @@ import {
   Star
 } from 'lucide-angular';
 import { ProductCardComponent } from '../../components/product-card/product-card.component';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 import { CatalogService } from '../../services/catalog.service';
 import { Product } from '../../models/product.model';
 
@@ -52,7 +52,7 @@ interface PromoCard {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule, ProductCardComponent],
+  imports: [CommonModule, RouterModule, LucideAngularModule, ProductCardComponent, TranslatePipe],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
@@ -252,45 +252,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   ];
 
-  // Showcase YouTube videos (autoplay/loop/muted, controls hidden, not clickable)
-  // To change a video, just replace the YouTube ID below.
-  showcaseVideo1Url!: SafeResourceUrl;
-  showcaseVideo2Url!: SafeResourceUrl;
-  private readonly showcaseVideo1Id = 'Aj_q42qk8vs'; // Retail / shopping stock footage
-  private readonly showcaseVideo2Id = 'Aj_q42qk8vs'; // Same source, different segment
-  private readonly showcaseVideo1Start = 0;
-  private readonly showcaseVideo2Start = 120;
+  // Médias showcase (images animées — fiables, sans iframe YouTube ni hotlink vidéo)
+  readonly showcaseVideo1Poster =
+    'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1600&q=80';
+  readonly showcaseVideo2Poster =
+    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1600&q=80';
 
   constructor(
-    private sanitizer: DomSanitizer,
     private catalogService: CatalogService,
     private cdr: ChangeDetectorRef
-  ) {
-    this.showcaseVideo1Url = this.buildYoutubeUrl(this.showcaseVideo1Id, this.showcaseVideo1Start);
-    this.showcaseVideo2Url = this.buildYoutubeUrl(this.showcaseVideo2Id, this.showcaseVideo2Start);
-  }
-
-  private buildYoutubeUrl(id: string, start: number): SafeResourceUrl {
-    const params = new URLSearchParams({
-      autoplay: '1',
-      mute: '1',
-      loop: '1',
-      playlist: id,        // required so `loop=1` actually loops the single video
-      controls: '0',       // hide play/pause/seek controls
-      modestbranding: '1', // hide YouTube logo
-      rel: '0',            // no related videos at end
-      showinfo: '0',       // hide title/uploader
-      iv_load_policy: '3', // hide annotations
-      disablekb: '1',      // disable keyboard shortcuts
-      fs: '0',             // hide fullscreen button
-      playsinline: '1',    // inline playback on iOS
-      cc_load_policy: '0', // no captions
-      start: String(start)
-    }).toString();
-    return this.sanitizer.bypassSecurityTrustResourceUrl(
-      `https://www.youtube-nocookie.com/embed/${id}?${params}`
-    );
-  }
+  ) {}
 
   ngOnInit(): void {
     this.catalogService.loadProducts().then((products) => {

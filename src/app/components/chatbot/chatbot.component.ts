@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 import {
   LucideAngularModule,
   MessageCircle,
@@ -108,6 +109,8 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   inputText = '';
   messages: ChatMessage[] = [];
   private msgCounter = 0;
+  private hasDragged = false;
+  private readonly dragThreshold = 6;
 
   // Draggable state
   posX = 24; // distance from right
@@ -122,7 +125,11 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
   private sub = new Subscription();
 
-  constructor(private router: Router, private zone: NgZone) {}
+  constructor(
+    private router: Router,
+    private zone: NgZone,
+    private authService: AuthService
+  ) {}
 
   // =================== Lifecycle ===================
   ngOnInit(): void {
@@ -143,7 +150,12 @@ export class ChatbotComponent implements OnInit, OnDestroy {
       }
     } catch {}
 
-    this.pushBotWelcome();
+    this.clampPosition();
+    this.restoreUiState();
+    this.restoreConversation();
+    if (!this.messages.length) {
+      this.pushBotWelcome();
+    }
   }
 
   ngOnDestroy(): void {
@@ -156,22 +168,75 @@ export class ChatbotComponent implements OnInit, OnDestroy {
     const path = (url.split('?')[0] || '').toLowerCase();
     this.mode = path === '/seller' || path.startsWith('/seller/') ? 'seller' : 'client';
     if (previous !== this.mode) {
-      // Reset conversation when mode changes
       this.messages = [];
       this.msgCounter = 0;
-      this.pushBotWelcome();
+      this.restoreConversation();
+      if (!this.messages.length) {
+        this.pushBotWelcome();
+      }
     }
+  }
+
+  private storageKey(base: string): string {
+    return `${base}-${this.mode}`;
+  }
+
+  private restoreUiState(): void {
+    try {
+      const raw = sessionStorage.getItem(this.storageKey('chatbot-ui'));
+      if (!raw) return;
+      const ui = JSON.parse(raw);
+      if (typeof ui.isOpen === 'boolean') this.isOpen = ui.isOpen;
+      if (typeof ui.isMinimized === 'boolean') this.isMinimized = ui.isMinimized;
+    } catch {}
+  }
+
+  private persistUiState(): void {
+    try {
+      sessionStorage.setItem(
+        this.storageKey('chatbot-ui'),
+        JSON.stringify({ isOpen: this.isOpen, isMinimized: this.isMinimized })
+      );
+    } catch {}
+  }
+
+  private restoreConversation(): void {
+    try {
+      const raw = sessionStorage.getItem(this.storageKey('chatbot-msgs'));
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+      this.messages = parsed.map((m: ChatMessage) => ({
+        ...m,
+        time: new Date(m.time)
+      }));
+      this.msgCounter = this.messages.reduce((max, m) => Math.max(max, m.id), 0);
+    } catch {
+      this.messages = [];
+      this.msgCounter = 0;
+    }
+  }
+
+  private persistConversation(): void {
+    try {
+      sessionStorage.setItem(this.storageKey('chatbot-msgs'), JSON.stringify(this.messages));
+    } catch {}
   }
 
   // =================== UI Getters ===================
   get title(): string {
-    return this.mode === 'seller' ? 'Seller Assist' : 'Helixa — Assistant HELIGXIAM';
+    return this.mode === 'seller' ? 'Seller Assist' : 'Assistant HELIGXIAM';
   }
 
   get subtitle(): string {
-    return this.mode === 'seller'
-      ? 'Votre copilote vendeur · Réponses en < 10s'
-      : 'Bonjour ! Comment puis-je vous aider ?';
+    if (this.mode === 'seller') {
+      return 'Copilote vendeur · Réponses instantanées';
+    }
+    const user = this.authService.currentUser;
+    if (user?.prenom) {
+      return `Bonjour ${user.prenom} — comment puis-je vous aider ?`;
+    }
+    return 'Bonjour ! Comment puis-je vous aider ?';
   }
 
   get headerGradient(): string {
@@ -212,26 +277,44 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   }
 
   // =================== Actions ===================
+  onBubbleClick(event: MouseEvent): void {
+    if (this.hasDragged) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    this.toggle();
+  }
+
   toggle(): void {
     if (this.isOpen && !this.isMinimized) {
       this.isMinimized = true;
+      this.persistUiState();
       return;
     }
     this.isOpen = true;
     this.isMinimized = false;
+    this.persistUiState();
     setTimeout(() => this.scrollToBottom(), 50);
   }
 
   close(): void {
     this.isOpen = false;
     this.isMinimized = false;
+    this.persistUiState();
   }
 
   minimize(): void {
     this.isMinimized = true;
+    this.persistUiState();
   }
 
   handleQuickAction(a: QuickAction): void {
+    if (a.id === 'guide') {
+      this.router.navigate(['/guide']);
+      this.close();
+      return;
+    }
     this.sendMessage(a.prompt);
   }
 
@@ -240,7 +323,6 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   }
 
   handleSuggestion(action: string): void {
-    // Simple routing actions
     switch (action) {
       case 'goto-guide':
         this.router.navigate(['/guide']);
@@ -262,12 +344,26 @@ export class ChatbotComponent implements OnInit, OnDestroy {
         this.router.navigate(['/account']);
         this.close();
         return;
+      case 'goto-profile':
+      case 'goto-profile-orders':
+        this.router.navigate(['/profile'], { queryParams: { view: 'orders' } });
+        this.close();
+        return;
+      case 'goto-profile-returns':
+        this.router.navigate(['/profile'], { queryParams: { view: 'returns' } });
+        this.close();
+        return;
       case 'goto-search':
         this.router.navigate(['/search']);
         this.close();
         return;
+      case 'call':
+        window.location.href = 'tel:0170771122';
+        return;
+      case 'mail':
+        window.location.href = 'mailto:support@heligxiam.fr';
+        return;
     }
-    // Otherwise treat as a prompt
     this.sendMessage(action);
   }
 
@@ -292,6 +388,9 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   resetConversation(): void {
     this.messages = [];
     this.msgCounter = 0;
+    try {
+      sessionStorage.removeItem(this.storageKey('chatbot-msgs'));
+    } catch {}
     this.pushBotWelcome();
   }
 
@@ -310,26 +409,29 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   private pushBotWelcome(): void {
     if (this.mode === 'seller') {
       this.pushBot(
-        'Bonjour ! Je suis **Seller Assist**, votre copilote HELIGXIAM. Je peux vous aider pour vos commandes, vos performances, la publicité ou les versements. Que voulez-vous faire ?',
+        'Bonjour ! Je suis **Seller Assist**, votre copilote HELIGXIAM. Commandes, performances, publicité ou versements — que souhaitez-vous faire ?',
         {
           quickReplies: [
-            'Voir mes ventes du jour',
             'Commandes à expédier',
+            'Mes ventes du jour',
             'Améliorer ma Buy Box',
-            'Lancer une campagne pub'
+            'Parler à un conseiller'
           ]
         }
       );
     } else {
+      const loggedIn = this.authService.isAuthenticated;
       this.pushBot(
-        'Bonjour ! Je suis **Helixa**, votre assistant HELIGXIAM. Je peux vous aider à suivre une commande, retourner un produit, ou trouver ce que vous cherchez. Comment puis-je vous aider ?',
+        loggedIn
+          ? 'Bonjour ! Je suis l\'**assistant HELIGXIAM**. Je peux vous aider à suivre une commande, lancer un retour ou trouver un produit.'
+          : 'Bonjour ! Je suis l\'**assistant HELIGXIAM**. Connectez-vous pour suivre vos commandes, ou posez-moi une question générale.',
         {
-          quickReplies: [
-            'Où est ma commande ?',
-            'Retourner un produit',
-            'Délais de livraison',
-            'Parler à un humain'
-          ]
+          quickReplies: loggedIn
+            ? ['Où est ma commande ?', 'Retourner un produit', 'Délais de livraison', 'Parler à un humain']
+            : ['Délais de livraison', 'Moyens de paiement', 'Devenir vendeur', 'Parler à un humain'],
+          suggestions: loggedIn
+            ? [{ label: 'Voir mon profil', action: 'goto-profile', icon: this.UserIcon }]
+            : [{ label: 'Se connecter', action: 'goto-account', icon: this.UserIcon }]
         }
       );
     }
@@ -354,7 +456,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
             : [
                 { label: '📞 Appeler le 01 70 77 11 22', action: 'call', icon: this.PhoneCall },
                 { label: '✉️ Email support@heligxiam.fr', action: 'mail', icon: this.Mail },
-                { label: '📖 Consulter le Guide', action: 'goto-guide', icon: this.BookOpen }
+                { label: '📖 Consulter le guide', action: 'goto-guide', icon: this.BookOpen }
               ]
         }
       );
@@ -419,20 +521,29 @@ export class ChatbotComponent implements OnInit, OnDestroy {
     // ====== Client-specific ======
     if (!seller) {
       if (/commande|suivi|colis|où\s?est/i.test(t)) {
+        const ordersAction = this.authService.isAuthenticated ? 'goto-profile-orders' : 'goto-account';
+        const ordersLabel = this.authService.isAuthenticated ? 'Voir mes commandes' : 'Me connecter pour suivre';
         this.pushBot(
-          '📦 Pour suivre votre commande, rendez-vous dans **Mon compte → Commandes**. Chaque colis dispose d\'un numéro de suivi en temps réel. Voulez-vous que je vous y emmène ?',
+          this.authService.isAuthenticated
+            ? '📦 Consultez **Mon profil → Commandes** pour le suivi en temps réel de vos colis.'
+            : '📦 Connectez-vous pour accéder au suivi de vos commandes en temps réel.',
           {
-            suggestions: [{ label: 'Voir mes commandes', action: 'goto-account', icon: this.Package }],
-            quickReplies: ['Délai de livraison moyen', 'Colis en retard']
+            suggestions: [{ label: ordersLabel, action: ordersAction, icon: this.Package }],
+            quickReplies: ['Délai de livraison moyen', 'Colis en retard', 'Parler à un humain']
           }
         );
         return;
       }
       if (/retour|remboursement|renvoi/i.test(t)) {
+        const returnsAction = this.authService.isAuthenticated ? 'goto-profile-returns' : 'goto-account';
         this.pushBot(
-          '↩️ **Retours sous 60 jours, gratuit et facile** :\n1. Allez dans Mon compte → Commandes\n2. Sélectionnez le produit\n3. Choisissez le motif\n4. Imprimez le bordereau prépayé\n5. Déposez le colis en point relais ou bureau de poste\n\nRemboursement sous 5 jours ouvrés après réception.',
+          '↩️ **Retours sous 60 jours, gratuits** :\n1. Profil → Commandes\n2. Sélectionnez le produit\n3. Choisissez le motif\n4. Imprimez le bordereau prépayé\n\nRemboursement sous 5 jours ouvrés.',
           {
-            suggestions: [{ label: 'Lancer un retour', action: 'goto-account', icon: this.RotateCcw }]
+            suggestions: [{
+              label: this.authService.isAuthenticated ? 'Lancer un retour' : 'Se connecter',
+              action: returnsAction,
+              icon: this.RotateCcw
+            }]
           }
         );
         return;
@@ -463,9 +574,9 @@ export class ChatbotComponent implements OnInit, OnDestroy {
       }
       if (/guide|aide|bienvenue/i.test(t)) {
         this.pushBot(
-          '📖 Le **Guide de l\'acheteur** rassemble tout ce que vous devez savoir : livraison, retours, Garantie A→Z, coupons, appareils HELIGXIAM, Premium…',
+          '📖 Le **guide acheteur** couvre livraison, retours, garanties, coupons et abonnement Premium.',
           {
-            suggestions: [{ label: 'Ouvrir le Guide', action: 'goto-guide', icon: this.BookOpen }]
+            suggestions: [{ label: 'Ouvrir le guide', action: 'goto-guide', icon: this.BookOpen }]
           }
         );
         return;
@@ -501,6 +612,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
       text,
       time: new Date()
     });
+    this.persistConversation();
     this.scrollToBottom();
   }
 
@@ -516,6 +628,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
       quickReplies: opts.quickReplies,
       suggestions: opts.suggestions
     });
+    this.persistConversation();
     this.scrollToBottom();
   }
 
@@ -527,12 +640,13 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
   // =================== Draggable ===================
   startDrag(event: MouseEvent | TouchEvent): void {
-    // Don't start drag on buttons/links inside header
     const target = event.target as HTMLElement;
-    if (target.closest('button') || target.closest('a')) return;
+    if (target.closest('button') && !target.closest('.chatbot-drag-handle')) return;
+    if (target.closest('a')) return;
 
     event.preventDefault();
     this.dragging = true;
+    this.hasDragged = false;
     const { x, y } = this.getEventCoords(event);
     this.dragStartX = x;
     this.dragStartY = y;
@@ -555,6 +669,9 @@ export class ChatbotComponent implements OnInit, OnDestroy {
     const { x, y } = this.getEventCoords(event);
     const deltaX = x - this.dragStartX;
     const deltaY = y - this.dragStartY;
+    if (Math.abs(deltaX) > this.dragThreshold || Math.abs(deltaY) > this.dragThreshold) {
+      this.hasDragged = true;
+    }
 
     // posX is distance from right, posY from bottom → invert deltas
     let newX = this.startPosX - deltaX;
@@ -572,6 +689,16 @@ export class ChatbotComponent implements OnInit, OnDestroy {
       this.posX = newX;
       this.posY = newY;
     });
+  }
+
+  private clampPosition(): void {
+    if (typeof window === 'undefined') return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const w = this.isOpen && !this.isMinimized ? 380 : 56;
+    const h = this.isOpen && !this.isMinimized ? 560 : 56;
+    this.posX = Math.max(8, Math.min(this.posX, vw - w - 8));
+    this.posY = Math.max(8, Math.min(this.posY, vh - h - 8));
   }
 
   private endDrag(): void {
@@ -608,12 +735,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   onWindowResize(): void {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const w = this.chatWindow?.nativeElement.offsetWidth ?? 80;
-    const h = this.chatWindow?.nativeElement.offsetHeight ?? 80;
-    this.posX = Math.max(8, Math.min(this.posX, vw - w - 8));
-    this.posY = Math.max(8, Math.min(this.posY, vh - h - 8));
+    this.clampPosition();
   }
 
   // Helpers for template

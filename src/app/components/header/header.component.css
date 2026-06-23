@@ -55,6 +55,28 @@
   box-shadow: 0 10px 25px -10px rgba(99, 102, 241, 0.35);
 }
 
+/* ========== Language selector grid ========== */
+.locale-lang-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.locale-lang-btn {
+  min-height: 2.5rem;
+}
+
+.locale-lang-label {
+  unicode-bidi: isolate;
+  text-align: start;
+}
+
+[dir="rtl"] .locale-lang-grid .locale-lang-btn {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .locale-lang-label {
+  text-align: right;
+}
+
 /* ========== Side drawer "Autre" ========== */
 @keyframes side-fade-in {
   from { opacity: 0; }

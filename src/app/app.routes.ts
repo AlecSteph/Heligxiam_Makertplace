@@ -31,9 +31,23 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'reset-password',
+    loadComponent: () => import('./pages/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [() => import('./guards/auth.guard').then(m => m.AuthGuard)]
+  },
+  {
+    path: 'orders',
+    redirectTo: 'profile',
+    pathMatch: 'full'
+  },
+  {
+    path: 'returns',
+    redirectTo: 'profile',
+    pathMatch: 'full'
   },
   {
     path: 'sell',

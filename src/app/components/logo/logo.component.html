@@ -1,0 +1,31 @@
+<ng-container *ngIf="hasLink; else staticLogo">
+  <a [routerLink]="link!" [class]="rootClass" [attr.aria-label]="'HELIGXIAM — ' + ('brand.tagline' | t)">
+    <ng-container *ngTemplateOutlet="logoContent"></ng-container>
+  </a>
+</ng-container>
+
+<ng-template #staticLogo>
+  <div [class]="rootClass" role="img" [attr.aria-label]="'HELIGXIAM — ' + ('brand.tagline' | t)">
+    <ng-container *ngTemplateOutlet="logoContent"></ng-container>
+  </div>
+</ng-template>
+
+<ng-template #logoContent>
+  <div [class]="'logo-emblem-wrap logo-emblem-wrap-' + size">
+    <img
+      [src]="emblemSrc"
+      alt=""
+      aria-hidden="true"
+      class="logo-emblem"
+      decoding="async"
+      loading="eager"
+      (error)="onEmblemError()"
+    />
+  </div>
+  <div *ngIf="showWordmark || showTagline" class="logo-text">
+    <span *ngIf="showWordmark" class="logo-wordmark" aria-hidden="true">
+      <span class="logo-hel">Helig</span><span class="logo-xiam">xiam</span>
+    </span>
+    <span *ngIf="showTagline" class="logo-tagline">{{ 'brand.tagline' | t }}</span>
+  </div>
+</ng-template>

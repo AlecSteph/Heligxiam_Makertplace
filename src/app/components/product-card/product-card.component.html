@@ -97,14 +97,14 @@
       class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl hover:shadow-xl hover:scale-105 transition-all font-medium"
     >
       <lucide-angular [img]="ShoppingCart" class="w-4 h-4"></lucide-angular>
-      Ajouter au panier
+      {{ 'action.addToCart' | t }}
     </button>
     <ng-template #outOfStock>
       <button
         disabled
         class="w-full bg-gray-200 text-gray-500 py-3 rounded-xl cursor-not-allowed font-medium"
       >
-        Rupture de stock
+        {{ 'price.outOfStock' | t }}
       </button>
     </ng-template>
   </div>

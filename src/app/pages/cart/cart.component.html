@@ -442,10 +442,29 @@
               </div>
             </div>
 
-            <button class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3.5 rounded-xl font-black text-base shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all mb-3">
-              <lucide-angular [img]="Lock" class="w-4 h-4"></lucide-angular>
-              Passer la commande
-              <lucide-angular [img]="ArrowRight" class="w-4 h-4"></lucide-angular>
+            <div class="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+              <p class="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                <lucide-angular [img]="MapPin" class="w-3.5 h-3.5"></lucide-angular>
+                Adresse de livraison
+              </p>
+              <input type="text" [(ngModel)]="addressLine1" placeholder="Adresse (n°, rue)"
+                     class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none" />
+              <div class="grid grid-cols-2 gap-2">
+                <input type="text" [(ngModel)]="addressPostal" placeholder="Code postal"
+                       class="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none" />
+                <input type="text" [(ngModel)]="addressCity" placeholder="Ville"
+                       class="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none" />
+              </div>
+            </div>
+
+            <p *ngIf="checkoutError" class="text-sm text-red-600 mb-2 font-semibold">{{ checkoutError }}</p>
+
+            <button type="button" (click)="placeOrder()" [disabled]="checkoutLoading"
+                    class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-60 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-black text-base shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all mb-3">
+              <lucide-angular *ngIf="!checkoutLoading" [img]="Lock" class="w-4 h-4"></lucide-angular>
+              <lucide-angular *ngIf="checkoutLoading" [img]="Loader2" class="w-4 h-4 animate-spin"></lucide-angular>
+              {{ checkoutLoading ? 'Traitement…' : 'Passer la commande' }}
+              <lucide-angular *ngIf="!checkoutLoading" [img]="ArrowRight" class="w-4 h-4"></lucide-angular>
             </button>
 
             <a routerLink="/" class="block text-center text-sm text-indigo-600 hover:text-indigo-700 font-semibold">

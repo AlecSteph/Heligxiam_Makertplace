@@ -14,21 +14,21 @@
         <div class="md:col-span-3">
           <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full mb-3 border border-white/20">
             <lucide-angular [img]="Crown" class="w-3.5 h-3.5"></lucide-angular>
-            <span class="text-xs font-medium">Marketplace Premium #1 en France</span>
+            <span class="text-xs font-medium">{{ 'home.hero.badge' | t }}</span>
           </div>
           <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-3">
-            Découvrez l'Excellence
+            {{ 'home.hero.title' | t }}
             <span class="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
               HELIGXIAM
             </span>
           </h1>
           <p class="text-indigo-100 mb-4 text-sm md:text-base max-w-xl">
-            15 000+ produits premium • Livraison express gratuite dès 99€ • Garantie 2 ans
+            {{ 'home.hero.subtitle' | t }}
           </p>
           <div class="flex flex-wrap gap-3">
             <a routerLink="/search"
                class="inline-flex items-center gap-2 bg-white text-indigo-600 px-5 py-2.5 rounded-lg font-bold hover:shadow-xl hover:scale-105 transition-all text-sm">
-              Explorer
+              {{ 'home.hero.explore' | t }}
               <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
             </a>
             <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }"
@@ -42,15 +42,15 @@
           <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11px] md:text-xs text-white/85">
             <div class="flex items-center gap-1.5">
               <lucide-angular [img]="ShieldCheck" class="w-3.5 h-3.5"></lucide-angular>
-              <span>Paiement sécurisé</span>
+              <span>{{ 'home.hero.securePay' | t }}</span>
             </div>
             <div class="flex items-center gap-1.5">
               <lucide-angular [img]="Truck" class="w-3.5 h-3.5"></lucide-angular>
-              <span>Livraison 24h</span>
+              <span>{{ 'home.hero.delivery24h' | t }}</span>
             </div>
             <div class="flex items-center gap-1.5">
               <lucide-angular [img]="Star" class="w-3.5 h-3.5"></lucide-angular>
-              <span>4,8/5 • 12 400 avis</span>
+              <span>{{ 'home.hero.rating' | t }}</span>
             </div>
           </div>
         </div>
@@ -117,24 +117,21 @@
   <section class="bg-gradient-to-b from-white to-gray-50 border-b">
     <div class="max-w-7xl mx-auto px-4 py-8">
       <div class="text-center mb-6">
-        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-2">Live shopping</span>
-        <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">L'expérience HELIGXIAM en images</h2>
-        <p class="text-gray-600 mt-1">Des milliers de clients satisfaits achètent en toute confiance</p>
+        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-2">{{ 'home.showcase.badge' | t }}</span>
+        <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">{{ 'home.showcase.title' | t }}</h2>
+        <p class="text-gray-600 mt-1">{{ 'home.showcase.subtitle' | t }}</p>
       </div>
 
       <div class="grid md:grid-cols-2 gap-4 md:gap-6">
-        <!-- Video 1 (YouTube embed - no controls, autoplay, loop, muted) -->
+        <!-- Média 1 (animation Ken Burns — remplace l'iframe YouTube bloquée) -->
         <div class="relative rounded-2xl overflow-hidden shadow-xl bg-gray-900 group aspect-video">
-          <iframe
-            class="absolute inset-0 w-full h-full pointer-events-none"
-            [src]="showcaseVideo1Url"
-            title="Shopping en ligne"
-            frameborder="0"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowfullscreen="false"
+          <img
+            class="absolute inset-0 w-full h-full object-cover pointer-events-none showcase-ken-burns"
+            [src]="showcaseVideo1Poster"
+            alt="Achats en ligne simplifiés"
             loading="lazy"
-            aria-hidden="true">
-          </iframe>
+            aria-hidden="true"
+          />
           <!-- Invisible click-blocking overlay + gradient + caption -->
           <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none"></div>
           <div class="absolute bottom-0 left-0 right-0 p-5 text-white pointer-events-none">
@@ -145,30 +142,27 @@
               </span>
               <span class="text-xs font-black uppercase tracking-widest">Live</span>
             </div>
-            <h3 class="text-xl md:text-2xl font-extrabold leading-tight drop-shadow">Achats en ligne, simplifiés</h3>
-            <p class="text-sm text-white/90 drop-shadow">Commandez en quelques clics depuis chez vous</p>
+            <h3 class="text-xl md:text-2xl font-extrabold leading-tight drop-shadow">{{ 'home.showcase.live1Title' | t }}</h3>
+            <p class="text-sm text-white/90 drop-shadow">{{ 'home.showcase.live1Sub' | t }}</p>
           </div>
         </div>
 
-        <!-- Video 2 (YouTube embed - no controls, autoplay, loop, muted) -->
+        <!-- Média 2 (animation Ken Burns) -->
         <div class="relative rounded-2xl overflow-hidden shadow-xl bg-gray-900 group aspect-video">
-          <iframe
-            class="absolute inset-0 w-full h-full pointer-events-none"
-            [src]="showcaseVideo2Url"
-            title="Communauté HELIGXIAM"
-            frameborder="0"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowfullscreen="false"
+          <img
+            class="absolute inset-0 w-full h-full object-cover pointer-events-none showcase-ken-burns showcase-ken-burns-delayed"
+            [src]="showcaseVideo2Poster"
+            alt="Communauté HELIGXIAM"
             loading="lazy"
-            aria-hidden="true">
-          </iframe>
+            aria-hidden="true"
+          />
           <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none"></div>
           <div class="absolute bottom-0 left-0 right-0 p-5 text-white pointer-events-none">
             <div class="flex items-center gap-2 mb-2">
               <span class="bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest">Community</span>
             </div>
-            <h3 class="text-xl md:text-2xl font-extrabold leading-tight drop-shadow">Ils ont adopté HELIGXIAM</h3>
-            <p class="text-sm text-white/90 drop-shadow">Rejoignez plus de 500 000 acheteurs satisfaits</p>
+            <h3 class="text-xl md:text-2xl font-extrabold leading-tight drop-shadow">{{ 'home.showcase.live2Title' | t }}</h3>
+            <p class="text-sm text-white/90 drop-shadow">{{ 'home.showcase.live2Sub' | t }}</p>
           </div>
         </div>
       </div>
@@ -199,7 +193,7 @@
         </div>
         <a [routerLink]="universe.categoryRoute"
            class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 mt-3 flex items-center gap-1">
-          Voir plus
+          {{ 'home.seeMore' | t }}
           <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
         </a>
       </div>
@@ -236,7 +230,7 @@
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
           <lucide-angular [img]="TrendingUp" class="w-5 h-5 text-blue-600"></lucide-angular>
-          <h2 class="text-xl font-bold text-gray-900">Meilleures Ventes</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ 'home.bestsellers' | t }}</h2>
         </div>
         <div class="flex items-center gap-2">
           <button (click)="scrollCarousel('carousel-bestsellers', 'left')"
@@ -249,7 +243,7 @@
           </button>
           <a [routerLink]="['/search']" [queryParams]="{ sort: 'bestseller' }"
              class="hidden md:inline-flex ml-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
-            Voir tout →
+            {{ 'home.seeAll' | t }}
           </a>
         </div>
       </div>
@@ -276,10 +270,10 @@
           </div>
           <div>
             <div class="inline-block text-xs font-bold bg-white/25 px-2 py-0.5 rounded-full mb-1 uppercase tracking-wide">
-              24H seulement
+              {{ 'home.flash.badge' | t }}
             </div>
-            <h3 class="text-2xl md:text-3xl font-bold">Ventes Flash du Jour</h3>
-            <p class="text-white/90 text-sm md:text-base">Des remises jusqu'à -70% sur une sélection exclusive</p>
+            <h3 class="text-2xl md:text-3xl font-bold">{{ 'home.flash.title' | t }}</h3>
+            <p class="text-white/90 text-sm md:text-base">{{ 'home.flash.subtitle' | t }}</p>
           </div>
         </div>
         <div class="flex items-center gap-4">
@@ -288,7 +282,7 @@
             <span class="font-mono font-bold">12:34:56</span>
           </div>
           <span class="inline-flex items-center gap-2 bg-white text-red-600 font-bold px-5 py-2.5 rounded-lg group-hover:scale-105 transition-transform text-sm">
-            Profiter maintenant
+            {{ 'home.flash.cta' | t }}
             <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
           </span>
         </div>
@@ -304,9 +298,9 @@
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
           <lucide-angular [img]="Crown" class="w-5 h-5 text-yellow-400"></lucide-angular>
-          <h2 class="text-xl font-bold">Collection Premium</h2>
+          <h2 class="text-xl font-bold">{{ 'home.premium' | t }}</h2>
           <span class="hidden md:inline text-xs font-bold text-yellow-400 uppercase tracking-wider bg-yellow-400/10 px-2 py-0.5 rounded-full ml-2">
-            Exclusif
+            {{ 'home.premium.exclusive' | t }}
           </span>
         </div>
         <div class="flex items-center gap-2">
@@ -320,7 +314,7 @@
           </button>
           <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }"
              class="hidden md:inline-flex ml-2 text-sm font-medium text-yellow-400 hover:text-yellow-300">
-            Voir tout →
+            {{ 'home.seeAll' | t }}
           </a>
         </div>
       </div>
@@ -356,7 +350,7 @@
         </div>
         <a [routerLink]="universe.categoryRoute"
            class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 mt-3 flex items-center gap-1">
-          Voir plus
+          {{ 'home.seeMore' | t }}
           <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
         </a>
       </div>
@@ -393,11 +387,11 @@
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
           <lucide-angular [img]="Tag" class="w-5 h-5 text-green-600"></lucide-angular>
-          <h2 class="text-xl font-bold text-gray-900">Produits essentiels à petit budget</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ 'home.budget' | t }}</h2>
         </div>
         <a [routerLink]="['/search']" [queryParams]="{ sort: 'price-asc' }"
            class="hidden md:inline text-sm font-medium text-indigo-600 hover:text-indigo-800">
-          Voir plus →
+          {{ 'home.seeMore' | t }} →
         </a>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -425,9 +419,9 @@
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
           <span class="text-xl">🔥</span>
-          <h2 class="text-xl font-bold text-gray-900">Promotions du moment</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ 'home.promotions' | t }}</h2>
           <span class="hidden md:inline text-xs font-bold text-red-600 uppercase tracking-wider bg-red-100 px-2 py-0.5 rounded-full ml-2">
-            -30% et +
+            {{ 'home.promos.badge' | t }}
           </span>
         </div>
         <div class="flex items-center gap-2">
@@ -441,7 +435,7 @@
           </button>
           <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }"
              class="hidden md:inline-flex ml-2 text-sm font-medium text-red-600 hover:text-red-800">
-            Toutes les promos →
+            {{ 'home.promos.all' | t }}
           </a>
         </div>
       </div>
@@ -464,8 +458,8 @@
             <lucide-angular [img]="Truck" class="w-5 h-5 text-indigo-600"></lucide-angular>
           </div>
           <div class="min-w-0">
-            <div class="font-semibold text-sm text-gray-900">Livraison Express</div>
-            <div class="text-xs text-gray-500">Gratuite dès 99€</div>
+            <div class="font-semibold text-sm text-gray-900">{{ 'home.trust.delivery' | t }}</div>
+            <div class="text-xs text-gray-500">{{ 'home.trust.deliverySub' | t }}</div>
           </div>
         </div>
         <div class="flex items-center gap-3 p-2">
@@ -473,8 +467,8 @@
             <lucide-angular [img]="Shield" class="w-5 h-5 text-green-600"></lucide-angular>
           </div>
           <div class="min-w-0">
-            <div class="font-semibold text-sm text-gray-900">Paiement Sécurisé</div>
-            <div class="text-xs text-gray-500">100% protégé</div>
+            <div class="font-semibold text-sm text-gray-900">{{ 'home.trust.secure' | t }}</div>
+            <div class="text-xs text-gray-500">{{ 'home.trust.secureSub' | t }}</div>
           </div>
         </div>
         <div class="flex items-center gap-3 p-2">
@@ -482,8 +476,8 @@
             <lucide-angular [img]="Award" class="w-5 h-5 text-amber-600"></lucide-angular>
           </div>
           <div class="min-w-0">
-            <div class="font-semibold text-sm text-gray-900">Garantie Premium</div>
-            <div class="text-xs text-gray-500">2 ans minimum</div>
+            <div class="font-semibold text-sm text-gray-900">{{ 'home.trust.warranty' | t }}</div>
+            <div class="text-xs text-gray-500">{{ 'home.trust.warrantySub' | t }}</div>
           </div>
         </div>
         <div class="flex items-center gap-3 p-2">
@@ -491,8 +485,8 @@
             <lucide-angular [img]="Headphones" class="w-5 h-5 text-pink-600"></lucide-angular>
           </div>
           <div class="min-w-0">
-            <div class="font-semibold text-sm text-gray-900">Support 24/7</div>
-            <div class="text-xs text-gray-500">Équipe dédiée</div>
+            <div class="font-semibold text-sm text-gray-900">{{ 'home.trust.support' | t }}</div>
+            <div class="text-xs text-gray-500">{{ 'home.trust.supportSub' | t }}</div>
           </div>
         </div>
       </div>
@@ -510,16 +504,16 @@
             <lucide-angular [img]="Sparkles" class="w-6 h-6"></lucide-angular>
           </div>
           <div>
-            <h3 class="text-xl font-bold">Rejoignez le Club HELIGXIAM</h3>
-            <p class="text-sm text-indigo-100">🎁 -10€ sur votre première commande • Offres exclusives</p>
+            <h3 class="text-xl font-bold">{{ 'home.newsletter.title' | t }}</h3>
+            <p class="text-sm text-indigo-100">{{ 'home.newsletter.subtitle' | t }}</p>
           </div>
         </div>
         <form class="flex gap-2 w-full md:w-auto md:min-w-[400px]">
-          <input type="email" placeholder="Votre email"
+          <input type="email" [attr.placeholder]="'home.newsletter.placeholder' | t"
                  class="flex-1 px-4 py-2.5 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-white/50" />
           <button type="submit"
                   class="bg-white text-indigo-600 px-5 py-2.5 rounded-lg font-bold hover:scale-105 transition-all text-sm whitespace-nowrap">
-            S'inscrire
+            {{ 'home.newsletter.submit' | t }}
           </button>
         </form>
       </div>

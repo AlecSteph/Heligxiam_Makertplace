@@ -1,17 +1,19 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import {
   LucideAngularModule, Trash2, ShoppingBag, Sparkles, ArrowRight, Shield, Truck,
   Heart, Tag, Minus, Plus, CheckCircle2, XCircle, CreditCard, Gift, MapPin,
   Clock, Lock, Zap, BadgePercent, Package, RefreshCcw, ChevronRight, AlertCircle,
-  Star
+  Star, Loader2
 } from 'lucide-angular';
 import { CartService } from '../../services/cart.service';
 import { WishlistService } from '../../services/wishlist.service';
 import { CatalogService } from '../../services/catalog.service';
+import { AuthService } from '../../services/auth.service';
+import { BuyerService } from '../../services/buyer.service';
 import { CartItem, Product } from '../../models/product.model';
 
 type DeliveryOption = 'standard' | 'express' | 'premium';
@@ -50,6 +52,14 @@ export class CartComponent implements OnInit, OnDestroy {
   // Notifications
   showNotification = false;
   notificationMessage = '';
+  checkoutLoading = false;
+  checkoutError = '';
+
+  // Adresse livraison
+  addressLine1 = '';
+  addressCity = '';
+  addressPostal = '';
+  addressCountry = 'France';
 
   // Subs
   private subs = new Subscription();
@@ -79,11 +89,15 @@ export class CartComponent implements OnInit, OnDestroy {
   readonly ChevronRight = ChevronRight;
   readonly AlertCircle = AlertCircle;
   readonly Star = Star;
+  readonly Loader2 = Loader2;
 
   constructor(
     private cartService: CartService,
     private wishlistService: WishlistService,
-    private catalogService: CatalogService
+    private catalogService: CatalogService,
+    private authService: AuthService,
+    private buyerService: BuyerService,
+    private router: Router
   ) {
     this.deliveryOptions = [
       { id: 'standard', label: 'Livraison Standard', sub: '3 à 5 jours ouvrés', price: 0, eta: 'Gratuite dès 49€', icon: this.Truck },
@@ -306,5 +320,55 @@ export class CartComponent implements OnInit, OnDestroy {
     this.notificationMessage = msg;
     this.showNotification = true;
     setTimeout(() => (this.showNotification = false), 2500);
+  }
+
+  async placeOrder(): Promise<void> {
+    this.checkoutError = '';
+    if (!this.cart.length) return;
+
+    const authUser = this.authService.currentUser;
+    if (!this.authService.isAuthenticated || authUser?.role !== 'client') {
+      this.router.navigate(['/account'], { queryParams: { redirect: '/cart' } });
+      return;
+    }
+
+    if (!this.addressLine1.trim() || !this.addressCity.trim() || !this.addressPostal.trim()) {
+      this.checkoutError = 'Veuillez renseigner votre adresse de livraison.';
+      return;
+    }
+
+    this.checkoutLoading = true;
+    try {
+      const order = await this.buyerService.checkout({
+        items: this.cart.map((i) => ({
+          id: i.id,
+          name: i.name,
+          price: i.price,
+          quantity: i.quantity,
+          image: i.image,
+          sellerName: i.sellerName
+        })),
+        delivery: this.delivery,
+        shipping: this.shipping,
+        promoCode: this.appliedPromo?.code,
+        promoDiscount: this.promoDiscount,
+        address: {
+          line1: this.addressLine1.trim(),
+          city: this.addressCity.trim(),
+          postalCode: this.addressPostal.trim(),
+          country: this.addressCountry.trim() || 'France'
+        }
+      });
+      this.cartService.clearCart();
+      this.appliedPromo = null;
+      this.flashNotification(`Commande ${order.id} confirmée !`);
+      setTimeout(() => {
+        this.router.navigate(['/profile'], { queryParams: { view: 'orders', new: order.id } });
+      }, 800);
+    } catch (e: unknown) {
+      this.checkoutError = e instanceof Error ? e.message : 'Paiement impossible. Réessayez.';
+    } finally {
+      this.checkoutLoading = false;
+    }
   }
 }

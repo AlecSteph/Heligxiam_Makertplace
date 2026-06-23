@@ -103,10 +103,27 @@ async function courrielVendeurPris(pool, email) {
   return !!row;
 }
 
+/**
+ * @param {import('mysql2/promise').Pool} pool
+ * @param {number|string} vendeurId
+ * @param {string} mot_de_passe_hache
+ */
+async function updateVendeurPassword(pool, vendeurId, mot_de_passe_hache) {
+  const id = parseInt(String(vendeurId), 10);
+  if (!Number.isFinite(id) || id < 1) {
+    throw new Error('INVALID_VENDEUR_ID');
+  }
+  await pool.execute(
+    `UPDATE comptes_vendeur SET mot_de_passe_hache = ?, date_mise_a_jour = NOW(6) WHERE identifiant = ?`,
+    [mot_de_passe_hache, id]
+  );
+}
+
 module.exports = {
   findVendeurByCourriel,
   findVendeurById,
   getPrimaryBoutiqueId,
   createVendeurWithBoutique,
-  courrielVendeurPris
+  courrielVendeurPris,
+  updateVendeurPassword
 };

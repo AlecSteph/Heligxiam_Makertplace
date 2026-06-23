@@ -4,7 +4,7 @@
     <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
       <div class="flex items-center gap-2">
         <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
-        <span class="font-medium">Livraison Premium Gratuite dès 99€ • Retours Faciles 60 Jours</span>
+        <span class="font-medium">{{ 'header.promoBanner' | t }}</span>
       </div>
       <div class="hidden md:flex gap-5 items-center">
         <a routerLink="/guide"
@@ -12,15 +12,15 @@
            class="inline-flex items-center gap-1.5 hover:text-indigo-100 transition-colors font-medium"
            title="Centre d'aide et contact 24h/24">
           <lucide-angular [img]="Headphones" class="w-4 h-4"></lucide-angular>
-          Support 24/7
+          {{ 'header.support247' | t }}
         </a>
         <span class="w-px h-4 bg-white/30"></span>
         <a routerLink="/profile"
            [queryParams]="{ view: 'orders' }"
            class="inline-flex items-center gap-1.5 hover:text-indigo-100 transition-colors font-medium"
-           title="Suivre mes commandes">
+           [title]="'header.trackOrder' | t">
           <lucide-angular [img]="Package" class="w-4 h-4"></lucide-angular>
-          Suivre ma commande
+          {{ 'header.trackOrder' | t }}
         </a>
       </div>
     </div>
@@ -30,19 +30,7 @@
   <div class="max-w-7xl mx-auto px-4 py-4">
     <div class="flex items-center gap-8">
       <!-- Logo -->
-      <a routerLink="/" class="flex-shrink-0 group">
-        <div class="flex items-center gap-2">
-          <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shadow-lg">
-            <span class="text-white text-xl font-bold">H</span>
-          </div>
-          <div>
-            <div class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
-              HELIGXIAM
-            </div>
-            <div class="text-xs text-gray-500 -mt-1">Luxury Marketplace</div>
-          </div>
-        </div>
-      </a>
+      <app-logo class="flex-shrink-0" size="md" [showTagline]="false"></app-logo>
 
       <!-- Search Bar with Category Dropdown -->
       <form (ngSubmit)="handleSearch()" class="flex-1 max-w-2xl">
@@ -55,8 +43,8 @@
               [attr.aria-expanded]="showSearchCategories"
               class="h-full flex items-center gap-1.5 px-3 py-3 bg-gray-50 hover:bg-gray-100 text-sm font-semibold text-gray-700 border-r border-gray-200 rounded-l-[10px] transition-colors"
             >
-              <span class="truncate max-w-[140px] hidden sm:inline">{{ searchCategory.label }}</span>
-              <span class="sm:hidden">Tout</span>
+              <span class="truncate max-w-[140px] hidden sm:inline">{{ searchCategory.labelKey | t }}</span>
+              <span class="sm:hidden">{{ 'header.search.allShort' | t }}</span>
               <svg class="w-3.5 h-3.5 text-gray-500 transition-transform flex-shrink-0" [class.rotate-180]="showSearchCategories" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
               </svg>
@@ -69,7 +57,7 @@
             >
               <div class="py-1 max-h-[70vh] overflow-y-auto">
                 <!-- Main categories -->
-                <p class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Catégories</p>
+                <p class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">{{ 'header.search.categories' | t }}</p>
                 <button *ngFor="let cat of searchCategories.slice(0, 7)"
                         type="button"
                         (click)="selectSearchCategory(cat)"
@@ -77,7 +65,7 @@
                           (searchCategory.value === cat.value
                             ? 'bg-indigo-50 text-indigo-700 font-semibold'
                             : 'text-gray-700 hover:bg-gray-50')">
-                  <span class="truncate">{{ cat.label }}</span>
+                  <span class="truncate">{{ cat.labelKey | t }}</span>
                   <svg *ngIf="searchCategory.value === cat.value" class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
                   </svg>
@@ -86,7 +74,7 @@
                 <div class="border-t border-gray-100 my-1"></div>
 
                 <!-- Collections -->
-                <p class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Collections</p>
+                <p class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">{{ 'header.search.collections' | t }}</p>
                 <button *ngFor="let cat of searchCategories.slice(7)"
                         type="button"
                         (click)="selectSearchCategory(cat)"
@@ -94,7 +82,7 @@
                           (searchCategory.value === cat.value
                             ? 'bg-indigo-50 text-indigo-700 font-semibold'
                             : 'text-gray-700 hover:bg-gray-50')">
-                  <span class="truncate">{{ cat.label }}</span>
+                  <span class="truncate">{{ cat.labelKey | t }}</span>
                   <svg *ngIf="searchCategory.value === cat.value" class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
                   </svg>
@@ -107,7 +95,7 @@
           <div class="relative flex-1">
           <input
             type="text"
-              [placeholder]="searchCategory.value ? 'Rechercher dans ' + searchCategory.label + '…' : 'Rechercher des produits premium…'"
+              [placeholder]="searchPlaceholder()"
             [(ngModel)]="searchQuery"
             name="search"
               class="w-full px-4 py-3 bg-transparent text-gray-900 placeholder-gray-400 focus:outline-none"
@@ -142,11 +130,11 @@
             [attr.aria-expanded]="showLanguageMenu"
             aria-haspopup="true"
             class="flex items-center gap-1.5 px-3 py-2 hover:bg-gray-50 rounded-xl transition-all group border border-transparent hover:border-gray-200"
-            title="Choisir la langue et le pays"
+            [title]="'header.locale.choose' | t"
           >
             <span class="text-lg leading-none">{{ selectedCountry.flag }}</span>
             <div class="text-left leading-tight hidden xl:block">
-              <div class="text-[11px] text-gray-500">Livrer en {{ selectedCountry.label }}</div>
+              <div class="text-[11px] text-gray-500">{{ deliverToLabel(selectedCountry) }}</div>
               <div class="text-sm font-semibold text-gray-900 flex items-center gap-1">
                 {{ selectedLanguage.short }}
                 <svg class="w-3.5 h-3.5 text-gray-500 transition-transform" [class.rotate-180]="showLanguageMenu" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,10 +160,10 @@
             <div class="px-4 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-100">
               <p class="text-xs font-bold text-gray-900 uppercase tracking-wide flex items-center gap-1.5">
                 <lucide-angular [img]="Globe" class="w-3.5 h-3.5 text-indigo-600"></lucide-angular>
-                Préférences régionales
+                {{ 'header.locale.title' | t }}
               </p>
               <p class="text-[11px] text-gray-600 mt-0.5">
-                Langue, pays et devise de livraison
+                {{ 'header.locale.subtitle' | t }}
               </p>
             </div>
 
@@ -184,17 +172,19 @@
               <div class="p-3">
                 <p class="px-1 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1">
                   <lucide-angular [img]="Languages" class="w-3 h-3"></lucide-angular>
-                  Langue
+                  {{ 'header.locale.language' | t }}
                 </p>
-                <div class="grid grid-cols-2 gap-1">
+                <div class="locale-lang-grid grid grid-cols-2 gap-1.5">
                   <button *ngFor="let lang of languages"
                           type="button"
                           (click)="selectLanguage(lang)"
-                          [class]="'flex items-center justify-between px-2.5 py-1.5 text-sm rounded-lg transition-colors ' +
+                          [attr.lang]="lang.code"
+                          [attr.dir]="lang.code === 'ar' ? 'rtl' : 'ltr'"
+                          [class]="'locale-lang-btn flex items-center justify-between gap-1 px-2.5 py-2 text-sm rounded-lg transition-colors ' +
                             (selectedLanguage.code === lang.code
                               ? 'bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200'
                               : 'text-gray-700 hover:bg-gray-50 border border-transparent')">
-                    <span class="truncate">{{ lang.label }}</span>
+                    <span class="locale-lang-label truncate">{{ lang.label }}</span>
                     <lucide-angular *ngIf="selectedLanguage.code === lang.code" [img]="CheckCircle2" class="w-3.5 h-3.5 text-indigo-600 flex-shrink-0 ml-1"></lucide-angular>
                   </button>
                 </div>
@@ -206,7 +196,7 @@
               <div class="p-3">
                 <p class="px-1 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-1">
                   <lucide-angular [img]="Globe" class="w-3 h-3"></lucide-angular>
-                  Pays / Marché
+                  {{ 'header.locale.country' | t }}
                 </p>
                 <div class="space-y-0.5">
                   <button *ngFor="let c of countries"
@@ -217,7 +207,7 @@
                               ? 'bg-indigo-50 text-indigo-700 font-semibold'
                               : 'text-gray-700 hover:bg-gray-50')">
                     <span class="text-lg leading-none">{{ c.flag }}</span>
-                    <span class="flex-1 text-left truncate">{{ c.label }}</span>
+                    <span class="flex-1 text-left truncate">{{ countryLabel(c.code) }}</span>
                     <span class="text-[10px] font-mono bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{{ c.currency }}</span>
                     <lucide-angular *ngIf="selectedCountry.code === c.code" [img]="CheckCircle2" class="w-3.5 h-3.5 text-indigo-600 flex-shrink-0"></lucide-angular>
                   </button>
@@ -229,7 +219,7 @@
             <div class="p-3 bg-gray-50 border-t border-gray-100">
               <!-- Résumé de la sélection -->
               <div class="flex items-center justify-between mb-2 px-1 text-xs">
-                <span class="text-gray-500">Sélection :</span>
+                <span class="text-gray-500">{{ 'header.locale.selection' | t }}</span>
                 <span class="font-bold text-gray-800 flex items-center gap-1.5">
                   {{ selectedLanguage.short }}
                   <span class="text-gray-300">•</span>
@@ -255,7 +245,7 @@
           class="hidden lg:flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 rounded-xl transition-all group"
         >
           <lucide-angular [img]="Heart" class="w-5 h-5 text-gray-700 group-hover:text-red-500 transition-colors"></lucide-angular>
-          <span class="text-sm font-medium">Favoris</span>
+          <span class="text-sm font-medium">{{ 'label.favorites' | t }}</span>
         </a>
 
         <!-- Non connecté : menu Bonjour / Identifiez-vous (hover + click) -->
@@ -275,9 +265,9 @@
         >
           <lucide-angular [img]="User" class="w-5 h-5 text-gray-700 group-hover:text-indigo-600 transition-colors"></lucide-angular>
             <div class="text-left leading-tight">
-              <div class="text-[11px] text-gray-500">Bonjour, identifiez-vous</div>
+              <div class="text-[11px] text-gray-500">{{ 'header.guest.hello' | t }}</div>
               <div class="text-sm font-semibold text-gray-900 flex items-center gap-1">
-                Comptes et listes
+                {{ 'header.guest.accountsLists' | t }}
                 <svg class="w-3.5 h-3.5 text-gray-500 transition-transform" [class.rotate-180]="showGuestMenu" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
@@ -302,13 +292,13 @@
                 (click)="closeGuestMenu()"
                 class="block w-full px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg hover:scale-[1.02] transition-all"
               >
-                Identifiez-vous
+                {{ 'header.guest.signIn' | t }}
               </a>
               <p class="text-xs text-gray-600 mt-2">
-                Nouveau client ?
+                {{ 'header.guest.newCustomer' | t }}
                 <a routerLink="/account" [queryParams]="{ mode: 'register' }" (click)="closeGuestMenu()"
                    class="text-indigo-600 hover:underline font-medium">
-                  Commencez ici
+                  {{ 'header.guest.startHere' | t }}
                 </a>
               </p>
             </div>
@@ -318,23 +308,23 @@
               <div class="p-3 border-r border-gray-100">
                 <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wide mb-2 flex items-center gap-1">
                   <lucide-angular [img]="List" class="w-3.5 h-3.5"></lucide-angular>
-                  Vos listes
+                  {{ 'header.guest.yourLists' | t }}
                 </h4>
                 <ul class="space-y-1 text-xs">
-                  <li><a routerLink="/wishlist" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">Créer une liste</a></li>
-                  <li><a routerLink="/wishlist" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">Liste d'envies</a></li>
-                  <li><a routerLink="/wishlist" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">Liste de souhaits</a></li>
+                  <li><a routerLink="/wishlist" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">{{ 'header.guest.createList' | t }}</a></li>
+                  <li><a routerLink="/wishlist" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">{{ 'header.guest.wishlist' | t }}</a></li>
+                  <li><a routerLink="/wishlist" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">{{ 'header.guest.wishList2' | t }}</a></li>
                 </ul>
               </div>
               <div class="p-3">
                 <h4 class="text-xs font-bold text-gray-900 uppercase tracking-wide mb-2 flex items-center gap-1">
                   <lucide-angular [img]="User" class="w-3.5 h-3.5"></lucide-angular>
-                  Vos comptes
+                  {{ 'header.guest.yourAccounts' | t }}
                 </h4>
                 <ul class="space-y-1 text-xs">
-                  <li><a routerLink="/account" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">Mon compte</a></li>
-                  <li><a routerLink="/orders" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">Vos commandes</a></li>
-                  <li><a routerLink="/cart" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">Votre panier</a></li>
+                  <li><a routerLink="/account" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">{{ 'header.guest.myAccount' | t }}</a></li>
+                  <li><a routerLink="/orders" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">{{ 'header.guest.yourOrders' | t }}</a></li>
+                  <li><a routerLink="/cart" (click)="closeGuestMenu()" class="text-gray-700 hover:text-indigo-600 hover:underline">{{ 'header.guest.yourCart' | t }}</a></li>
                 </ul>
               </div>
             </div>
@@ -350,9 +340,9 @@
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
-                  Vendre sur HELIGXIAM
+                  {{ 'header.sell.title' | t }}
                 </p>
-                <p class="text-[11px] text-gray-500">Devenez vendeur partenaire — jusqu'à 47 250€ d'avantages</p>
+                <p class="text-[11px] text-gray-500">{{ 'header.sell.subtitle' | t }}</p>
               </div>
               <svg class="w-4 h-4 text-gray-400 group-hover:text-orange-600 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -374,7 +364,7 @@
               {{ userInitials || 'U' }}
             </div>
             <span class="text-sm font-medium text-gray-800">
-              {{ currentUser?.prenom || 'Profil' }}
+              {{ currentUser?.prenom || ('header.user.profileFallback' | t) }}
             </span>
             <svg class="w-4 h-4 text-gray-500 transition-transform" [class.rotate-180]="showUserMenu" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -393,11 +383,11 @@
               <p class="text-xs text-gray-500 truncate">{{ currentUser?.email }}</p>
               <span *ngIf="currentUser?.role === 'client'"
                     class="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide bg-indigo-100 text-indigo-700">
-                Client
+                {{ 'header.user.client' | t }}
               </span>
               <span *ngIf="currentUser?.role === 'admin'"
                     class="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded-full uppercase tracking-wide bg-slate-800 text-white">
-                Administrateur
+                {{ 'header.user.admin' | t }}
               </span>
             </div>
 
@@ -408,7 +398,7 @@
                 class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <lucide-angular [img]="User" class="w-4 h-4 text-gray-500"></lucide-angular>
-                Mon profil
+                {{ 'header.user.profile' | t }}
               </a>
 
               <!-- Sections client -->
@@ -418,7 +408,7 @@
                 class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <lucide-angular [img]="Heart" class="w-4 h-4 text-gray-500"></lucide-angular>
-                Mes favoris
+                {{ 'header.user.favorites' | t }}
               </a>
               <a *ngIf="!isSeller"
                 routerLink="/cart"
@@ -426,7 +416,7 @@
                 class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <lucide-angular [img]="ShoppingCart" class="w-4 h-4 text-gray-500"></lucide-angular>
-                Mon panier
+                {{ 'header.user.cart' | t }}
               </a>
             </nav>
 
@@ -437,7 +427,7 @@
                 class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
               >
                 <lucide-angular [img]="LogOut" class="w-4 h-4"></lucide-angular>
-                Se déconnecter
+                {{ 'header.user.logout' | t }}
               </button>
             </div>
           </div>
@@ -448,7 +438,7 @@
           class="relative flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all"
         >
           <lucide-angular [img]="ShoppingCart" class="w-5 h-5"></lucide-angular>
-          <span class="hidden md:inline text-sm font-medium">Panier</span>
+          <span class="hidden md:inline text-sm font-medium">{{ 'label.cart' | t }}</span>
           <span 
             *ngIf="cartCount > 0"
             class="absolute -top-1 -right-1 bg-pink-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-lg animate-pulse"
@@ -474,7 +464,7 @@
         title="Plus de services : Points de relais, Carrières, Accessibilité…"
       >
         <lucide-angular [img]="Menu" class="w-4 h-4"></lucide-angular>
-        Autre
+        {{ 'header.nav.other' | t }}
       </button>
 
       <div class="max-w-7xl w-full mx-auto flex items-stretch px-4">
@@ -493,7 +483,7 @@
           class="flex items-center gap-1.5 px-3 py-2 my-1.5 mr-3 rounded-full text-xs font-bold uppercase tracking-wide text-white bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 hover:shadow-lg hover:scale-[1.02] transition-all"
         >
           <lucide-angular [img]="Tag" class="w-3.5 h-3.5"></lucide-angular>
-          Offres &amp; Bons plans
+          {{ 'header.nav.offers' | t }}
           <svg class="w-3 h-3 transition-transform" [class.rotate-180]="showOffersMenu" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
           </svg>
@@ -511,16 +501,16 @@
             <div>
               <p class="text-sm font-bold text-gray-900 flex items-center gap-1.5">
                 <lucide-angular [img]="Gift" class="w-4 h-4 text-pink-600"></lucide-angular>
-                Toutes les manières d'économiser
+                {{ 'header.offers.title' | t }}
               </p>
               <p class="text-[11px] text-gray-600 mt-0.5">
-                Jusqu'à -70% en temps réel — cumulez coupons, cashback et fidélité
+                {{ 'header.offers.subtitle' | t }}
               </p>
             </div>
             <a routerLink="/offres"
                (click)="closeOffersMenu()"
                class="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-pink-600 hover:text-pink-700">
-              Voir toutes les offres
+              {{ 'header.offers.viewAll' | t }}
               <lucide-angular [img]="ArrowRight" class="w-3.5 h-3.5"></lucide-angular>
             </a>
           </div>
@@ -537,10 +527,10 @@
                 <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-md mb-3">
                   <lucide-angular [img]="Ticket" class="w-5 h-5 text-white"></lucide-angular>
                 </div>
-                <h4 class="text-sm font-bold text-gray-900">Codes promo &amp; coupons</h4>
-                <p class="text-[11px] text-gray-600 mt-1 leading-snug">Activez des réductions à appliquer au panier.</p>
+                <h4 class="text-sm font-bold text-gray-900">{{ 'header.offers.coupons.title' | t }}</h4>
+                <p class="text-[11px] text-gray-600 mt-1 leading-snug">{{ 'header.offers.coupons.desc' | t }}</p>
                 <div class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-pink-700 group-hover:gap-2 transition-all">
-                  Parcourir les coupons
+                  {{ 'header.offers.coupons.cta' | t }}
                   <lucide-angular [img]="ArrowRight" class="w-3 h-3"></lucide-angular>
                 </div>
               </div>
@@ -556,10 +546,10 @@
                 <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-md mb-3">
                   <lucide-angular [img]="Percent" class="w-5 h-5 text-white"></lucide-angular>
                 </div>
-                <h4 class="text-sm font-bold text-gray-900">Bons de réduction</h4>
-                <p class="text-[11px] text-gray-600 mt-1 leading-snug">Remises exclusives par catégorie et vendeur.</p>
+                <h4 class="text-sm font-bold text-gray-900">{{ 'header.offers.vouchers.title' | t }}</h4>
+                <p class="text-[11px] text-gray-600 mt-1 leading-snug">{{ 'header.offers.vouchers.desc' | t }}</p>
                 <div class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-orange-700 group-hover:gap-2 transition-all">
-                  Voir les bons du jour
+                  {{ 'header.offers.vouchers.cta' | t }}
                   <lucide-angular [img]="ArrowRight" class="w-3 h-3"></lucide-angular>
                 </div>
               </div>
@@ -575,10 +565,10 @@
                 <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md mb-3">
                   <lucide-angular [img]="Wallet" class="w-5 h-5 text-white"></lucide-angular>
                 </div>
-                <h4 class="text-sm font-bold text-gray-900">Cashback &amp; crédits</h4>
-                <p class="text-[11px] text-gray-600 mt-1 leading-snug">Jusqu'à 8% remboursés sur chaque commande.</p>
+                <h4 class="text-sm font-bold text-gray-900">{{ 'header.offers.cashback.title' | t }}</h4>
+                <p class="text-[11px] text-gray-600 mt-1 leading-snug">{{ 'header.offers.cashback.desc' | t }}</p>
                 <div class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 group-hover:gap-2 transition-all">
-                  Activer mon cashback
+                  {{ 'header.offers.cashback.cta' | t }}
                   <lucide-angular [img]="ArrowRight" class="w-3 h-3"></lucide-angular>
                 </div>
               </div>
@@ -594,10 +584,10 @@
                 <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center shadow-md mb-3">
                   <lucide-angular [img]="Zap" class="w-5 h-5 text-white"></lucide-angular>
                 </div>
-                <h4 class="text-sm font-bold text-gray-900">Ventes flash &amp; outlet</h4>
-                <p class="text-[11px] text-gray-600 mt-1 leading-snug">Deals chronométrés, stocks ultra-limités.</p>
+                <h4 class="text-sm font-bold text-gray-900">{{ 'header.offers.flash.title' | t }}</h4>
+                <p class="text-[11px] text-gray-600 mt-1 leading-snug">{{ 'header.offers.flash.desc' | t }}</p>
                 <div class="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-red-700 group-hover:gap-2 transition-all">
-                  Courir vers les deals
+                  {{ 'header.offers.flash.cta' | t }}
                   <lucide-angular [img]="ArrowRight" class="w-3 h-3"></lucide-angular>
                 </div>
               </div>
@@ -608,12 +598,12 @@
           <div class="px-5 py-2.5 bg-gray-50 border-t border-gray-100 text-[11px] text-gray-600 flex items-center justify-between">
             <span class="flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              +128 offres actives aujourd'hui
+              {{ 'header.offers.activeToday' | t }}
             </span>
             <a routerLink="/offres"
                (click)="closeOffersMenu()"
                class="font-semibold text-gray-700 hover:text-pink-600">
-              Tout voir →
+              {{ 'header.offers.seeAll' | t }}
             </a>
           </div>
         </div>
@@ -634,49 +624,49 @@
            (mouseleave)="onMarqueeHoverLeave()">
         <div #marqueeTrack class="marquee-track text-sm">
           <!-- copy 1 -->
-          <a routerLink="/category/electronique" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Électronique</a>
-          <a routerLink="/category/mode" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Mode &amp; Accessoires</a>
-          <a routerLink="/category/maison" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Maison &amp; Déco</a>
-          <a routerLink="/category/beaute" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Beauté &amp; Santé</a>
-          <a routerLink="/category/sport" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Sport &amp; Fitness</a>
-          <a routerLink="/category/auto" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Automobile</a>
+          <a routerLink="/category/electronique" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">{{ 'nav.electronics' | t }}</a>
+          <a routerLink="/category/mode" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">{{ 'nav.fashion' | t }}</a>
+          <a routerLink="/category/maison" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">{{ 'nav.home' | t }}</a>
+          <a routerLink="/category/beaute" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">{{ 'nav.beauty' | t }}</a>
+          <a routerLink="/category/sport" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">{{ 'nav.sport' | t }}</a>
+          <a routerLink="/category/auto" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">{{ 'nav.auto' | t }}</a>
           <span class="h-4 w-px bg-gray-300 shrink-0"></span>
-          <a [routerLink]="['/search']" [queryParams]="{ sort: 'rating' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Meilleures ventes</a>
-          <a [routerLink]="['/search']" [queryParams]="{ badge: 'Nouveau' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Nouveautés</a>
-          <a [routerLink]="['/search']" [queryParams]="{ tab: 'brands' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">Marques</a>
+          <a [routerLink]="['/search']" [queryParams]="{ sort: 'rating' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">{{ 'nav.bestsellers' | t }}</a>
+          <a [routerLink]="['/search']" [queryParams]="{ badge: 'Nouveau' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">{{ 'nav.new' | t }}</a>
+          <a [routerLink]="['/search']" [queryParams]="{ tab: 'brands' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors">{{ 'nav.brands' | t }}</a>
           <span class="h-4 w-px bg-gray-300 shrink-0"></span>
           <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }" class="inline-flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
-            <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>Premium
+            <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>{{ 'nav.premium' | t }}
           </a>
-          <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }" class="font-medium text-pink-600 hover:text-pink-700 transition-colors">🔥 Promotions</a>
-          <a [routerLink]="['/search']" [queryParams]="{ promo: 'flash' }" class="font-medium text-red-600 hover:text-red-700 transition-colors">⚡ Ventes Flash</a>
-          <a [routerLink]="['/search']" [queryParams]="{ promo: 'deals' }" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors">💰 Bons plans</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }" class="font-medium text-pink-600 hover:text-pink-700 transition-colors">{{ 'nav.promos' | t }}</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'flash' }" class="font-medium text-red-600 hover:text-red-700 transition-colors">{{ 'nav.flash' | t }}</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'deals' }" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors">{{ 'nav.deals' | t }}</a>
           <span class="h-4 w-px bg-gray-300 shrink-0"></span>
           <a routerLink="/guide" class="inline-flex items-center gap-1.5 font-semibold px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-orange-700 hover:from-amber-200 hover:to-orange-200 border border-amber-200 transition-all">
-            <lucide-angular [img]="BookOpen" class="w-4 h-4"></lucide-angular>Guide de l'acheteur
+            <lucide-angular [img]="BookOpen" class="w-4 h-4"></lucide-angular>{{ 'nav.buyerGuide' | t }}
           </a>
 
           <!-- copy 2 (duplicate for seamless infinite loop) -->
-          <a routerLink="/category/electronique" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Électronique</a>
-          <a routerLink="/category/mode" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Mode &amp; Accessoires</a>
-          <a routerLink="/category/maison" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Maison &amp; Déco</a>
-          <a routerLink="/category/beaute" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Beauté &amp; Santé</a>
-          <a routerLink="/category/sport" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Sport &amp; Fitness</a>
-          <a routerLink="/category/auto" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Automobile</a>
+          <a routerLink="/category/electronique" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">{{ 'nav.electronics' | t }}</a>
+          <a routerLink="/category/mode" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">{{ 'nav.fashion' | t }}</a>
+          <a routerLink="/category/maison" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">{{ 'nav.home' | t }}</a>
+          <a routerLink="/category/beaute" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">{{ 'nav.beauty' | t }}</a>
+          <a routerLink="/category/sport" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">{{ 'nav.sport' | t }}</a>
+          <a routerLink="/category/auto" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">{{ 'nav.auto' | t }}</a>
           <span class="h-4 w-px bg-gray-300 shrink-0"></span>
-          <a [routerLink]="['/search']" [queryParams]="{ sort: 'rating' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Meilleures ventes</a>
-          <a [routerLink]="['/search']" [queryParams]="{ badge: 'Nouveau' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Nouveautés</a>
-          <a [routerLink]="['/search']" [queryParams]="{ tab: 'brands' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">Marques</a>
+          <a [routerLink]="['/search']" [queryParams]="{ sort: 'rating' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">{{ 'nav.bestsellers' | t }}</a>
+          <a [routerLink]="['/search']" [queryParams]="{ badge: 'Nouveau' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">{{ 'nav.new' | t }}</a>
+          <a [routerLink]="['/search']" [queryParams]="{ tab: 'brands' }" class="font-medium text-gray-700 hover:text-indigo-600 transition-colors" aria-hidden="true">{{ 'nav.brands' | t }}</a>
           <span class="h-4 w-px bg-gray-300 shrink-0"></span>
           <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }" class="inline-flex items-center gap-1 font-medium text-indigo-600 hover:text-indigo-700 transition-colors" aria-hidden="true">
-            <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>Premium
+            <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>{{ 'nav.premium' | t }}
           </a>
-          <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }" class="font-medium text-pink-600 hover:text-pink-700 transition-colors" aria-hidden="true">🔥 Promotions</a>
-          <a [routerLink]="['/search']" [queryParams]="{ promo: 'flash' }" class="font-medium text-red-600 hover:text-red-700 transition-colors" aria-hidden="true">⚡ Ventes Flash</a>
-          <a [routerLink]="['/search']" [queryParams]="{ promo: 'deals' }" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors" aria-hidden="true">💰 Bons plans</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }" class="font-medium text-pink-600 hover:text-pink-700 transition-colors" aria-hidden="true">{{ 'nav.promos' | t }}</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'flash' }" class="font-medium text-red-600 hover:text-red-700 transition-colors" aria-hidden="true">{{ 'nav.flash' | t }}</a>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'deals' }" class="font-medium text-emerald-600 hover:text-emerald-700 transition-colors" aria-hidden="true">{{ 'nav.deals' | t }}</a>
           <span class="h-4 w-px bg-gray-300 shrink-0"></span>
           <a routerLink="/guide" class="inline-flex items-center gap-1.5 font-semibold px-3 py-1 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-orange-700 hover:from-amber-200 hover:to-orange-200 border border-amber-200 transition-all" aria-hidden="true">
-            <lucide-angular [img]="BookOpen" class="w-4 h-4"></lucide-angular>Guide de l'acheteur
+            <lucide-angular [img]="BookOpen" class="w-4 h-4"></lucide-angular>{{ 'nav.buyerGuide' | t }}
           </a>
         </div>
       </div>
@@ -717,8 +707,8 @@
             <lucide-angular [img]="Menu" class="w-5 h-5"></lucide-angular>
           </div>
           <div>
-            <p class="text-[11px] uppercase tracking-widest text-white/70">Tous nos services</p>
-            <h2 class="text-lg font-bold">Explorer HELIGXIAM</h2>
+            <p class="text-[11px] uppercase tracking-widest text-white/70">{{ 'header.side.allServices' | t }}</p>
+            <h2 class="text-lg font-bold">{{ 'header.side.explore' | t }}</h2>
           </div>
         </div>
         <button type="button"
@@ -735,8 +725,8 @@
           {{ userInitials || 'U' }}
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-semibold truncate">Bonjour, {{ currentUser?.prenom || 'Client' }}</p>
-          <p class="text-[11px] text-white/70 truncate">{{ roleLabel }}</p>
+          <p class="text-sm font-semibold truncate">{{ 'header.side.hello' | t:{ name: currentUser?.prenom || ('role.client' | t) } }}</p>
+          <p *ngIf="!isSeller" class="text-[11px] text-white/70 truncate">{{ roleLabel }}</p>
         </div>
       </div>
       <a *ngIf="!isLoggedIn"
@@ -745,7 +735,7 @@
          class="mt-4 flex items-center justify-between px-4 py-2.5 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition">
         <span class="flex items-center gap-2 text-sm">
           <lucide-angular [img]="User" class="w-4 h-4"></lucide-angular>
-          Identifiez-vous
+          {{ 'header.side.signIn' | t }}
         </span>
         <lucide-angular [img]="ArrowRight" class="w-4 h-4"></lucide-angular>
       </a>
@@ -754,7 +744,7 @@
     <!-- Content (scrollable) -->
     <div class="flex-1 overflow-y-auto px-3 py-4 space-y-5">
       <div *ngFor="let section of sideMenuSections">
-        <p class="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">{{ section.title }}</p>
+        <p class="px-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">{{ section.titleKey | t }}</p>
         <ul class="space-y-0.5">
           <li *ngFor="let item of section.items">
             <a [routerLink]="item.route"
@@ -767,13 +757,13 @@
               </span>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
-                  <p class="text-sm font-semibold text-gray-900 truncate">{{ item.label }}</p>
-                  <span *ngIf="item.badge"
+                  <p class="text-sm font-semibold text-gray-900 truncate">{{ item.labelKey | t }}</p>
+                  <span *ngIf="item.badgeKey"
                         class="inline-block px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white">
-                    {{ item.badge }}
+                    {{ item.badgeKey | t }}
                   </span>
                 </div>
-                <p *ngIf="item.description" class="text-[11px] text-gray-500 truncate">{{ item.description }}</p>
+                <p *ngIf="item.descKey" class="text-[11px] text-gray-500 truncate">{{ item.descKey | t }}</p>
               </div>
               <lucide-angular [img]="ArrowRight" class="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition"></lucide-angular>
             </a>
@@ -789,15 +779,15 @@
           <lucide-angular [img]="Sparkles" class="w-4 h-4 text-white"></lucide-angular>
         </span>
         <div>
-          <p class="text-[11px] font-bold text-gray-900">HELIGXIAM Plus</p>
-          <p class="text-[10px] text-gray-500">-70% sur vos achats</p>
+          <p class="text-[11px] font-bold text-gray-900">{{ 'header.side.plus' | t }}</p>
+          <p class="text-[10px] text-gray-500">{{ 'header.side.plusDeal' | t }}</p>
         </div>
       </div>
       <a routerLink="/offres"
          fragment="cashback"
          (click)="closeSideMenu()"
          class="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-bold rounded-lg hover:shadow-md transition">
-        Découvrir
+        {{ 'header.side.discover' | t }}
       </a>
     </div>
   </aside>
@@ -816,7 +806,7 @@
         {{ selectedLanguage.short }}
         <span class="text-gray-300">•</span>
         <span>{{ selectedCountry.flag }}</span>
-        {{ selectedCountry.label }}
+        {{ countryLabel(selectedCountry.code) }}
         <span class="text-gray-300">•</span>
         <span class="font-bold text-indigo-600">{{ selectedCountry.currency }}</span>
       </p>

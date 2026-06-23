@@ -1,9 +1,10 @@
 <!-- =========== FLOATING BUBBLE (closed state) =========== -->
 <button *ngIf="!isOpen || isMinimized"
         type="button"
+        class="chatbot-bubble chatbot-drag-handle"
         (mousedown)="startDrag($event)"
         (touchstart)="startDrag($event)"
-        (click)="toggle()"
+        (click)="onBubbleClick($event)"
         [style.right.px]="posX"
         [style.bottom.px]="posY"
         [class]="'fixed z-[60] flex items-center gap-2 select-none cursor-grab active:cursor-grabbing shadow-2xl rounded-full transition-all hover:scale-105 ' +
@@ -28,7 +29,7 @@
       <lucide-angular [img]="Bot" class="w-4 h-4 text-white"></lucide-angular>
     </div>
     <div class="text-left">
-      <p class="text-[11px] font-bold text-slate-900 leading-tight">{{ mode === 'seller' ? 'Seller Assist' : 'Helixa' }}</p>
+      <p class="text-[11px] font-bold text-slate-900 leading-tight">{{ mode === 'seller' ? 'Seller Assist' : 'Assistant' }}</p>
       <p class="text-[10px] text-emerald-600 leading-tight flex items-center gap-1">
         <span [class]="'w-1.5 h-1.5 rounded-full ' + pulseColor"></span>
         En ligne
@@ -42,10 +43,11 @@
      #chatWindow
      [style.right.px]="posX"
      [style.bottom.px]="posY"
-     class="fixed z-[60] w-[92vw] sm:w-[380px] h-[560px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-pop">
+     class="chatbot-window fixed z-[60] w-[min(92vw,380px)] h-[min(560px,85dvh)] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-pop">
 
   <!-- Header (drag handle) -->
   <div
+    class="chatbot-drag-handle"
     (mousedown)="startDrag($event)"
     (touchstart)="startDrag($event)"
     [class]="'relative cursor-grab active:cursor-grabbing bg-gradient-to-br ' + headerGradient + ' text-white p-3 flex items-center gap-3 select-none'">
@@ -201,7 +203,7 @@
       </div>
       <button type="button"
               (click)="send()"
-              [disabled]="!inputText.trim()"
+              [disabled]="!inputText.trim() || isTyping"
               [class]="'w-9 h-9 rounded-full flex items-center justify-center text-white transition-all flex-shrink-0 ' +
                 (inputText.trim()
                   ? 'bg-gradient-to-br ' + bubbleGradient + ' hover:scale-105 shadow-md'

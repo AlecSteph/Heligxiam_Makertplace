@@ -6,11 +6,12 @@ import { Product } from '../../models/product.model';
 import { CartService } from '../../services/cart.service';
 import { WishlistService } from '../../services/wishlist.service';
 import { LocalizedPricePipe } from '../../pipes/localized-price.pipe';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule, LocalizedPricePipe],
+  imports: [CommonModule, RouterModule, LucideAngularModule, LocalizedPricePipe, TranslatePipe],
   templateUrl: './product-card.component.html',
   styleUrls: ['./product-card.component.css']
 })

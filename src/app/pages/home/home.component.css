@@ -11,3 +11,28 @@
 .snap-x > * {
   scroll-snap-align: start;
 }
+
+/* Effet cinématique pour la section showcase (remplace YouTube autoplay) */
+.showcase-ken-burns {
+  animation: showcaseKenBurns 20s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.showcase-ken-burns-delayed {
+  animation-delay: -8s;
+}
+
+@keyframes showcaseKenBurns {
+  from {
+    transform: scale(1) translate(0, 0);
+  }
+  to {
+    transform: scale(1.14) translate(-2.5%, -1.5%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .showcase-ken-burns {
+    animation: none;
+  }
+}

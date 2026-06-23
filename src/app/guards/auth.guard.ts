@@ -68,7 +68,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
     if (!this.authService.isAuthenticated) {
       return of(false);
     }
-    return of(true);
+    return this.authService.validateSession();
   }
 
   private redirectByRole(userRole: UserRole | null): void {
@@ -151,16 +151,18 @@ export class ClientGuard implements CanActivate {
   ) {}
 
   canActivate(): Observable<boolean> {
-    if (!this.authService.isAuthenticated) {
-      this.router.navigate(['/account']);
-      return of(false);
-    }
-
-    if (!this.authService.isClient()) {
-      this.router.navigate(['/']);
-      return of(false);
-    }
-
-    return of(true);
+    return this.authService.validateSession().pipe(
+      map((valid) => {
+        if (!valid) {
+          this.router.navigate(['/account']);
+          return false;
+        }
+        if (!this.authService.isClient()) {
+          this.router.navigate(['/']);
+          return false;
+        }
+        return true;
+      })
+    );
   }
 }

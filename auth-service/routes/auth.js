@@ -12,11 +12,23 @@ const {
   createVendeurWithBoutique,
   courrielVendeurPris
 } = require('../lib/vendeurMysql');
+const { users, findMemoryUserById } = require('../lib/memoryUsers');
+const { requireAuth } = require('../middlewares/auth');
+const {
+  requestPasswordReset,
+  resetPasswordWithToken,
+  applyPasswordUpdate
+} = require('../lib/passwordReset');
+const {
+  clientEmailTaken,
+  createClientInPg
+} = require('../lib/clientUsersPg');
+const { verifyRecaptcha, getPublicConfig } = require('../lib/recaptcha');
 
 const router = express.Router();
 
-// Comptes « acheteur » / démo sans MySQL (clé = id_user UUID)
-const users = new Map();
+const GENERIC_RESET_MESSAGE =
+  'Si un compte existe avec cette adresse, un e-mail de réinitialisation a été envoyé.';
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -45,10 +57,7 @@ const isValidEmail = (email) => {
   return emailRegex.test(email) && email.length <= 254;
 };
 
-const validatePassword = (password) => {
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
-  return passwordRegex.test(password);
-};
+const { validatePassword, PASSWORD_HINT } = require('../lib/passwordPolicy');
 
 const hashPassword = async (password) => {
   const saltRounds = parseInt(process.env.BCRYPT_ROUNDS, 10) || 12;
@@ -128,6 +137,11 @@ async function emailTakenInMemoryOrMysql(email) {
   for (const [, u] of users) {
     if (String(u.email).toLowerCase() === lower) return true;
   }
+  try {
+    if (await clientEmailTaken(email)) return true;
+  } catch (e) {
+    console.error('Vérification email PostgreSQL:', e.message);
+  }
   if (isMysqlEnabled()) {
     const pool = getMysqlPool();
     return courrielVendeurPris(pool, email);
@@ -135,7 +149,35 @@ async function emailTakenInMemoryOrMysql(email) {
   return false;
 }
 
-// Inscription
+async function verifyCurrentPasswordForUser(payload, currentPassword) {
+  if (payload.kind === 'vendeur_mysql' && payload.vendeur_id && isMysqlEnabled()) {
+    const pool = getMysqlPool();
+    const row = await findVendeurById(pool, payload.vendeur_id);
+    if (!row) return false;
+    return verifyPassword(currentPassword, row.mot_de_passe_hache);
+  }
+
+  const mem = findMemoryUserById(payload.id_user);
+  if (!mem) return false;
+  return verifyPassword(currentPassword, mem.password);
+}
+
+async function assertRecaptcha(req, res) {
+  const remoteIp = req.ip || req.headers['x-forwarded-for'] || '';
+  const result = await verifyRecaptcha(req.body?.recaptchaToken, String(remoteIp).split(',')[0].trim());
+  if (!result.ok) {
+    res.status(400).json({
+      success: false,
+      message: result.message || 'Validation reCAPTCHA requise.'
+    });
+    return false;
+  }
+  return true;
+}
+
+router.get('/recaptcha-config', (_req, res) => {
+  res.json({ success: true, data: getPublicConfig() });
+});
 router.post(
   '/register',
   [
@@ -148,6 +190,8 @@ router.post(
   handleValidationErrors,
   async (req, res) => {
     try {
+      if (!(await assertRecaptcha(req, res))) return;
+
       const { nom, prenom, email, password, role = 'client' } = req.body;
 
       if (!isValidEmail(email)) {
@@ -161,7 +205,7 @@ router.post(
         return res.status(400).json({
           success: false,
           message:
-            'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre'
+            PASSWORD_HINT
         });
       }
 
@@ -228,6 +272,29 @@ router.post(
 
       users.set(id_user, newUser);
 
+      try {
+        await createClientInPg({
+          id_user,
+          nom,
+          prenom,
+          email: email.trim(),
+          password_hash: hashedPassword
+        });
+      } catch (pgErr) {
+        users.delete(id_user);
+        if (pgErr.code === '23505') {
+          return res.status(409).json({
+            success: false,
+            message: 'Cet email est déjà utilisé'
+          });
+        }
+        console.error('Inscription client PostgreSQL:', pgErr);
+        return res.status(500).json({
+          success: false,
+          message: "Erreur lors de la persistance du compte client."
+        });
+      }
+
       const { token, refreshToken } = generateTokens(newUser);
 
       return res.status(201).json({
@@ -256,6 +323,8 @@ router.post(
   handleValidationErrors,
   async (req, res) => {
     try {
+      if (!(await assertRecaptcha(req, res))) return;
+
       const { email, password } = req.body;
 
       if (!isValidEmail(email)) {
@@ -448,5 +517,133 @@ router.get('/me', async (req, res) => {
     });
   }
 });
+
+router.post(
+  '/forgot-password',
+  [body('email').isEmail().withMessage('Email invalide')],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      if (!(await assertRecaptcha(req, res))) return;
+
+      const { email } = req.body;
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ success: false, message: "Format d'email invalide" });
+      }
+
+      await requestPasswordReset(email.trim());
+
+      return res.json({
+        success: true,
+        message: GENERIC_RESET_MESSAGE
+      });
+    } catch (error) {
+      console.error('Erreur forgot-password:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Impossible de traiter la demande pour le moment.'
+      });
+    }
+  }
+);
+
+router.post(
+  '/reset-password',
+  [
+    body('token').notEmpty().withMessage('Token requis'),
+    body('password').isLength({ min: 8 }).withMessage('Mot de passe trop court')
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      if (!validatePassword(password)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            PASSWORD_HINT
+        });
+      }
+
+      const hashedPassword = await hashPassword(password);
+      const result = await resetPasswordWithToken(token, hashedPassword);
+
+      if (!result.ok) {
+        return res.status(400).json({
+          success: false,
+          message: 'Lien de réinitialisation invalide ou expiré. Demandez un nouvel e-mail.'
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: 'Mot de passe mis à jour. Vous pouvez vous connecter.'
+      });
+    } catch (error) {
+      console.error('Erreur reset-password:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erreur lors de la réinitialisation du mot de passe.'
+      });
+    }
+  }
+);
+
+router.put(
+  '/change-password',
+  requireAuth,
+  [
+    body('currentPassword').notEmpty().withMessage('Mot de passe actuel requis'),
+    body('newPassword').isLength({ min: 8 }).withMessage('Nouveau mot de passe trop court')
+  ],
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+
+      if (!validatePassword(newPassword)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            PASSWORD_HINT
+        });
+      }
+
+      const valid = await verifyCurrentPasswordForUser(req.user, currentPassword);
+      if (!valid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Mot de passe actuel incorrect.'
+        });
+      }
+
+      const hashedPassword = await hashPassword(newPassword);
+      const accountKind =
+        req.user.kind === 'vendeur_mysql' && req.user.vendeur_id ? 'vendeur_mysql' : 'memory';
+      const accountRef =
+        accountKind === 'vendeur_mysql' ? String(req.user.vendeur_id) : req.user.id_user;
+
+      const updated = await applyPasswordUpdate(accountKind, accountRef, hashedPassword);
+      if (!updated) {
+        return res.status(404).json({
+          success: false,
+          message: 'Compte introuvable.'
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: 'Mot de passe mis à jour.'
+      });
+    } catch (error) {
+      console.error('Erreur change-password:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erreur lors du changement de mot de passe.'
+      });
+    }
+  }
+);
 
 module.exports = router;

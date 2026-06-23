@@ -13,7 +13,7 @@ import { WelcomePromoComponent } from './components/welcome-promo/welcome-promo.
   standalone: true,
   imports: [CommonModule, RouterOutlet, HeaderComponent, FooterComponent, NotificationComponent, ChatbotComponent, WelcomePromoComponent],
   template: `
-    <div class="min-h-screen flex flex-col bg-gray-50">
+    <div class="min-h-screen flex flex-col bg-gray-50" dir="ltr">
       <app-header *ngIf="showChrome"></app-header>
       <app-notification></app-notification>
       <main class="flex-1">
@@ -34,7 +34,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private sub = new Subscription();
 
   // Routes qui ne doivent PAS afficher le header/footer publics
-  private chromelessPrefixes = ['/seller', '/admin'];
+  private chromelessPrefixes = ['/seller', '/admin', '/account', '/reset-password'];
 
   constructor(private router: Router) {}
 
@@ -54,6 +54,6 @@ export class AppComponent implements OnInit, OnDestroy {
   private updateChromeFromUrl(url: string): void {
     const path = (url.split('?')[0] || '').toLowerCase();
     this.showChrome = !this.chromelessPrefixes.some(p => path === p || path.startsWith(p + '/'));
-    this.showChatbot = !path.startsWith('/admin/login');
+    this.showChatbot = !path.startsWith('/admin/login') && path !== '/account' && path !== '/reset-password';
   }
 }

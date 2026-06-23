@@ -11,9 +11,13 @@ import {
   ChallengeResponse,
   ProfileUpdateRequest,
   PasswordChangeRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+  MessageResponse,
   AuthState,
   UserRole
 } from '../models/auth.model';
+import { isValidPassword, PASSWORD_HINT } from '../utils/password.util';
 
 @Injectable({
   providedIn: 'root'
@@ -81,6 +85,37 @@ export class AuthService {
     }
   }
 
+  /**
+   * Valide la session au démarrage de l'app (APP_INITIALIZER).
+   * Évite le flash connecté puis déconnexion brutale au refresh.
+   */
+  bootstrapSession(): Observable<boolean> {
+    if (!this.getToken()) {
+      this.sessionReadySubject.next(true);
+      return of(false);
+    }
+
+    this.authStateSubject.next({
+      ...this.authStateSubject.value,
+      isLoading: true
+    });
+
+    return this.validateSession().pipe(
+      tap((valid) => {
+        if (!valid) {
+          this.clearSession();
+        }
+      }),
+      finalize(() => {
+        this.sessionReadySubject.next(true);
+        this.authStateSubject.next({
+          ...this.authStateSubject.value,
+          isLoading: false
+        });
+      })
+    );
+  }
+
   // Validation email (même logique que backend)
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -89,23 +124,7 @@ export class AuthService {
 
   // Validation mot de passe (même logique que backend)
   private validatePassword(password: string): boolean {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-  }
-
-  // Vérifier la force du mot de passe
-  private getPasswordStrength(password: string): 'weak' | 'medium' | 'strong' {
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (password.length >= 12) score++;
-    if (/[a-z]/.test(password)) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/\d/.test(password)) score++;
-    if (/[@$!%*?&]/.test(password)) score++;
-
-    if (score < 3) return 'weak';
-    if (score < 5) return 'medium';
-    return 'strong';
+    return isValidPassword(password);
   }
 
   // Rate limiting pour les tentatives de connexion
@@ -149,7 +168,7 @@ export class AuthService {
     }
 
     if (!this.validatePassword(registerData.password)) {
-      return throwError(() => new Error('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre'));
+      return throwError(() => new Error(PASSWORD_HINT));
     }
 
     this.clearError();
@@ -330,27 +349,50 @@ export class AuthService {
     );
   }
 
-  // Changer le mot de passe
-  changePassword(passwordData: PasswordChangeRequest): Observable<any> {
+  // Changer le mot de passe (connecté)
+  changePassword(passwordData: PasswordChangeRequest): Observable<MessageResponse> {
     if (!this.validatePassword(passwordData.newPassword)) {
-      return throwError(() => new Error('Le nouveau mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre'));
+      return throwError(() => new Error(PASSWORD_HINT));
     }
 
-    return this.http.put(`${this.API_URL}/change-password`, passwordData).pipe(
+    return this.http.put<MessageResponse>(`${this.API_URL}/change-password`, passwordData).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Mot de passe oublié
+  forgotPassword(data: ForgotPasswordRequest): Observable<MessageResponse> {
+    if (!this.isValidEmail(data.email)) {
+      return throwError(() => new Error('Format d\'email invalide'));
+    }
+
+    return this.http.post<MessageResponse>(`${this.API_URL}/forgot-password`, data).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Réinitialiser le mot de passe via token e-mail
+  resetPassword(data: ResetPasswordRequest): Observable<MessageResponse> {
+    if (!this.validatePassword(data.password)) {
+      return throwError(() => new Error(PASSWORD_HINT));
+    }
+
+    return this.http.post<MessageResponse>(`${this.API_URL}/reset-password`, data).pipe(
       catchError(this.handleError)
     );
   }
 
   // Déconnexion
-  logout(): void {
+  logout(navigate = true): void {
     const currentToken = this.getToken();
     if (currentToken) {
-      // Appeler l'API de logout (optionnel)
       this.http.post(`${this.API_URL}/logout`, {}).subscribe();
     }
 
     this.clearSession();
-    this.router.navigate(['/account']);
+    if (navigate) {
+      this.router.navigate(['/account']);
+    }
   }
 
   /** Efface la session locale sans redirection (validation silencieuse). */

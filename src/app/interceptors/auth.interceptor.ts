@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { isDevMode } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, switchMap, filter, take, finalize } from 'rxjs/operators';
@@ -67,6 +68,9 @@ export class AuthInterceptor implements HttpInterceptor {
            url.includes('/api/auth/register') || 
            url.includes('/api/auth/challenge') ||
            url.includes('/api/auth/refresh-token') ||
+           url.includes('/api/auth/forgot-password') ||
+           url.includes('/api/auth/reset-password') ||
+           url.includes('/api/auth/recaptcha-config') ||
            url.includes('/api/admin/login');
   }
 
@@ -137,10 +141,7 @@ export class AuthInterceptor implements HttpInterceptor {
       }),
       catchError((error) => {
         this.isRefreshing = false;
-        
-        // Si le refresh échoue, déconnecter l'utilisateur
-        this.authService.logout();
-        
+        this.authService.clearSession();
         return throwError(() => error);
       })
     );
@@ -167,14 +168,14 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   private logRequest(req: HttpRequest<any>): void {
-    // Log uniquement en développement
-    const logData = {
+    if (!isDevMode()) {
+      return;
+    }
+    console.debug('HTTP Request:', {
       method: req.method,
       url: req.url,
       timestamp: new Date().toISOString()
-    };
-    
-    console.log('HTTP Request:', logData);
+    });
   }
 }
 

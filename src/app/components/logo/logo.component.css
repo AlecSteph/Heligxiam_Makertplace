@@ -1,0 +1,115 @@
+.logo-root {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.logo-link {
+  transition: opacity 0.2s ease;
+}
+
+.logo-link:hover {
+  opacity: 0.92;
+}
+
+.logo-link:hover .logo-emblem-wrap {
+  transform: scale(1.03);
+}
+
+.logo-emblem-wrap {
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #0a1628;
+  box-shadow: 0 1px 3px rgba(10, 22, 40, 0.18), 0 0 0 1px rgba(212, 175, 55, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.logo-emblem-wrap-xs { width: 1.75rem; height: 1.75rem; }
+.logo-emblem-wrap-sm { width: 2.125rem; height: 2.125rem; }
+.logo-emblem-wrap-md { width: 2.5rem; height: 2.5rem; }
+.logo-emblem-wrap-lg { width: 3.25rem; height: 3.25rem; }
+.logo-emblem-wrap-xl { width: 5.5rem; height: 5.5rem; }
+
+.logo-emblem {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+.logo-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 1.125rem;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.logo-hel {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.logo-xiam {
+  color: #a67c00;
+  font-weight: 700;
+}
+
+.logo-tagline {
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 0.5625rem;
+  line-height: 1.2;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  color: #94a3b8;
+  max-width: 11rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Variante claire (panneau login sombre) */
+.logo-variant-light .logo-hel {
+  color: #f8fafc;
+}
+
+.logo-variant-light .logo-xiam {
+  color: #e8c547;
+}
+
+.logo-variant-light .logo-tagline {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* Variante sombre (footer) */
+.logo-variant-dark .logo-hel {
+  color: #f1f5f9;
+}
+
+.logo-variant-dark .logo-xiam {
+  color: #d4af37;
+}
+
+.logo-variant-dark .logo-tagline {
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .logo-tagline {
+    display: none;
+  }
+}
