@@ -1,0 +1,398 @@
+{
+  "generatedAt": "2026-06-16T23:42:20.064Z",
+  "basePath": "/assets/catalog-seed",
+  "license": "Photos Unsplash — fichiers locaux. Logos SVG HELIGXIAM.",
+  "products": [
+    {
+      "sku": "P001",
+      "title": "MacBook Pro 16 M3 Max",
+      "localPath": "products/P001.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P001.jpg",
+      "bytes": 41821
+    },
+    {
+      "sku": "P002",
+      "title": "AirPods Max Silver",
+      "localPath": "products/P002.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P002.jpg",
+      "bytes": 42048
+    },
+    {
+      "sku": "P003",
+      "title": "iPhone 15 Pro Max",
+      "localPath": "products/P003.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P003.jpg",
+      "bytes": 77369
+    },
+    {
+      "sku": "P004",
+      "title": "iPad Pro 12.9 M2",
+      "localPath": "products/P004.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P004.jpg",
+      "bytes": 122731
+    },
+    {
+      "sku": "P005",
+      "title": "Casque Audio Aurora",
+      "localPath": "products/P005.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P005.jpg",
+      "bytes": 42048
+    },
+    {
+      "sku": "P006",
+      "title": "Montre Pulse X2",
+      "localPath": "products/P006.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P006.jpg",
+      "bytes": 20242
+    },
+    {
+      "sku": "P007",
+      "title": "AirPods Pro 2 USB-C",
+      "localPath": "products/P007.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P007.jpg",
+      "bytes": 24709
+    },
+    {
+      "sku": "P008",
+      "title": "iPad Air M2",
+      "localPath": "products/P008.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P008.jpg",
+      "bytes": 76561
+    },
+    {
+      "sku": "P009",
+      "title": "Sony A7R V",
+      "localPath": "products/P009.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P009.jpg",
+      "bytes": 85297
+    },
+    {
+      "sku": "P010",
+      "title": "PlayStation 5 Pro",
+      "localPath": "products/P010.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P010.jpg",
+      "bytes": 46896
+    },
+    {
+      "sku": "P011",
+      "title": "Bose SoundLink Revolve+ II",
+      "localPath": "products/P011.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P011.jpg",
+      "bytes": 114784
+    },
+    {
+      "sku": "P012",
+      "title": "Sony WH-1000XM5",
+      "localPath": "products/P012.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P012.jpg",
+      "bytes": 39445
+    },
+    {
+      "sku": "P013",
+      "title": "Chargeur sans fil 15W",
+      "localPath": "products/P013.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P013.jpg",
+      "bytes": 64549
+    },
+    {
+      "sku": "P014",
+      "title": "Câble USB-C",
+      "localPath": "products/P014.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P014.jpg",
+      "bytes": 39558
+    },
+    {
+      "sku": "P015",
+      "title": "Enceinte Waveform",
+      "localPath": "products/P015.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P015.jpg",
+      "bytes": 54896
+    },
+    {
+      "sku": "P016",
+      "title": "Clavier mécanique RGB",
+      "localPath": "products/P016.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P016.jpg",
+      "bytes": 78643
+    },
+    {
+      "sku": "P017",
+      "title": "Webcam 4K",
+      "localPath": "products/P017.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P017.jpg",
+      "bytes": 78643
+    },
+    {
+      "sku": "P018",
+      "title": "Galaxy S24 Ultra",
+      "localPath": "products/P018.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P018.jpg",
+      "bytes": 101984
+    },
+    {
+      "sku": "P019",
+      "title": "TV Samsung QLED 55",
+      "localPath": "products/P019.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P019.jpg",
+      "bytes": 122731
+    },
+    {
+      "sku": "P020",
+      "title": "Galaxy Buds3",
+      "localPath": "products/P020.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P020.jpg",
+      "bytes": 33390
+    },
+    {
+      "sku": "P021",
+      "title": "Apple Watch Ultra 2",
+      "localPath": "products/P021.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P021.jpg",
+      "bytes": 63287
+    },
+    {
+      "sku": "P022",
+      "title": "Sac Kelly Premium",
+      "localPath": "products/P022.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P022.jpg",
+      "bytes": 157003
+    },
+    {
+      "sku": "P023",
+      "title": "Nike Air Jordan 1",
+      "localPath": "products/P023.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P023.jpg",
+      "bytes": 70809
+    },
+    {
+      "sku": "P024",
+      "title": "Ray-Ban Aviator",
+      "localPath": "products/P024.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P024.jpg",
+      "bytes": 39517
+    },
+    {
+      "sku": "P025",
+      "title": "Tenue Mode Luxe",
+      "localPath": "products/P025.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P025.jpg",
+      "bytes": 125566
+    },
+    {
+      "sku": "P026",
+      "title": "Sac à dos minimaliste",
+      "localPath": "products/P026.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P026.jpg",
+      "bytes": 64907
+    },
+    {
+      "sku": "P027",
+      "title": "T-shirt premium",
+      "localPath": "products/P027.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P027.jpg",
+      "bytes": 55986
+    },
+    {
+      "sku": "P028",
+      "title": "MacBook Air M2",
+      "localPath": "products/P028.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P028.jpg",
+      "bytes": 53923
+    },
+    {
+      "sku": "P029",
+      "title": "Nike Air Max 2026",
+      "localPath": "products/P029.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P029.jpg",
+      "bytes": 53465
+    },
+    {
+      "sku": "P030",
+      "title": "Vase minimaliste",
+      "localPath": "products/P030.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P030.jpg",
+      "bytes": 75711
+    },
+    {
+      "sku": "P031",
+      "title": "DeLonghi Dinamica",
+      "localPath": "products/P031.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P031.jpg",
+      "bytes": 66982
+    },
+    {
+      "sku": "P032",
+      "title": "Cafetière Delonghi Auto",
+      "localPath": "products/P032.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P032.jpg",
+      "bytes": 124575
+    },
+    {
+      "sku": "P033",
+      "title": "Robot aspirateur iLife",
+      "localPath": "products/P033.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P033.jpg",
+      "bytes": 38901
+    },
+    {
+      "sku": "P034",
+      "title": "Diffuseur huiles",
+      "localPath": "products/P034.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P034.jpg",
+      "bytes": 65795
+    },
+    {
+      "sku": "P035",
+      "title": "Aspirateur Dyson V15",
+      "localPath": "products/P035.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P035.jpg",
+      "bytes": 53686
+    },
+    {
+      "sku": "P036",
+      "title": "Tom Ford Black Orchid",
+      "localPath": "products/P036.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P036.jpg",
+      "bytes": 77874
+    },
+    {
+      "sku": "P037",
+      "title": "Coffret parfum premium",
+      "localPath": "products/P037.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P037.jpg",
+      "bytes": 60474
+    },
+    {
+      "sku": "P038",
+      "title": "Coffret Sephora",
+      "localPath": "products/P038.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P038.jpg",
+      "bytes": 60169
+    },
+    {
+      "sku": "P039",
+      "title": "Crème L Occitane",
+      "localPath": "products/P039.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P039.jpg",
+      "bytes": 84959
+    },
+    {
+      "sku": "P040",
+      "title": "Garmin Fenix 8",
+      "localPath": "products/P040.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P040.jpg",
+      "bytes": 56413
+    },
+    {
+      "sku": "P041",
+      "title": "Adidas Ultraboost",
+      "localPath": "products/P041.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P041.jpg",
+      "bytes": 35501
+    },
+    {
+      "sku": "P042",
+      "title": "Haltères 20 kg",
+      "localPath": "products/P042.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P042.jpg",
+      "bytes": 96444
+    },
+    {
+      "sku": "P043",
+      "title": "Tapis yoga 6mm",
+      "localPath": "products/P043.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P043.jpg",
+      "bytes": 96444
+    },
+    {
+      "sku": "P044",
+      "title": "Kit entretien hiver auto",
+      "localPath": "products/P044.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P044.jpg",
+      "bytes": 34107
+    },
+    {
+      "sku": "P045",
+      "title": "Balai essuie-glace",
+      "localPath": "products/P045.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P045.jpg",
+      "bytes": 34107
+    },
+    {
+      "sku": "P046",
+      "title": "Dashcam Garmin Mini",
+      "localPath": "products/P046.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P046.jpg",
+      "bytes": 93230
+    },
+    {
+      "sku": "P047",
+      "title": "Compresseur 12V",
+      "localPath": "products/P047.jpg",
+      "publicUrl": "/assets/catalog-seed/products/P047.jpg",
+      "bytes": 51980
+    }
+  ],
+  "logos": [
+    {
+      "vendorId": "V01-techstore-pro",
+      "name": "TechStore Pro",
+      "localPath": "logos/V01-techstore-pro.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V01-techstore-pro.svg"
+    },
+    {
+      "vendorId": "V02-electromarket",
+      "name": "ElectroMarket",
+      "localPath": "logos/V02-electromarket.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V02-electromarket.svg"
+    },
+    {
+      "vendorId": "V03-fashion-hub",
+      "name": "Fashion Hub",
+      "localPath": "logos/V03-fashion-hub.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V03-fashion-hub.svg"
+    },
+    {
+      "vendorId": "V04-nike-flagship",
+      "name": "Nike Flagship",
+      "localPath": "logos/V04-nike-flagship.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V04-nike-flagship.svg"
+    },
+    {
+      "vendorId": "V05-heligxiam-official",
+      "name": "HELIGXIAM Official",
+      "localPath": "logos/V05-heligxiam-official.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V05-heligxiam-official.svg"
+    },
+    {
+      "vendorId": "V06-home-essentials",
+      "name": "Home Essentials",
+      "localPath": "logos/V06-home-essentials.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V06-home-essentials.svg"
+    },
+    {
+      "vendorId": "V07-beaute-paris-select",
+      "name": "Beauté Paris Select",
+      "localPath": "logos/V07-beaute-paris-select.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V07-beaute-paris-select.svg"
+    },
+    {
+      "vendorId": "V08-sport-performance",
+      "name": "Sport Performance",
+      "localPath": "logos/V08-sport-performance.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V08-sport-performance.svg"
+    },
+    {
+      "vendorId": "V09-auto-expert-france",
+      "name": "Auto Expert France",
+      "localPath": "logos/V09-auto-expert-france.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V09-auto-expert-france.svg"
+    },
+    {
+      "vendorId": "V10-samsung-premium",
+      "name": "Samsung Premium",
+      "localPath": "logos/V10-samsung-premium.svg",
+      "publicUrl": "/assets/catalog-seed/logos/V10-samsung-premium.svg"
+    }
+  ]
+}

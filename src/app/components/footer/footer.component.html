@@ -1,0 +1,161 @@
+<footer class="bg-gradient-to-b from-gray-900 via-gray-900 to-black text-gray-300 mt-12">
+  <!-- Back to top -->
+  <button type="button"
+          (click)="scrollToTop()"
+          class="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 group">
+    <lucide-angular [img]="ArrowUp" class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform"></lucide-angular>
+    Retour en haut
+  </button>
+
+  <!-- Trust badges strip -->
+  <div class="border-b border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div *ngFor="let badge of trustBadges"
+             class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+            <lucide-angular [img]="getIcon(badge.icon)" class="w-5 h-5 text-white"></lucide-angular>
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-white truncate">{{ badge.title }}</p>
+            <p class="text-xs text-gray-400 truncate">{{ badge.subtitle }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Newsletter section -->
+  <div class="border-b border-gray-800 bg-gradient-to-r from-indigo-900/30 to-purple-900/30">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="grid md:grid-cols-2 gap-6 items-center">
+        <div>
+          <h3 class="text-xl font-bold text-white mb-1">Restez informé</h3>
+          <p class="text-sm text-gray-300">Offres exclusives, nouveautés et -10% sur votre 1ère commande.</p>
+        </div>
+        <form (ngSubmit)="submitNewsletter()" class="flex gap-2">
+          <div class="relative flex-1">
+            <lucide-angular [img]="Mail" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></lucide-angular>
+            <input type="email"
+                   [(ngModel)]="newsletterEmail"
+                   name="newsletterEmail"
+                   placeholder="votre@email.com"
+                   required
+                   class="w-full pl-10 pr-3 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+          </div>
+          <button type="submit"
+                  class="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-sm font-semibold rounded-lg transition-all flex items-center gap-2 whitespace-nowrap">
+            <lucide-angular [img]="Send" class="w-4 h-4"></lucide-angular>
+            S'inscrire
+          </button>
+        </form>
+      </div>
+      <div *ngIf="newsletterSubmitted"
+           class="mt-3 text-sm text-green-400 animate-fade-in">
+        ✓ Merci ! Vérifiez votre boîte mail pour confirmer votre inscription.
+      </div>
+    </div>
+  </div>
+
+  <!-- Main footer content -->
+  <div class="max-w-7xl mx-auto px-4 py-10">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+      <!-- Brand column -->
+      <div class="col-span-2 md:col-span-3 lg:col-span-1">
+        <a routerLink="/" class="flex items-center gap-2 mb-4">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <span class="text-white font-bold text-lg">H</span>
+          </div>
+          <span class="text-xl font-bold text-white">HELIGXIAM</span>
+        </a>
+        <p class="text-sm text-gray-400 mb-4 leading-relaxed">
+          La marketplace premium française. 15 000+ produits, livraison express et garantie 2 ans.
+        </p>
+        <!-- Contact -->
+        <div class="space-y-2 text-sm">
+          <a href="tel:+33123456789" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+            <lucide-angular [img]="Phone" class="w-4 h-4"></lucide-angular>
+            +33 1 23 45 67 89
+          </a>
+          <a href="mailto:contact@heligxiam.com" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+            <lucide-angular [img]="Mail" class="w-4 h-4"></lucide-angular>
+            contact&#64;heligxiam.com
+          </a>
+          <div class="flex items-start gap-2 text-gray-400">
+            <lucide-angular [img]="MapPin" class="w-4 h-4 mt-0.5 flex-shrink-0"></lucide-angular>
+            <span>12 rue de l'Innovation<br/>75001 Paris, France</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columns -->
+      <div *ngFor="let column of columns">
+        <h4 class="text-sm font-semibold text-white mb-4 uppercase tracking-wide">{{ column.title }}</h4>
+        <ul class="space-y-2">
+          <li *ngFor="let link of column.links">
+            <a [routerLink]="link.route"
+               [queryParams]="link.queryParams"
+               class="text-sm text-gray-400 hover:text-white hover:underline transition-colors">
+              {{ link.label }}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Social + payment -->
+  <div class="border-t border-gray-800">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Social -->
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-gray-400">Suivez-nous :</span>
+          <div class="flex gap-2">
+            <a *ngFor="let social of socialLinks"
+               [href]="social.url"
+               target="_blank"
+               rel="noopener"
+               [attr.aria-label]="social.name"
+               class="w-9 h-9 rounded-full bg-gray-800 hover:bg-gradient-to-br hover:from-indigo-500 hover:to-purple-600 flex items-center justify-center transition-all hover:scale-110">
+              <lucide-angular [img]="getIcon(social.icon)" class="w-4 h-4 text-white"></lucide-angular>
+            </a>
+          </div>
+        </div>
+
+        <!-- Payment methods -->
+        <div class="flex items-center gap-3">
+          <lucide-angular [img]="CreditCard" class="w-5 h-5 text-gray-400"></lucide-angular>
+          <div class="flex flex-wrap gap-1.5">
+            <span *ngFor="let method of paymentMethods"
+                  class="px-2 py-1 bg-gray-800 rounded text-[11px] font-medium text-gray-300 border border-gray-700">
+              {{ method }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="border-t border-gray-800 bg-black">
+    <div class="max-w-7xl mx-auto px-4 py-5">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <p class="text-xs text-gray-500">
+          © 1996-{{ currentYear }}, Heligxiam SAS ou ses affiliés. Tous droits réservés.
+        </p>
+        <nav class="flex flex-wrap gap-x-4 gap-y-1">
+          <a *ngFor="let link of legalLinks"
+             [routerLink]="link.route"
+             [fragment]="link.fragment ?? ''"
+             class="text-xs text-gray-500 hover:text-white hover:underline transition-colors">
+            {{ link.label }}
+          </a>
+        </nav>
+      </div>
+      <p class="text-[11px] text-gray-600 mt-3 text-center md:text-left">
+        HELIGXIAM est une marketplace fictive créée à des fins de démonstration. Les prix et produits affichés sont donnés à titre indicatif.
+      </p>
+    </div>
+  </div>
+</footer>

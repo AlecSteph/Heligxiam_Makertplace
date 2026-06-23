@@ -1,0 +1,13 @@
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Bordure douce pour les carrousels */
+.snap-x > * {
+  scroll-snap-align: start;
+}

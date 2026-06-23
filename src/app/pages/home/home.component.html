@@ -1,0 +1,529 @@
+<div class="min-h-screen bg-gray-50">
+
+  <!-- ========================================= -->
+  <!-- 1. HERO (impactant, plus grand)            -->
+  <!-- ========================================= -->
+  <section class="relative bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white overflow-hidden">
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnptLTEyIDEyYzMuMzE0IDAgNiAyLjY4NiA2IDZzLTIuNjg2IDYtNiA2LTYtMi42ODYtNi02IDIuNjg2LTYgNi02eiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMDUiLz48L2c+PC9zdmc+')] opacity-30"></div>
+    <!-- Decorative glows -->
+    <div class="absolute -top-20 -left-20 w-72 h-72 bg-pink-400/25 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-20 -right-20 w-80 h-80 bg-indigo-400/25 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 py-10 md:py-12 relative w-full">
+      <div class="grid md:grid-cols-5 gap-6 items-center">
+        <div class="md:col-span-3">
+          <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full mb-3 border border-white/20">
+            <lucide-angular [img]="Crown" class="w-3.5 h-3.5"></lucide-angular>
+            <span class="text-xs font-medium">Marketplace Premium #1 en France</span>
+          </div>
+          <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-3">
+            Découvrez l'Excellence
+            <span class="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
+              HELIGXIAM
+            </span>
+          </h1>
+          <p class="text-indigo-100 mb-4 text-sm md:text-base max-w-xl">
+            15 000+ produits premium • Livraison express gratuite dès 99€ • Garantie 2 ans
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a routerLink="/search"
+               class="inline-flex items-center gap-2 bg-white text-indigo-600 px-5 py-2.5 rounded-lg font-bold hover:shadow-xl hover:scale-105 transition-all text-sm">
+              Explorer
+              <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+            </a>
+            <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }"
+               class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/30 px-5 py-2.5 rounded-lg font-bold hover:bg-white/20 transition-all text-sm">
+              <lucide-angular [img]="Sparkles" class="w-4 h-4"></lucide-angular>
+              Premium
+            </a>
+          </div>
+
+          <!-- Trust indicators (compact) -->
+          <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[11px] md:text-xs text-white/85">
+            <div class="flex items-center gap-1.5">
+              <lucide-angular [img]="ShieldCheck" class="w-3.5 h-3.5"></lucide-angular>
+              <span>Paiement sécurisé</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <lucide-angular [img]="Truck" class="w-3.5 h-3.5"></lucide-angular>
+              <span>Livraison 24h</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <lucide-angular [img]="Star" class="w-3.5 h-3.5"></lucide-angular>
+              <span>4,8/5 • 12 400 avis</span>
+            </div>
+          </div>
+        </div>
+        <div class="md:col-span-2">
+          <div class="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 aspect-[4/3] md:aspect-auto md:h-72 group"
+               (mouseenter)="pauseAutoPlay()"
+               (mouseleave)="resumeAutoPlay()">
+            <!-- Slides -->
+            <div *ngFor="let slide of heroSlides; let i = index"
+                 class="absolute inset-0 transition-opacity duration-700 ease-in-out"
+                 [class.opacity-100]="i === currentSlide"
+                 [class.opacity-0]="i !== currentSlide"
+                 [class.pointer-events-none]="i !== currentSlide">
+              <img [src]="slide.image" [alt]="slide.title"
+                   class="w-full h-full object-cover" />
+              <div [class]="'absolute inset-0 bg-gradient-to-tr ' + slide.accent"></div>
+              <div class="absolute inset-0 flex flex-col justify-end p-5 text-white">
+                <span class="inline-block self-start text-[10px] font-bold bg-white/25 backdrop-blur-sm px-2 py-0.5 rounded-full uppercase tracking-wide mb-2">
+                  {{ slide.badge }}
+                </span>
+                <h3 class="text-xl md:text-2xl font-bold leading-tight mb-1 line-clamp-2">
+                  {{ slide.title }}
+                </h3>
+                <p class="text-xs md:text-sm text-white/90 mb-3 line-clamp-2">{{ slide.subtitle }}</p>
+                <a [routerLink]="slide.route"
+                   [queryParams]="slide.queryParams"
+                   class="inline-flex self-start items-center gap-1 bg-white text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:scale-105 transition-transform">
+                  {{ slide.cta }}
+                  <lucide-angular [img]="ChevronRight" class="w-3.5 h-3.5"></lucide-angular>
+                </a>
+              </div>
+            </div>
+
+            <!-- Arrows -->
+            <button type="button" (click)="prevSlide()"
+                    aria-label="Diapositive précédente"
+                    class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-gray-800 flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+              <lucide-angular [img]="ChevronLeft" class="w-4 h-4"></lucide-angular>
+            </button>
+            <button type="button" (click)="nextSlide()"
+                    aria-label="Diapositive suivante"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-gray-800 flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+              <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+            </button>
+
+            <!-- Dots -->
+            <div class="absolute bottom-2 right-3 flex gap-1.5 z-10">
+              <button *ngFor="let slide of heroSlides; let i = index"
+                      type="button"
+                      (click)="goToSlide(i)"
+                      [attr.aria-label]="'Aller à la diapositive ' + (i + 1)"
+                      [class]="'h-1.5 rounded-full transition-all ' + (i === currentSlide ? 'w-6 bg-white' : 'w-1.5 bg-white/50 hover:bg-white/80')">
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 2. SHOWCASE VIDÉO (shopping en ligne live)  -->
+  <!-- ========================================= -->
+  <section class="bg-gradient-to-b from-white to-gray-50 border-b">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="text-center mb-6">
+        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-2">Live shopping</span>
+        <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900">L'expérience HELIGXIAM en images</h2>
+        <p class="text-gray-600 mt-1">Des milliers de clients satisfaits achètent en toute confiance</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4 md:gap-6">
+        <!-- Video 1 (YouTube embed - no controls, autoplay, loop, muted) -->
+        <div class="relative rounded-2xl overflow-hidden shadow-xl bg-gray-900 group aspect-video">
+          <iframe
+            class="absolute inset-0 w-full h-full pointer-events-none"
+            [src]="showcaseVideo1Url"
+            title="Shopping en ligne"
+            frameborder="0"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowfullscreen="false"
+            loading="lazy"
+            aria-hidden="true">
+          </iframe>
+          <!-- Invisible click-blocking overlay + gradient + caption -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-5 text-white pointer-events-none">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+              </span>
+              <span class="text-xs font-black uppercase tracking-widest">Live</span>
+            </div>
+            <h3 class="text-xl md:text-2xl font-extrabold leading-tight drop-shadow">Achats en ligne, simplifiés</h3>
+            <p class="text-sm text-white/90 drop-shadow">Commandez en quelques clics depuis chez vous</p>
+          </div>
+        </div>
+
+        <!-- Video 2 (YouTube embed - no controls, autoplay, loop, muted) -->
+        <div class="relative rounded-2xl overflow-hidden shadow-xl bg-gray-900 group aspect-video">
+          <iframe
+            class="absolute inset-0 w-full h-full pointer-events-none"
+            [src]="showcaseVideo2Url"
+            title="Communauté HELIGXIAM"
+            frameborder="0"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowfullscreen="false"
+            loading="lazy"
+            aria-hidden="true">
+          </iframe>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none"></div>
+          <div class="absolute bottom-0 left-0 right-0 p-5 text-white pointer-events-none">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-white/20 backdrop-blur px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest">Community</span>
+            </div>
+            <h3 class="text-xl md:text-2xl font-extrabold leading-tight drop-shadow">Ils ont adopté HELIGXIAM</h3>
+            <p class="text-sm text-white/90 drop-shadow">Rejoignez plus de 500 000 acheteurs satisfaits</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 3. GRILLE UNIVERS (4 cartes 2x2) TOP       -->
+  <!-- ========================================= -->
+  <section class="max-w-7xl mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div *ngFor="let universe of universesTop"
+           class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-lg transition-shadow flex flex-col">
+        <h3 class="font-bold text-base text-gray-900 mb-3 line-clamp-1">{{ universe.title }}</h3>
+        <div class="grid grid-cols-2 gap-2 flex-1">
+          <a *ngFor="let tile of universe.tiles"
+             [routerLink]="['/search']"
+             [queryParams]="{ q: tile.query }"
+             class="group">
+            <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-1">
+              <img [src]="tile.image" [alt]="tile.label"
+                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            </div>
+            <div class="text-xs font-medium text-gray-700 group-hover:text-indigo-600 line-clamp-1">
+              {{ tile.label }}
+            </div>
+          </a>
+        </div>
+        <a [routerLink]="universe.categoryRoute"
+           class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 mt-3 flex items-center gap-1">
+          Voir plus
+          <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 4. STRIP PROMO (3 mini-bannières)          -->
+  <!-- ========================================= -->
+  <section class="max-w-7xl mx-auto px-4 pb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <a *ngFor="let promo of promoCardsTop"
+         [routerLink]="promo.route"
+         [queryParams]="promo.queryParams"
+         [class]="'relative overflow-hidden rounded-xl p-5 text-white bg-gradient-to-br ' + promo.gradient + ' hover:shadow-xl hover:-translate-y-0.5 transition-all'">
+        <div [class]="'absolute -right-8 -top-8 w-32 h-32 rounded-full ' + promo.accent + ' blur-2xl'"></div>
+        <div class="relative">
+          <h3 class="font-bold text-lg mb-1">{{ promo.title }}</h3>
+          <p class="text-sm text-white/90 mb-3">{{ promo.subtitle }}</p>
+          <span class="inline-flex items-center gap-1 text-sm font-semibold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+            {{ promo.cta }}
+            <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+          </span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 5. CARROUSEL HORIZONTAL - MEILLEURES VENTES-->
+  <!-- ========================================= -->
+  <section class="bg-white border-y">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <lucide-angular [img]="TrendingUp" class="w-5 h-5 text-blue-600"></lucide-angular>
+          <h2 class="text-xl font-bold text-gray-900">Meilleures Ventes</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button (click)="scrollCarousel('carousel-bestsellers', 'left')"
+                  class="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
+            <lucide-angular [img]="ChevronLeft" class="w-4 h-4"></lucide-angular>
+          </button>
+          <button (click)="scrollCarousel('carousel-bestsellers', 'right')"
+                  class="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
+            <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+          </button>
+          <a [routerLink]="['/search']" [queryParams]="{ sort: 'bestseller' }"
+             class="hidden md:inline-flex ml-2 text-sm font-medium text-indigo-600 hover:text-indigo-800">
+            Voir tout →
+          </a>
+        </div>
+      </div>
+      <div id="carousel-bestsellers" class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x pb-2">
+        <div *ngFor="let product of allProducts" class="flex-shrink-0 w-56 snap-start">
+          <app-product-card [product]="product"></app-product-card>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 6. BANNIÈRE FLASH SALE (pleine largeur)    -->
+  <!-- ========================================= -->
+  <section class="max-w-7xl mx-auto px-4 py-6">
+    <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }"
+       class="block relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 text-white p-6 md:p-8 hover:shadow-2xl transition-shadow group">
+      <div class="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+      <div class="absolute -left-12 -bottom-12 w-48 h-48 rounded-full bg-white/10 blur-3xl"></div>
+      <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 md:w-16 md:h-16 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center flex-shrink-0">
+            <lucide-angular [img]="Flame" class="w-7 h-7 md:w-8 md:h-8"></lucide-angular>
+          </div>
+          <div>
+            <div class="inline-block text-xs font-bold bg-white/25 px-2 py-0.5 rounded-full mb-1 uppercase tracking-wide">
+              24H seulement
+            </div>
+            <h3 class="text-2xl md:text-3xl font-bold">Ventes Flash du Jour</h3>
+            <p class="text-white/90 text-sm md:text-base">Des remises jusqu'à -70% sur une sélection exclusive</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="hidden md:flex items-center gap-2 text-sm">
+            <lucide-angular [img]="Clock" class="w-5 h-5"></lucide-angular>
+            <span class="font-mono font-bold">12:34:56</span>
+          </div>
+          <span class="inline-flex items-center gap-2 bg-white text-red-600 font-bold px-5 py-2.5 rounded-lg group-hover:scale-105 transition-transform text-sm">
+            Profiter maintenant
+            <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+          </span>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 7. CARROUSEL COLLECTION PREMIUM            -->
+  <!-- ========================================= -->
+  <section *ngIf="premiumProducts.length > 0" class="bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 text-white">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <lucide-angular [img]="Crown" class="w-5 h-5 text-yellow-400"></lucide-angular>
+          <h2 class="text-xl font-bold">Collection Premium</h2>
+          <span class="hidden md:inline text-xs font-bold text-yellow-400 uppercase tracking-wider bg-yellow-400/10 px-2 py-0.5 rounded-full ml-2">
+            Exclusif
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button (click)="scrollCarousel('carousel-premium', 'left')"
+                  class="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+            <lucide-angular [img]="ChevronLeft" class="w-4 h-4"></lucide-angular>
+          </button>
+          <button (click)="scrollCarousel('carousel-premium', 'right')"
+                  class="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+            <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+          </button>
+          <a [routerLink]="['/search']" [queryParams]="{ badge: 'Premium' }"
+             class="hidden md:inline-flex ml-2 text-sm font-medium text-yellow-400 hover:text-yellow-300">
+            Voir tout →
+          </a>
+        </div>
+      </div>
+      <div id="carousel-premium" class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x pb-2">
+        <div *ngFor="let product of premiumProducts" class="flex-shrink-0 w-56 snap-start">
+          <app-product-card [product]="product"></app-product-card>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 8. GRILLE UNIVERS (4 cartes 2x2) BOTTOM    -->
+  <!-- ========================================= -->
+  <section class="max-w-7xl mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div *ngFor="let universe of universesBottom"
+           class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-lg transition-shadow flex flex-col">
+        <h3 class="font-bold text-base text-gray-900 mb-3 line-clamp-1">{{ universe.title }}</h3>
+        <div class="grid grid-cols-2 gap-2 flex-1">
+          <a *ngFor="let tile of universe.tiles"
+             [routerLink]="['/search']"
+             [queryParams]="{ q: tile.query }"
+             class="group">
+            <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-1">
+              <img [src]="tile.image" [alt]="tile.label"
+                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            </div>
+            <div class="text-xs font-medium text-gray-700 group-hover:text-indigo-600 line-clamp-1">
+              {{ tile.label }}
+            </div>
+          </a>
+        </div>
+        <a [routerLink]="universe.categoryRoute"
+           class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 mt-3 flex items-center gap-1">
+          Voir plus
+          <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 9. STRIP PROMO (3 bandeaux)                -->
+  <!-- ========================================= -->
+  <section class="max-w-7xl mx-auto px-4 pb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <a *ngFor="let promo of promoCardsBottom"
+         [routerLink]="promo.route"
+         [queryParams]="promo.queryParams"
+         [class]="'relative overflow-hidden rounded-xl p-5 text-white bg-gradient-to-br ' + promo.gradient + ' hover:shadow-xl hover:-translate-y-0.5 transition-all'">
+        <div [class]="'absolute -right-8 -top-8 w-32 h-32 rounded-full ' + promo.accent + ' blur-2xl'"></div>
+        <div class="relative">
+          <h3 class="font-bold text-lg mb-1">{{ promo.title }}</h3>
+          <p class="text-sm text-white/90 mb-3">{{ promo.subtitle }}</p>
+          <span class="inline-flex items-center gap-1 text-sm font-semibold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">
+            {{ promo.cta }}
+            <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+          </span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 10. CARTE "PETIT BUDGET" (4 produits compact) -->
+  <!-- ========================================= -->
+  <section *ngIf="budgetProducts.length > 0" class="max-w-7xl mx-auto px-4 pb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <lucide-angular [img]="Tag" class="w-5 h-5 text-green-600"></lucide-angular>
+          <h2 class="text-xl font-bold text-gray-900">Produits essentiels à petit budget</h2>
+        </div>
+        <a [routerLink]="['/search']" [queryParams]="{ sort: 'price-asc' }"
+           class="hidden md:inline text-sm font-medium text-indigo-600 hover:text-indigo-800">
+          Voir plus →
+        </a>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a *ngFor="let product of budgetProducts"
+           [routerLink]="['/product', product.id]"
+           class="group">
+          <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2">
+            <img [src]="product.image" [alt]="product.name"
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </div>
+          <div class="text-xs text-gray-600 line-clamp-2 mb-1 group-hover:text-indigo-600">
+            {{ product.name }}
+          </div>
+          <div class="text-base font-bold text-gray-900">{{ product.price.toFixed(2) }}€</div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 11. CARROUSEL PROMOTIONS                   -->
+  <!-- ========================================= -->
+  <section *ngIf="promoProducts.length > 0" class="bg-gradient-to-br from-red-50 to-pink-50 border-y">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🔥</span>
+          <h2 class="text-xl font-bold text-gray-900">Promotions du moment</h2>
+          <span class="hidden md:inline text-xs font-bold text-red-600 uppercase tracking-wider bg-red-100 px-2 py-0.5 rounded-full ml-2">
+            -30% et +
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button (click)="scrollCarousel('carousel-promos', 'left')"
+                  class="p-2 bg-white hover:bg-red-50 border rounded-full transition-colors">
+            <lucide-angular [img]="ChevronLeft" class="w-4 h-4"></lucide-angular>
+          </button>
+          <button (click)="scrollCarousel('carousel-promos', 'right')"
+                  class="p-2 bg-white hover:bg-red-50 border rounded-full transition-colors">
+            <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+          </button>
+          <a [routerLink]="['/search']" [queryParams]="{ promo: 'true' }"
+             class="hidden md:inline-flex ml-2 text-sm font-medium text-red-600 hover:text-red-800">
+            Toutes les promos →
+          </a>
+        </div>
+      </div>
+      <div id="carousel-promos" class="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth snap-x pb-2">
+        <div *ngFor="let product of promoProducts" class="flex-shrink-0 w-56 snap-start">
+          <app-product-card [product]="product"></app-product-card>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 12. TRUST BAR COMPACTE (1 ligne)           -->
+  <!-- ========================================= -->
+  <section class="bg-white border-y">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="flex items-center gap-3 p-2">
+          <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <lucide-angular [img]="Truck" class="w-5 h-5 text-indigo-600"></lucide-angular>
+          </div>
+          <div class="min-w-0">
+            <div class="font-semibold text-sm text-gray-900">Livraison Express</div>
+            <div class="text-xs text-gray-500">Gratuite dès 99€</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 p-2">
+          <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <lucide-angular [img]="Shield" class="w-5 h-5 text-green-600"></lucide-angular>
+          </div>
+          <div class="min-w-0">
+            <div class="font-semibold text-sm text-gray-900">Paiement Sécurisé</div>
+            <div class="text-xs text-gray-500">100% protégé</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 p-2">
+          <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <lucide-angular [img]="Award" class="w-5 h-5 text-amber-600"></lucide-angular>
+          </div>
+          <div class="min-w-0">
+            <div class="font-semibold text-sm text-gray-900">Garantie Premium</div>
+            <div class="text-xs text-gray-500">2 ans minimum</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 p-2">
+          <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <lucide-angular [img]="Headphones" class="w-5 h-5 text-pink-600"></lucide-angular>
+          </div>
+          <div class="min-w-0">
+            <div class="font-semibold text-sm text-gray-900">Support 24/7</div>
+            <div class="text-xs text-gray-500">Équipe dédiée</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================= -->
+  <!-- 13. NEWSLETTER (compacte)                  -->
+  <!-- ========================================= -->
+  <section class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center flex-shrink-0">
+            <lucide-angular [img]="Sparkles" class="w-6 h-6"></lucide-angular>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold">Rejoignez le Club HELIGXIAM</h3>
+            <p class="text-sm text-indigo-100">🎁 -10€ sur votre première commande • Offres exclusives</p>
+          </div>
+        </div>
+        <form class="flex gap-2 w-full md:w-auto md:min-w-[400px]">
+          <input type="email" placeholder="Votre email"
+                 class="flex-1 px-4 py-2.5 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-white/50" />
+          <button type="submit"
+                  class="bg-white text-indigo-600 px-5 py-2.5 rounded-lg font-bold hover:scale-105 transition-all text-sm whitespace-nowrap">
+            S'inscrire
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</div>

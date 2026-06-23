@@ -1,0 +1,47 @@
+.legal-prose h3 {
+  font-weight: 700;
+  color: #111827;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.legal-prose h4 {
+  font-weight: 600;
+  color: #1f2937;
+  margin-top: 1rem;
+  margin-bottom: 0.4rem;
+}
+
+.legal-prose p {
+  color: #374151;
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.legal-prose ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  color: #374151;
+  line-height: 1.65;
+  font-size: 0.9rem;
+}
+
+.legal-prose ul li {
+  margin-bottom: 0.35rem;
+}
+
+.legal-prose strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+section[id] {
+  scroll-margin-top: 90px;
+}
+
+@media print {
+  .print\:hidden { display: none !important; }
+  section[id] { page-break-before: always; }
+}

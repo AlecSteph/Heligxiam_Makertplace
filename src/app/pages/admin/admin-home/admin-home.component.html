@@ -1,0 +1,105 @@
+<div class="min-h-screen bg-slate-950 text-white flex flex-col">
+  <header
+    class="px-4 py-4 border-b border-slate-800/80 flex items-center justify-between gap-3 flex-wrap"
+  >
+    <div>
+      <p class="text-[0.6rem] uppercase tracking-[0.28em] text-indigo-400 font-bold">HELIGXIAM</p>
+      <h1 class="text-lg sm:text-xl font-bold tracking-tight mt-0.5">Console administrateur</h1>
+      <p class="text-sm text-slate-400">Choisissez un espace d’exploitation</p>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap justify-end">
+      <a
+        routerLink="/"
+        class="text-xs sm:text-sm text-slate-400 hover:text-indigo-300 inline-flex items-center gap-1"
+      >
+        <lucide-angular [img]="ChevronRight" class="w-3.5 h-3.5 rotate-180"></lucide-angular>
+        Site public
+      </a>
+      <button
+        type="button"
+        (click)="logout()"
+        class="text-xs sm:text-sm inline-flex items-center gap-1.5 rounded-lg border border-rose-500/50 bg-rose-950/50 px-3 py-1.5 text-rose-200 hover:bg-rose-900/50"
+      >
+        <lucide-angular [img]="LogOut" class="w-3.5 h-3.5"></lucide-angular>
+        Déconnexion
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto w-full flex flex-col justify-center">
+    <div class="grid md:grid-cols-2 gap-4 sm:gap-6">
+      <a
+        routerLink="/admin/vendeurs"
+        class="admin-card group relative flex flex-col min-h-[280px] sm:min-h-[320px] rounded-3xl border border-amber-500/30 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+      >
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-amber-900/40 via-slate-800 to-slate-900 transition-transform duration-500 group-hover:scale-105"
+        ></div>
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-amber-950/95 via-slate-900/60 to-slate-900/20"
+        ></div>
+        <div class="relative z-10 flex-1 p-6 sm:p-8 flex flex-col justify-end">
+          <div class="flex items-center gap-2 mb-2">
+            <lucide-angular [img]="Store" class="w-7 h-7 text-amber-400"></lucide-angular>
+            <span class="text-xs font-bold uppercase tracking-widest text-amber-200/90">Vendeurs</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white">Espace marchands</h2>
+          <p class="text-sm text-amber-100/85 mt-2 max-w-prose">
+            KYC, offres, annuaire boutiques, retours côté vendeur, messages pro…
+          </p>
+          <span
+            class="mt-4 inline-flex items-center gap-2 text-sm font-bold text-amber-300 group-hover:translate-x-1 transition-transform"
+          >
+            Ouvrir
+            <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+          </span>
+        </div>
+      </a>
+
+      <a
+        routerLink="/admin/clients"
+        class="admin-card group relative flex flex-col min-h-[280px] sm:min-h-[320px] rounded-3xl border border-cyan-500/30 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+      >
+        <div
+          class="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-slate-800 to-slate-900 transition-transform duration-500 group-hover:scale-105"
+        ></div>
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-cyan-950/95 via-slate-900/60 to-slate-900/20"
+        ></div>
+        <div class="relative z-10 flex-1 p-6 sm:p-8 flex flex-col justify-end">
+          <div class="flex items-center gap-2 mb-2">
+            <lucide-angular [img]="UserRound" class="w-7 h-7 text-cyan-400"></lucide-angular>
+            <span class="text-xs font-bold uppercase tracking-widest text-cyan-200/90">Clients</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white">Espace acheteurs</h2>
+          <p class="text-sm text-cyan-100/85 mt-2 max-w-prose">
+            Annuaire, commandes, retours, communications, CSAT, tickets support…
+          </p>
+          <span
+            class="mt-4 inline-flex items-center gap-2 text-sm font-bold text-cyan-300 group-hover:translate-x-1 transition-transform"
+          >
+            Ouvrir
+            <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+          </span>
+        </div>
+      </a>
+    </div>
+
+    <div
+      class="mt-8 p-4 rounded-2xl border border-slate-800 bg-slate-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+    >
+      <div>
+        <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Transverse</p>
+        <p class="text-sm text-slate-300">Litiges, recherche & audit (acheteur ↔ vendeur)</p>
+      </div>
+      <a
+        routerLink="/admin/transverse"
+        class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 px-5 py-2.5 text-sm font-semibold text-white"
+      >
+        <lucide-angular [img]="Scale" class="w-4 h-4 text-sky-400"></lucide-angular>
+        Litiges & transverse
+        <lucide-angular [img]="FileSearch" class="w-4 h-4 text-slate-400"></lucide-angular>
+      </a>
+    </div>
+  </main>
+</div>

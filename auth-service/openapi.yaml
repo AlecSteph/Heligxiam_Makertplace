@@ -1,0 +1,142 @@
+openapi: 3.0.3
+info:
+  title: Auth Service API
+  version: 1.0.0
+  description: API d'authentification (JWT + refresh token + profil utilisateur).
+servers:
+  - url: http://localhost:3001
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: Service up
+  /api/auth/register:
+    post:
+      summary: Creer un compte
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Compte cree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/auth/login:
+    post:
+      summary: Connexion utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Connexion reussie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/auth/refresh-token:
+    post:
+      summary: Renouveler les tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        "200":
+          description: Token renouvelle
+  /api/auth/me:
+    get:
+      summary: Recuperer le profil courant
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profil retourne
+  /api/auth/logout:
+    post:
+      summary: Deconnexion (revoque refresh token)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Deconnecte
+  /api/auth/user/{id}:
+    put:
+      summary: Mettre a jour le profil utilisateur
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Profil mis a jour
+  /api/auth/change-password:
+    put:
+      summary: Changer le mot de passe
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Mot de passe mis a jour
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [nom, prenom, email, password]
+      properties:
+        nom:
+          type: string
+        prenom:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        role:
+          type: string
+          enum: [client, vendeur]
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object

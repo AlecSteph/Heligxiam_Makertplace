@@ -1,0 +1,428 @@
+<div *ngIf="loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
+  <div class="text-center">
+    <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-3"></div>
+    <p class="text-sm text-gray-600">Chargement du produit…</p>
+  </div>
+</div>
+
+<div *ngIf="!loading && product" class="min-h-screen bg-gray-50">
+  <!-- Breadcrumb -->
+  <div class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex items-center gap-2 text-sm text-gray-600">
+        <a routerLink="/" class="hover:text-blue-600">Accueil</a>
+        <span>/</span>
+        <a [routerLink]="getCategoryRoute(product.category)" class="hover:text-blue-600">
+          {{ product.category }}
+        </a>
+        <span>/</span>
+        <span class="text-gray-900">{{ product.name }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Details -->
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <button
+      (click)="goBack()"
+      class="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Retour
+    </button>
+
+    <div class="bg-white rounded-lg p-8 mb-8">
+      <div class="grid md:grid-cols-2 gap-12">
+        <!-- Galerie carrousel -->
+        <div>
+          <!-- Image principale -->
+          <div class="relative aspect-square rounded-xl overflow-hidden bg-gray-100 mb-4 group">
+            <img *ngFor="let img of galleryImages; let i = index; trackBy: trackByIndex"
+                 [src]="img"
+                 [alt]="product.name + ' — photo ' + (i + 1)"
+                 [class]="'absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ' +
+                          (i === currentImageIndex ? 'opacity-100' : 'opacity-0 pointer-events-none')" />
+
+            <!-- Bouton précédent -->
+            <button type="button"
+                    *ngIf="galleryImages.length > 1"
+                    (click)="prevImage()"
+                    aria-label="Image précédente"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-gray-700 hover:text-indigo-600 transition-all opacity-0 group-hover:opacity-100 md:opacity-100">
+              <lucide-angular [img]="ChevronLeft" class="w-5 h-5"></lucide-angular>
+            </button>
+
+            <!-- Bouton suivant -->
+            <button type="button"
+                    *ngIf="galleryImages.length > 1"
+                    (click)="nextImage()"
+                    aria-label="Image suivante"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-gray-700 hover:text-indigo-600 transition-all opacity-0 group-hover:opacity-100 md:opacity-100">
+              <lucide-angular [img]="ChevronRight" class="w-5 h-5"></lucide-angular>
+            </button>
+
+            <!-- Indicateur (dots) -->
+            <div *ngIf="galleryImages.length > 1"
+                 class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-black/40 backdrop-blur-sm rounded-full">
+              <button *ngFor="let img of galleryImages; let i = index; trackBy: trackByIndex"
+                      type="button"
+                      (click)="setImage(i)"
+                      [attr.aria-label]="'Aller à la photo ' + (i + 1)"
+                      [class]="'transition-all rounded-full ' +
+                               (i === currentImageIndex
+                                  ? 'w-6 h-2 bg-white'
+                                  : 'w-2 h-2 bg-white/60 hover:bg-white/90')"></button>
+            </div>
+
+            <!-- Compteur -->
+            <div *ngIf="galleryImages.length > 1"
+                 class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs font-bold">
+              {{ currentImageIndex + 1 }} / {{ galleryImages.length }}
+            </div>
+          </div>
+
+          <!-- Miniatures -->
+          <div *ngIf="galleryImages.length > 1"
+               class="grid grid-cols-4 gap-2">
+            <button *ngFor="let img of galleryImages; let i = index; trackBy: trackByIndex"
+                    type="button"
+                    (click)="setImage(i)"
+                    [attr.aria-label]="'Miniature ' + (i + 1)"
+                    [class]="'relative aspect-square rounded-lg overflow-hidden border-2 transition-all ' +
+                             (i === currentImageIndex
+                                ? 'border-indigo-600 ring-2 ring-indigo-200'
+                                : 'border-transparent hover:border-gray-300 opacity-70 hover:opacity-100')">
+              <img [src]="img" [alt]="'Miniature ' + (i + 1)" class="w-full h-full object-cover" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div>
+          <div *ngIf="product.badge" class="inline-block px-3 py-1 rounded-full text-sm font-medium mb-3" [class]="getBadgeClass(product.badge)">
+            {{ product.badge }}
+          </div>
+
+          <h1 class="text-3xl font-bold text-gray-900 mb-4">
+            {{ product.name }}
+          </h1>
+
+          <!-- Vendeur -->
+          <div *ngIf="product.sellerName" class="flex items-center gap-3 mb-4 p-3 rounded-xl bg-gray-50 border border-gray-100">
+            <img *ngIf="product.sellerLogo" [src]="product.sellerLogo" [alt]="product.sellerName" class="w-10 h-10 rounded-full object-cover bg-white" />
+            <div>
+              <p class="text-xs text-gray-500 uppercase tracking-wide">Vendu par</p>
+              <p class="font-semibold text-gray-900">{{ product.sellerName }}</p>
+            </div>
+          </div>
+
+          <!-- Rating -->
+          <div class="flex items-center gap-3 mb-6">
+            <div class="flex items-center">
+              <svg *ngFor="let star of getStars(product.rating); trackBy: trackByIndex" 
+                   xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" 
+                   fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                   [class]="isStarFilled(product.rating, star) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <span class="text-gray-600">
+              {{ product.rating }} ({{ product.reviews }} avis)
+            </span>
+          </div>
+
+          <!-- Price -->
+          <div class="flex items-baseline gap-3 mb-6">
+            <span class="text-4xl font-bold text-gray-900">
+              {{ product.price.toFixed(2) }}€
+            </span>
+            <span *ngIf="product.originalPrice" class="text-xl text-gray-500 line-through">
+              {{ product.originalPrice.toFixed(2) }}€
+            </span>
+          </div>
+
+          <!-- Description -->
+          <p class="text-gray-700 mb-6 leading-relaxed">
+            {{ product.description }}
+          </p>
+
+          <!-- Stock Status -->
+          <div class="mb-6">
+            <p *ngIf="product.inStock" class="text-green-600 font-medium">✓ En stock</p>
+            <p *ngIf="!product.inStock" class="text-red-600 font-medium">✕ Rupture de stock</p>
+          </div>
+
+          <!-- Quantity -->
+          <div *ngIf="product.inStock" class="flex items-center gap-4 mb-6">
+            <label class="font-medium">Quantité:</label>
+            <div class="flex items-center border rounded-lg">
+              <button
+                (click)="decreaseQuantity()"
+                class="px-4 py-2 hover:bg-gray-100"
+              >
+                -
+              </button>
+              <span class="px-6 py-2 border-x">{{ quantity }}</span>
+              <button
+                (click)="increaseQuantity()"
+                class="px-4 py-2 hover:bg-gray-100"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-4 mb-6">
+            <button *ngIf="product.inStock"
+                    (click)="addToCart()"
+                    class="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              Ajouter au panier
+            </button>
+            <button *ngIf="!product.inStock" disabled class="flex-1 bg-gray-300 text-gray-500 py-3 px-6 rounded-lg cursor-not-allowed">
+              Rupture de stock
+            </button>
+            <!-- Favoris -->
+            <button type="button"
+                    (click)="toggleFavorite()"
+                    [attr.aria-label]="isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+                    [title]="isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+                    [class]="'p-3 border rounded-lg transition-all ' +
+                             (isFavorite
+                                ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100'
+                                : 'hover:bg-gray-50 text-gray-600')">
+              <lucide-angular [img]="Heart" class="w-6 h-6"
+                              [class.fill-current]="isFavorite"></lucide-angular>
+            </button>
+
+            <!-- Partager -->
+            <div class="relative">
+              <button type="button"
+                      (click)="toggleShareMenu($event)"
+                      aria-label="Partager ce produit"
+                      title="Partager"
+                      class="p-3 border rounded-lg hover:bg-gray-50 text-gray-600 transition-all">
+                <lucide-angular [img]="Share2" class="w-6 h-6"></lucide-angular>
+              </button>
+
+              <!-- Menu de partage (fallback desktop) -->
+              <div *ngIf="showShareMenu"
+                   class="absolute right-0 top-full mt-2 z-30 w-64 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-fade-in">
+                <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <span class="text-sm font-bold text-gray-900">Partager ce produit</span>
+                </div>
+                <button type="button" (click)="copyLink()"
+                        class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                    <lucide-angular [img]="Link2" class="w-4 h-4 text-slate-700"></lucide-angular>
+                  </div>
+                  Copier le lien
+                </button>
+                <button type="button" (click)="shareOn('whatsapp')"
+                        class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 hover:bg-emerald-50 transition-colors">
+                  <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <lucide-angular [img]="MessageCircle" class="w-4 h-4 text-emerald-600"></lucide-angular>
+                  </div>
+                  WhatsApp
+                </button>
+                <button type="button" (click)="shareOn('facebook')"
+                        class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 hover:bg-blue-50 transition-colors">
+                  <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <lucide-angular [img]="Facebook" class="w-4 h-4 text-blue-600"></lucide-angular>
+                  </div>
+                  Facebook
+                </button>
+                <button type="button" (click)="shareOn('twitter')"
+                        class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 hover:bg-sky-50 transition-colors">
+                  <div class="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center">
+                    <lucide-angular [img]="Twitter" class="w-4 h-4 text-sky-600"></lucide-angular>
+                  </div>
+                  Twitter / X
+                </button>
+                <button type="button" (click)="shareOn('email')"
+                        class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-gray-700 hover:bg-orange-50 transition-colors border-t border-gray-100">
+                  <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                    <lucide-angular [img]="Mail" class="w-4 h-4 text-orange-600"></lucide-angular>
+                  </div>
+                  E-mail
+                </button>
+              </div>
+
+              <!-- Backdrop pour fermer au clic extérieur -->
+              <div *ngIf="showShareMenu"
+                   (click)="closeShareMenu()"
+                   class="fixed inset-0 z-20"></div>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div class="border-t pt-6">
+            <h3 class="font-bold mb-3">Caractéristiques:</h3>
+            <ul class="space-y-2 text-gray-700">
+              <li>✓ Livraison gratuite dès 50€</li>
+              <li>✓ Retour gratuit sous 30 jours</li>
+              <li>✓ Garantie constructeur 2 ans</li>
+              <li>✓ Paiement sécurisé</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== Avis clients ========== -->
+    <div class="bg-white rounded-2xl p-6 md:p-8 mb-8 border border-gray-100">
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <h2 class="text-2xl font-bold text-gray-900">Avis clients</h2>
+        <span class="text-sm text-gray-500">{{ allReviews.length }} avis vérifiés</span>
+      </div>
+
+      <!-- Résumé + distribution -->
+      <div class="grid md:grid-cols-3 gap-6 mb-8 pb-6 border-b border-gray-100">
+        <!-- Note moyenne -->
+        <div class="md:col-span-1 flex flex-col items-center justify-center bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
+          <div class="text-5xl font-extrabold text-gray-900">{{ averageRating() }}</div>
+          <div class="flex items-center mt-2">
+            <lucide-angular *ngFor="let s of getStars(averageRating()); trackBy: trackByIndex"
+                            [img]="Star"
+                            class="w-5 h-5"
+                            [class.text-amber-400]="isStarFilled(averageRating(), s)"
+                            [class.fill-amber-400]="isStarFilled(averageRating(), s)"
+                            [class.text-gray-300]="!isStarFilled(averageRating(), s)"></lucide-angular>
+          </div>
+          <p class="mt-2 text-sm text-gray-600">sur {{ allReviews.length }} avis</p>
+        </div>
+
+        <!-- Distribution -->
+        <div class="md:col-span-2 space-y-2">
+          <button *ngFor="let row of ratingDistribution(); trackBy: trackByIndex"
+                  type="button"
+                  (click)="setReviewFilter(filterRating === row.stars ? null : row.stars)"
+                  [class]="'w-full flex items-center gap-3 px-3 py-1.5 rounded-lg transition-colors text-left ' +
+                           (filterRating === row.stars ? 'bg-indigo-50 ring-1 ring-indigo-200' : 'hover:bg-gray-50')">
+            <span class="flex items-center gap-1 text-sm font-semibold text-gray-700 w-12">
+              {{ row.stars }}
+              <lucide-angular [img]="Star" class="w-3.5 h-3.5 fill-amber-400 text-amber-400"></lucide-angular>
+            </span>
+            <div class="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
+                   [style.width.%]="row.percent"></div>
+            </div>
+            <span class="text-xs text-gray-500 w-10 text-right">{{ row.count }}</span>
+          </button>
+
+          <!-- Réinitialiser filtre -->
+          <button *ngIf="filterRating !== null"
+                  type="button"
+                  (click)="setReviewFilter(null)"
+                  class="text-xs font-bold text-indigo-600 hover:text-indigo-700 mt-2">
+            Afficher tous les avis
+          </button>
+        </div>
+      </div>
+
+      <!-- Liste d'avis -->
+      <div class="space-y-5">
+        <article *ngFor="let review of visibleReviews; trackBy: trackByReview"
+                 class="pb-5 border-b border-gray-100 last:border-0 last:pb-0">
+          <!-- En-tête -->
+          <div class="flex items-start gap-3 mb-3">
+            <div [class]="'w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ' + review.avatarColor">
+              {{ review.avatarInitials }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold text-gray-900 text-sm">{{ review.author }}</span>
+                <span *ngIf="review.verified"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full border border-emerald-200">
+                  <lucide-angular [img]="BadgeCheck" class="w-3 h-3"></lucide-angular>
+                  Achat vérifié
+                </span>
+              </div>
+              <div class="flex items-center gap-2 mt-1">
+                <div class="flex items-center">
+                  <lucide-angular *ngFor="let s of getStars(review.rating); trackBy: trackByIndex"
+                                  [img]="Star"
+                                  class="w-3.5 h-3.5"
+                                  [class.text-amber-400]="isStarFilled(review.rating, s)"
+                                  [class.fill-amber-400]="isStarFilled(review.rating, s)"
+                                  [class.text-gray-300]="!isStarFilled(review.rating, s)"></lucide-angular>
+                </div>
+                <span class="text-xs text-gray-500">{{ review.date }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Titre + texte -->
+          <h4 class="font-bold text-gray-900 mb-1.5">{{ review.title }}</h4>
+          <p class="text-sm text-gray-700 leading-relaxed mb-3">{{ review.text }}</p>
+
+          <!-- Photos de l'avis -->
+          <div *ngIf="review.photos.length > 0" class="flex gap-2 mb-3 flex-wrap">
+            <img *ngFor="let photo of review.photos; trackBy: trackByIndex"
+                 [src]="photo"
+                 [alt]="'Photo de ' + review.author"
+                 class="w-20 h-20 object-cover rounded-lg border border-gray-200 hover:scale-105 transition-transform cursor-pointer" />
+          </div>
+
+          <!-- Bouton utile -->
+          <button type="button"
+                  (click)="markHelpful(review)"
+                  [disabled]="review.helpfulPressed"
+                  [class]="'inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border transition-all ' +
+                           (review.helpfulPressed
+                              ? 'bg-indigo-50 text-indigo-700 border-indigo-200 cursor-default'
+                              : 'bg-white text-gray-600 border-gray-200 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300')">
+            <lucide-angular [img]="ThumbsUp" class="w-3.5 h-3.5"
+                            [class.fill-current]="review.helpfulPressed"></lucide-angular>
+            Utile ({{ review.helpful }})
+          </button>
+        </article>
+      </div>
+
+      <!-- Charger plus -->
+      <div *ngIf="visibleReviews.length < filteredReviews.length" class="mt-6 text-center">
+        <button type="button"
+                (click)="loadMoreReviews()"
+                class="px-5 py-2.5 bg-white border-2 border-gray-200 rounded-lg font-bold text-sm text-gray-700 hover:bg-gray-50 hover:border-indigo-300 hover:text-indigo-600 transition-all">
+          Voir plus d'avis ({{ filteredReviews.length - visibleReviews.length }})
+        </button>
+      </div>
+
+      <!-- Message si filtre vide -->
+      <div *ngIf="filteredReviews.length === 0" class="text-center py-6 text-gray-500 text-sm">
+        Aucun avis avec {{ filterRating }} étoile(s) pour le moment.
+      </div>
+    </div>
+
+    <!-- Related Products -->
+    <div *ngIf="relatedProducts.length > 0">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Produits similaires</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <app-product-card *ngFor="let p of relatedProducts" [product]="p"></app-product-card>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast de feedback -->
+<div *ngIf="toastVisible"
+     class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] pointer-events-none">
+  <div class="bg-slate-900 text-white text-sm font-semibold px-5 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-fade-in">
+    <lucide-angular [img]="Check" class="w-4 h-4 text-emerald-400"></lucide-angular>
+    {{ toastMessage }}
+  </div>
+</div>
+
+<div *ngIf="!loading && !product" class="max-w-7xl mx-auto px-4 py-16 text-center min-h-screen bg-gray-50">
+  <h2 class="text-2xl font-bold mb-4">{{ loadError ? 'Impossible de charger le produit' : 'Produit non trouvé' }}</h2>
+  <p *ngIf="loadError" class="text-sm text-gray-500 mb-4">Vérifiez que le serveur API est démarré puis réessayez.</p>
+  <a routerLink="/" class="text-blue-600 hover:underline">Retour à l'accueil</a>
+</div>

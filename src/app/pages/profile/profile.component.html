@@ -1,0 +1,1186 @@
+<div class="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+
+  <!-- ============ HERO CARD ============ -->
+  <section class="relative bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-600 text-white overflow-hidden">
+    <div class="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 -left-10 w-72 h-72 bg-amber-400/20 rounded-full blur-3xl"></div>
+
+    <div class="relative max-w-7xl mx-auto px-4 py-6 md:py-8">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+        <!-- Left: user card -->
+        <div class="flex items-center gap-4">
+          <div class="relative flex-shrink-0">
+            <div class="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl md:text-3xl font-extrabold shadow-xl ring-4 ring-white/20">
+              {{ initials }}
+            </div>
+            <span *ngIf="userInfo.verified"
+                  class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-green-500 ring-4 ring-indigo-700 flex items-center justify-center"
+                  title="Compte vérifié">
+              <lucide-angular [img]="CheckCircle2" class="w-4 h-4 text-white"></lucide-angular>
+            </span>
+          </div>
+          <div>
+            <div class="flex items-center flex-wrap gap-2 mb-1">
+              <h1 class="text-2xl md:text-3xl font-extrabold">{{ fullName }}</h1>
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-900 text-[11px] font-extrabold rounded-full uppercase tracking-wide">
+                <lucide-angular [img]="Crown" class="w-3 h-3"></lucide-angular>
+                {{ userInfo.level }}
+              </span>
+            </div>
+            <p class="text-sm text-white/80 flex items-center gap-2">
+              <lucide-angular [img]="Mail" class="w-3.5 h-3.5"></lucide-angular>
+              {{ userInfo.email }}
+            </p>
+            <p class="text-xs text-white/70 mt-1 flex items-center gap-2">
+              <lucide-angular [img]="Calendar" class="w-3 h-3"></lucide-angular>
+              Membre depuis {{ userInfo.memberSince | date:'MMMM yyyy' }} • {{ memberYears }} an{{ memberYears > 1 ? 's' : '' }} de fidélité
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: quick stats -->
+        <div class="grid grid-cols-3 gap-2 md:gap-4">
+          <div class="text-center px-3 py-2 md:px-4 md:py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <p class="text-xl md:text-2xl font-extrabold text-amber-300">{{ loyalty.points }}</p>
+            <p class="text-[10px] md:text-xs text-white/80 uppercase tracking-widest">Points</p>
+          </div>
+          <div class="text-center px-3 py-2 md:px-4 md:py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <p class="text-xl md:text-2xl font-extrabold">{{ stats.totalOrders }}</p>
+            <p class="text-[10px] md:text-xs text-white/80 uppercase tracking-widest">Commandes</p>
+          </div>
+          <div class="text-center px-3 py-2 md:px-4 md:py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <p class="text-xl md:text-2xl font-extrabold text-green-300">{{ creditBalance }}€</p>
+            <p class="text-[10px] md:text-xs text-white/80 uppercase tracking-widest">Crédit</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MAIN LAYOUT ============ -->
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="grid lg:grid-cols-[260px_1fr] gap-6">
+
+      <!-- ============ SIDEBAR ============ -->
+      <aside class="lg:sticky lg:top-24 lg:self-start">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <!-- Progress to next tier -->
+          <div class="p-4 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 border-b border-slate-200">
+            <div class="flex items-center justify-between mb-1.5">
+              <p class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <lucide-angular [img]="Award" class="w-3.5 h-3.5 text-amber-600"></lucide-angular>
+                Prochain palier : {{ loyalty.nextTier }}
+              </p>
+              <span class="text-xs font-bold text-orange-600">{{ loyaltyProgress }}%</span>
+            </div>
+            <div class="h-1.5 bg-white/70 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 transition-all"
+                   [style.width.%]="loyaltyProgress"></div>
+            </div>
+            <p class="text-[10px] text-slate-600 mt-1.5">
+              Plus que <strong class="text-orange-700">{{ loyalty.pointsToNext }} points</strong> à gagner
+            </p>
+          </div>
+
+          <!-- Groups -->
+          <nav class="p-2 space-y-3">
+            <div *ngFor="let group of navGroups">
+              <p class="px-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">{{ group.label }}</p>
+              <div class="space-y-0.5">
+                <button *ngFor="let item of group.items"
+                        type="button"
+                        (click)="switchView(item.id)"
+                        [class]="'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-all ' +
+                          (currentView === item.id
+                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                            : 'text-slate-700 hover:bg-slate-100')">
+                  <lucide-angular [img]="item.icon" class="w-4 h-4 flex-shrink-0"></lucide-angular>
+                  <span class="flex-1 text-left truncate">{{ item.label }}</span>
+                  <span *ngIf="item.badge"
+                        [class]="'px-1.5 py-0.5 text-[10px] font-bold rounded-full ' +
+                          (currentView === item.id ? 'bg-white/25 text-white' : 'bg-red-500 text-white')">
+                    {{ item.badge }}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          <!-- Logout -->
+          <div class="border-t border-slate-200 p-2">
+            <button (click)="logout()"
+                    class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition">
+              <lucide-angular [img]="LogOut" class="w-4 h-4"></lucide-angular>
+              Se déconnecter
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ============ MAIN CONTENT ============ -->
+      <main class="min-w-0">
+
+        <!-- ======================== DASHBOARD ======================== -->
+        <div *ngIf="currentView === 'dashboard'" class="space-y-6">
+
+          <!-- Stats cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="rounded-2xl p-4 bg-gradient-to-br from-indigo-500 to-blue-600 text-white relative overflow-hidden">
+              <div class="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+              <lucide-angular [img]="Package" class="w-5 h-5 mb-2 opacity-80"></lucide-angular>
+              <p class="text-2xl font-extrabold">{{ stats.totalOrders }}</p>
+              <p class="text-xs text-white/80">Commandes total</p>
+            </div>
+            <div class="rounded-2xl p-4 bg-gradient-to-br from-emerald-500 to-green-600 text-white relative overflow-hidden">
+              <div class="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+              <lucide-angular [img]="Wallet" class="w-5 h-5 mb-2 opacity-80"></lucide-angular>
+              <p class="text-2xl font-extrabold">{{ stats.totalSpent | currency:'EUR':'symbol':'1.0-0' }}</p>
+              <p class="text-xs text-white/80">Total dépensé</p>
+            </div>
+            <div class="rounded-2xl p-4 bg-gradient-to-br from-pink-500 to-rose-600 text-white relative overflow-hidden">
+              <div class="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+              <lucide-angular [img]="Percent" class="w-5 h-5 mb-2 opacity-80"></lucide-angular>
+              <p class="text-2xl font-extrabold">{{ stats.totalSavings | currency:'EUR':'symbol':'1.0-0' }}</p>
+              <p class="text-xs text-white/80">Économies réalisées</p>
+            </div>
+            <div class="rounded-2xl p-4 bg-gradient-to-br from-teal-500 to-cyan-600 text-white relative overflow-hidden">
+              <div class="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+              <lucide-angular [img]="Leaf" class="w-5 h-5 mb-2 opacity-80"></lucide-angular>
+              <p class="text-2xl font-extrabold">{{ stats.co2Saved }} kg</p>
+              <p class="text-xs text-white/80">CO₂ économisé</p>
+            </div>
+          </div>
+
+          <!-- Active delivery tracking -->
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div class="p-4 md:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-slate-200">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                    <lucide-angular [img]="Truck" class="w-5 h-5 text-white"></lucide-angular>
+                  </div>
+                  <div>
+                    <p class="text-[11px] font-bold uppercase tracking-widest text-blue-600">Colis en route</p>
+                    <h3 class="text-base font-bold text-slate-900">Livraison estimée : {{ activeDelivery.eta }}</h3>
+                  </div>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-1 bg-blue-600 text-white rounded-full whitespace-nowrap">
+                  {{ activeDelivery.progress }}%
+                </span>
+              </div>
+            </div>
+            <div class="p-4 md:p-5">
+              <div class="flex items-center gap-3 mb-4">
+                <img [src]="activeDelivery.image" [alt]="activeDelivery.product"
+                     class="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-sm text-slate-900 truncate">{{ activeDelivery.product }}</p>
+                  <p class="text-xs text-slate-500">{{ activeDelivery.seller }} • {{ activeDelivery.carrier }}</p>
+                  <p class="text-[11px] font-mono text-indigo-600">{{ activeDelivery.tracking }}</p>
+                </div>
+              </div>
+              <!-- Progress steps -->
+              <div class="relative">
+                <div class="absolute top-3 left-3 right-3 h-0.5 bg-slate-200 rounded-full"></div>
+                <div class="absolute top-3 left-3 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all"
+                     [style.width.%]="activeDelivery.progress - 10"></div>
+                <div class="relative flex justify-between">
+                  <div *ngFor="let s of activeDelivery.steps" class="flex flex-col items-center gap-1 flex-1">
+                    <div [class]="'w-6 h-6 rounded-full flex items-center justify-center z-10 transition-all ' +
+                            (s.done ? 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-md' : 'bg-slate-200')">
+                      <lucide-angular *ngIf="s.done" [img]="CheckCircle" class="w-3.5 h-3.5 text-white"></lucide-angular>
+                    </div>
+                    <p [class]="'text-[10px] font-bold text-center ' + (s.done ? 'text-slate-900' : 'text-slate-400')">
+                      {{ s.label }}
+                    </p>
+                    <p class="text-[9px] text-slate-400">{{ s.date }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick actions + activity row -->
+          <div class="grid lg:grid-cols-[1.5fr_1fr] gap-4">
+            <!-- Quick actions -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-slate-900">Accès rapides</h3>
+                <lucide-angular [img]="Zap" class="w-4 h-4 text-amber-500"></lucide-angular>
+              </div>
+              <div class="grid grid-cols-3 md:grid-cols-4 gap-2">
+                <button *ngFor="let q of [
+                  {v:'orders', icon:Package, label:'Commandes', color:'from-indigo-500 to-blue-600'},
+                  {v:'wishlist', icon:Heart, label:'Favoris', color:'from-pink-500 to-rose-600'},
+                  {v:'coupons', icon:Tag, label:'Coupons', color:'from-amber-500 to-orange-600'},
+                  {v:'addresses', icon:MapPin, label:'Adresses', color:'from-emerald-500 to-green-600'},
+                  {v:'payments', icon:CreditCard, label:'Paiements', color:'from-fuchsia-500 to-pink-600'},
+                  {v:'loyalty', icon:Award, label:'Fidélité', color:'from-violet-500 to-purple-600'},
+                  {v:'messages', icon:MessageSquare, label:'Messages', color:'from-cyan-500 to-teal-600'},
+                  {v:'help', icon:HelpCircle, label:'Aide', color:'from-slate-500 to-slate-700'}
+                ]"
+                        type="button"
+                        (click)="switchView($any(q.v))"
+                        class="group flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 transition-all">
+                  <div [class]="'w-10 h-10 rounded-xl bg-gradient-to-br ' + q.color + ' flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform'">
+                    <lucide-angular [img]="q.icon" class="w-5 h-5 text-white"></lucide-angular>
+                  </div>
+                  <span class="text-[10px] font-bold text-slate-700 text-center leading-tight">{{ q.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Activity -->
+            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              <div class="flex items-center justify-between p-4 border-b border-slate-100">
+                <h3 class="font-bold text-slate-900">Activité récente</h3>
+                <lucide-angular [img]="Clock" class="w-4 h-4 text-slate-400"></lucide-angular>
+              </div>
+              <div class="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                <div *ngFor="let a of activities" class="flex items-start gap-3 p-3 hover:bg-slate-50">
+                  <div [class]="'w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ' + a.color">
+                    <lucide-angular [img]="a.icon" class="w-4 h-4"></lucide-angular>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-slate-900 leading-tight">{{ a.title }}</p>
+                    <p class="text-[11px] text-slate-500 leading-tight">{{ a.description }}</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">{{ a.time }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent orders -->
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div class="flex items-center justify-between p-4 md:p-5 border-b border-slate-100">
+              <div>
+                <h3 class="font-bold text-slate-900">Commandes récentes</h3>
+                <p class="text-xs text-slate-500">Vos 3 dernières commandes</p>
+              </div>
+              <button (click)="switchView('orders')"
+                      class="text-sm font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1">
+                Tout voir <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+              </button>
+            </div>
+            <div class="divide-y divide-slate-100">
+              <div *ngFor="let order of recentOrders.slice(0, 3)"
+                   class="p-4 md:p-5 hover:bg-slate-50 transition-colors">
+                <div class="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p class="text-sm font-bold text-slate-900 font-mono">{{ order.id }}</p>
+                    <p class="text-xs text-slate-500">{{ order.date | date:'dd MMM yyyy' }} • {{ order.items }} article{{ order.items > 1 ? 's' : '' }} • {{ order.seller }}</p>
+                  </div>
+                  <div class="text-right flex-shrink-0">
+                    <p class="text-base font-extrabold text-slate-900">{{ order.total | currency:'EUR' }}</p>
+                    <span [class]="'inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ' + getStatusColor(order.status)">
+                      <lucide-angular [img]="getStatusIcon(order.status)" class="w-3 h-3"></lucide-angular>
+                      {{ getStatusText(order.status) }}
+                    </span>
+                  </div>
+                </div>
+                <!-- Product thumbnails -->
+                <div class="flex items-center gap-2 flex-wrap">
+                  <img *ngFor="let p of order.products" [src]="p.image" [alt]="p.name"
+                       class="w-12 h-12 rounded-md object-cover border border-slate-200" />
+                  <div class="flex-1 flex gap-2 ml-2">
+                    <button *ngIf="order.status !== 'cancelled'"
+                            class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 px-3 py-1 border border-indigo-200 hover:bg-indigo-50 rounded-lg transition">
+                      Suivre
+                    </button>
+                    <button *ngIf="order.status === 'delivered'"
+                            class="text-xs font-semibold text-slate-600 hover:text-slate-700 px-3 py-1 border border-slate-200 hover:bg-slate-50 rounded-lg transition inline-flex items-center gap-1">
+                      <lucide-angular [img]="Repeat" class="w-3 h-3"></lucide-angular>
+                      Racheter
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-bold text-slate-900">Recommandations pour vous</h3>
+                <p class="text-xs text-slate-500">Basées sur vos dernières commandes</p>
+              </div>
+              <lucide-angular [img]="Sparkles" class="w-4 h-4 text-amber-500"></lucide-angular>
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div *ngFor="let r of recommendations"
+                   class="group rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md overflow-hidden transition-all">
+                <div class="relative aspect-square bg-slate-50 overflow-hidden">
+                  <img [src]="r.image" [alt]="r.name"
+                       class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <span *ngIf="r.badge"
+                        class="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                    {{ r.badge }}
+                  </span>
+                </div>
+                <div class="p-2.5">
+                  <p class="text-xs font-bold text-slate-900 line-clamp-1">{{ r.name }}</p>
+                  <div class="flex items-center gap-1 my-1">
+                    <lucide-angular [img]="Star" class="w-3 h-3 text-amber-400 fill-amber-400"></lucide-angular>
+                    <span class="text-[10px] font-semibold text-slate-700">{{ r.rating }}</span>
+                  </div>
+                  <p class="text-[9px] text-slate-500 line-clamp-1 mb-1.5">{{ r.reason }}</p>
+                  <p class="text-sm font-extrabold text-indigo-600">{{ r.price | currency:'EUR' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recently viewed -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-slate-900">Vus récemment</h3>
+              <button class="text-xs font-bold text-slate-500 hover:text-slate-700">Effacer</button>
+            </div>
+            <div class="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scroll-hide">
+              <div *ngFor="let p of recentlyViewed"
+                   class="flex-shrink-0 w-32 group cursor-pointer">
+                <div class="aspect-square rounded-lg bg-slate-50 overflow-hidden border border-slate-200 group-hover:shadow-md transition">
+                  <img [src]="p.image" [alt]="p.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                </div>
+                <p class="text-[11px] font-semibold text-slate-900 mt-1.5 line-clamp-2 leading-tight">{{ p.name }}</p>
+                <p class="text-xs font-bold text-indigo-600 mt-0.5">{{ p.price | currency:'EUR' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== ORDERS ======================== -->
+        <div *ngIf="currentView === 'orders'" class="space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">Mes commandes</h2>
+              <p class="text-sm text-slate-500">{{ recentOrders.length }} commandes au total</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="relative">
+                <lucide-angular [img]="Search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></lucide-angular>
+                <input type="text" placeholder="Rechercher une commande"
+                       class="pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm w-56 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+              </div>
+              <button class="inline-flex items-center gap-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50">
+                <lucide-angular [img]="Filter" class="w-4 h-4"></lucide-angular>
+                Filtrer
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div *ngFor="let order of recentOrders"
+                 class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div class="flex items-center justify-between p-4 bg-slate-50 border-b border-slate-200">
+                <div class="flex items-center gap-4">
+                  <div>
+                    <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Commande</p>
+                    <p class="text-sm font-mono font-bold text-slate-900">{{ order.id }}</p>
+                  </div>
+                  <div class="hidden md:block border-l border-slate-200 pl-4">
+                    <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Date</p>
+                    <p class="text-sm font-semibold text-slate-900">{{ order.date | date:'dd MMM yyyy' }}</p>
+                  </div>
+                  <div class="hidden md:block border-l border-slate-200 pl-4">
+                    <p class="text-[10px] uppercase font-bold text-slate-500 tracking-widest">Total</p>
+                    <p class="text-sm font-bold text-indigo-600">{{ order.total | currency:'EUR' }}</p>
+                  </div>
+                </div>
+                <span [class]="'inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ' + getStatusColor(order.status)">
+                  <lucide-angular [img]="getStatusIcon(order.status)" class="w-3.5 h-3.5"></lucide-angular>
+                  {{ getStatusText(order.status) }}
+                </span>
+              </div>
+              <div class="p-4">
+                <div class="flex items-start gap-3">
+                  <div class="flex gap-2 flex-wrap">
+                    <img *ngFor="let p of order.products" [src]="p.image" [alt]="p.name"
+                         class="w-16 h-16 rounded-lg object-cover border border-slate-200" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-900 mb-1">
+                      {{ order.products[0].name }}
+                      <span *ngIf="order.items > 1" class="text-xs text-slate-500 font-normal">+ {{ order.items - 1 }} autre{{ order.items > 2 ? 's' : '' }}</span>
+                    </p>
+                    <p class="text-xs text-slate-500 mb-2">Vendu par <strong class="text-slate-700">{{ order.seller }}</strong></p>
+                    <div *ngIf="order.tracking" class="text-xs text-blue-600 font-mono mb-2">
+                      <lucide-angular [img]="Truck" class="inline w-3 h-3 mr-1"></lucide-angular>
+                      {{ order.tracking }} • ETA {{ order.eta }}
+                    </div>
+                    <!-- Progress -->
+                    <div *ngIf="order.status !== 'cancelled' && order.status !== 'delivered'" class="mb-3">
+                      <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all"
+                             [style.width.%]="order.progress"></div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <button *ngIf="order.status !== 'cancelled' && order.status !== 'delivered'"
+                              class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 px-3 py-1.5 border border-indigo-200 hover:bg-indigo-50 rounded-lg transition">
+                        Suivre le colis
+                      </button>
+                      <button *ngIf="order.status === 'delivered'"
+                              class="text-xs font-semibold text-slate-700 hover:text-slate-900 px-3 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-lg transition inline-flex items-center gap-1">
+                        <lucide-angular [img]="Repeat" class="w-3 h-3"></lucide-angular>
+                        Racheter
+                      </button>
+                      <button *ngIf="order.status === 'delivered'"
+                              class="text-xs font-semibold text-slate-700 hover:text-slate-900 px-3 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-lg transition inline-flex items-center gap-1">
+                        <lucide-angular [img]="Star" class="w-3 h-3"></lucide-angular>
+                        Laisser un avis
+                      </button>
+                      <button *ngIf="order.status === 'delivered'"
+                              class="text-xs font-semibold text-red-600 hover:text-red-700 px-3 py-1.5 border border-red-200 hover:bg-red-50 rounded-lg transition">
+                        Retour
+                      </button>
+                      <button *ngIf="order.status === 'processing' || order.status === 'shipped'"
+                              class="text-xs font-semibold text-red-600 hover:text-red-700 px-3 py-1.5 border border-red-200 hover:bg-red-50 rounded-lg transition">
+                        Annuler
+                      </button>
+                      <button class="text-xs font-semibold text-slate-500 hover:text-slate-700 px-3 py-1.5 inline-flex items-center gap-1 ml-auto">
+                        <lucide-angular [img]="Download" class="w-3 h-3"></lucide-angular>
+                        Facture
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== PURCHASES (reuses orders delivered) ======================== -->
+        <div *ngIf="currentView === 'purchases'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-slate-900 mb-1">Historique d'achats</h2>
+          <p class="text-sm text-slate-500 mb-4">Tous vos produits achetés sur HELIGXIAM</p>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div *ngFor="let o of recentOrders">
+              <div *ngFor="let p of o.products"
+                   class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                <div class="aspect-square bg-slate-50 overflow-hidden">
+                  <img [src]="p.image" [alt]="p.name" class="w-full h-full object-cover" />
+                </div>
+                <div class="p-3">
+                  <p class="text-sm font-semibold text-slate-900 line-clamp-1">{{ p.name }}</p>
+                  <p class="text-[11px] text-slate-500 mb-2">{{ o.seller }} • {{ o.date | date:'dd/MM/yyyy' }}</p>
+                  <div class="flex items-center gap-1.5">
+                    <button class="flex-1 px-2.5 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition inline-flex items-center justify-center gap-1">
+                      <lucide-angular [img]="Repeat" class="w-3 h-3"></lucide-angular>
+                      Racheter
+                    </button>
+                    <button class="px-2.5 py-1.5 border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition">
+                      <lucide-angular [img]="Star" class="w-3 h-3"></lucide-angular>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== WISHLIST ======================== -->
+        <div *ngIf="currentView === 'wishlist'" class="space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">Ma liste d'envies</h2>
+              <p class="text-sm text-slate-500">{{ wishlist.length }} produits sauvegardés</p>
+            </div>
+            <button class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold hover:bg-slate-50">
+              <lucide-angular [img]="ShoppingCart" class="w-4 h-4"></lucide-angular>
+              Tout ajouter au panier
+            </button>
+          </div>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div *ngFor="let item of wishlist"
+                 class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+              <div class="relative aspect-square bg-slate-50 overflow-hidden">
+                <img [src]="item.image" [alt]="item.name"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <span *ngIf="item.discount > 0"
+                      class="absolute top-3 left-3 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
+                  -{{ item.discount }}%
+                </span>
+                <span *ngIf="!item.inStock"
+                      class="absolute top-3 right-3 px-2 py-0.5 bg-slate-700 text-white text-[10px] font-bold rounded-full uppercase">
+                  Rupture
+                </span>
+                <button (click)="removeFromWishlist(item.id)"
+                        class="absolute bottom-3 right-3 w-9 h-9 bg-white hover:bg-red-50 rounded-full shadow-md flex items-center justify-center text-red-500 hover:text-red-700 transition">
+                  <lucide-angular [img]="Heart" class="w-4 h-4 fill-current"></lucide-angular>
+                </button>
+              </div>
+              <div class="p-4">
+                <p class="text-sm font-semibold text-slate-900 line-clamp-2 mb-1">{{ item.name }}</p>
+                <p class="text-[11px] text-slate-500 mb-2">{{ item.seller }}</p>
+                <div class="flex items-center gap-1 mb-2">
+                  <div class="flex">
+                    <ng-container *ngFor="let f of starArray(item.rating)">
+                      <lucide-angular [img]="Star" [class]="'w-3 h-3 ' + (f ? 'text-amber-400 fill-amber-400' : 'text-slate-300')"></lucide-angular>
+                    </ng-container>
+                  </div>
+                  <span class="text-[10px] text-slate-500">({{ item.reviews }})</span>
+                </div>
+                <div class="flex items-baseline gap-2 mb-3">
+                  <span class="text-lg font-extrabold text-indigo-600">{{ item.price | currency:'EUR' }}</span>
+                  <span *ngIf="item.oldPrice" class="text-xs text-slate-400 line-through">{{ item.oldPrice | currency:'EUR' }}</span>
+                </div>
+                <button (click)="addWishlistToCart(item.id)"
+                        [disabled]="!item.inStock"
+                        [class]="'w-full py-2 text-sm font-bold rounded-lg transition inline-flex items-center justify-center gap-1.5 ' +
+                          (item.inStock
+                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg'
+                            : 'bg-slate-100 text-slate-400 cursor-not-allowed')">
+                  <lucide-angular [img]="ShoppingCart" class="w-4 h-4"></lucide-angular>
+                  {{ item.inStock ? 'Ajouter au panier' : 'Indisponible' }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="wishlist.length === 0" class="text-center py-16 bg-white rounded-2xl border border-slate-200">
+            <lucide-angular [img]="Heart" class="w-12 h-12 text-slate-300 mx-auto mb-3"></lucide-angular>
+            <p class="text-sm font-semibold text-slate-600">Votre liste d'envies est vide</p>
+            <p class="text-xs text-slate-400 mt-1">Ajoutez des produits à revoir plus tard</p>
+          </div>
+        </div>
+
+        <!-- ======================== ADDRESSES ======================== -->
+        <div *ngIf="currentView === 'addresses'" class="space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">Mes adresses</h2>
+              <p class="text-sm text-slate-500">{{ addresses.length }} adresses enregistrées</p>
+            </div>
+            <button class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
+              <lucide-angular [img]="Plus" class="w-4 h-4"></lucide-angular>
+              Nouvelle adresse
+            </button>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div *ngFor="let address of addresses"
+                 class="relative bg-white rounded-2xl border-2 p-5 shadow-sm transition-all"
+                 [class.border-indigo-300]="address.isDefault"
+                 [class.border-slate-200]="!address.isDefault">
+              <span *ngIf="address.isDefault"
+                    class="absolute -top-2 left-5 px-2 py-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] font-bold rounded-full uppercase tracking-wider">
+                Par défaut
+              </span>
+              <div class="flex items-start gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                  <lucide-angular [img]="address.icon" class="w-5 h-5 text-indigo-600"></lucide-angular>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-bold text-slate-900">{{ address.name }}</p>
+                  <p class="text-xs text-slate-500">{{ address.type === 'principal' ? 'Adresse principale' : 'Adresse secondaire' }}</p>
+                </div>
+              </div>
+              <div class="text-sm text-slate-700 space-y-0.5 mb-4 pl-13">
+                <p>{{ fullName }}</p>
+                <p>{{ address.street }}</p>
+                <p>{{ address.postalCode }} {{ address.city }}</p>
+                <p>{{ address.country }}</p>
+                <p class="text-slate-500 flex items-center gap-1 pt-1">
+                  <lucide-angular [img]="Phone" class="w-3 h-3"></lucide-angular>
+                  {{ address.phone }}
+                </p>
+              </div>
+              <div class="flex items-center gap-2 pt-3 border-t border-slate-100">
+                <button class="flex-1 text-xs font-semibold text-slate-700 hover:text-indigo-600 px-3 py-1.5 border border-slate-200 hover:border-indigo-300 rounded-lg transition inline-flex items-center justify-center gap-1">
+                  <lucide-angular [img]="Edit3" class="w-3 h-3"></lucide-angular>
+                  Modifier
+                </button>
+                <button *ngIf="!address.isDefault"
+                        (click)="setDefaultAddress(address.id)"
+                        class="flex-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 border border-indigo-200 rounded-lg transition">
+                  Définir par défaut
+                </button>
+                <button (click)="deleteAddress(address.id)"
+                        class="text-xs font-semibold text-red-600 hover:bg-red-50 px-3 py-1.5 border border-red-200 rounded-lg transition">
+                  <lucide-angular [img]="Trash2" class="w-3 h-3"></lucide-angular>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== PAYMENTS ======================== -->
+        <div *ngIf="currentView === 'payments'" class="space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">Moyens de paiement</h2>
+              <p class="text-sm text-slate-500">{{ paymentMethods.length }} moyens enregistrés · 100% sécurisés</p>
+            </div>
+            <button class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm font-bold hover:shadow-lg transition">
+              <lucide-angular [img]="Plus" class="w-4 h-4"></lucide-angular>
+              Ajouter un moyen
+            </button>
+          </div>
+
+          <!-- Credit card visual -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <div *ngFor="let payment of paymentMethods"
+                 [class]="'relative rounded-2xl p-5 text-white shadow-xl overflow-hidden ' +
+                   (payment.type === 'visa' ? 'bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900' :
+                    payment.type === 'mastercard' ? 'bg-gradient-to-br from-orange-500 via-red-500 to-red-700' :
+                    'bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600')">
+              <div class="absolute -right-12 -top-12 w-40 h-40 bg-white/10 rounded-full blur-xl"></div>
+              <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full blur-lg"></div>
+
+              <div class="relative flex items-start justify-between mb-6">
+                <div>
+                  <p class="text-[10px] uppercase font-bold tracking-widest opacity-80">{{ payment.brand }}</p>
+                  <p class="text-xs opacity-80 mt-0.5">{{ payment.type === 'paypal' ? 'Wallet' : 'Carte bancaire' }}</p>
+                </div>
+                <span *ngIf="payment.isDefault"
+                      class="inline-flex items-center gap-1 text-[10px] font-bold bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                  <lucide-angular [img]="CheckCircle" class="w-3 h-3"></lucide-angular>
+                  Par défaut
+                </span>
+              </div>
+
+              <div class="mb-5">
+                <p *ngIf="payment.type !== 'paypal'" class="text-lg font-mono tracking-[0.3em] mb-3">
+                  •••• •••• •••• {{ payment.last4 }}
+                </p>
+                <p *ngIf="payment.type === 'paypal'" class="text-sm font-bold truncate mb-3">
+                  {{ payment.email }}
+                </p>
+                <div class="flex items-end justify-between text-xs">
+                  <div>
+                    <p class="opacity-60 text-[9px] uppercase tracking-widest">{{ fullName }}</p>
+                  </div>
+                  <p *ngIf="payment.type !== 'paypal'" class="font-mono opacity-80">{{ payment.expiry }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1.5 pt-4 border-t border-white/20">
+                <button *ngIf="!payment.isDefault"
+                        (click)="setDefaultPayment(payment.id)"
+                        class="flex-1 text-[11px] font-bold bg-white/20 backdrop-blur hover:bg-white/30 px-2.5 py-1.5 rounded-lg transition">
+                  Par défaut
+                </button>
+                <button class="flex-1 text-[11px] font-bold bg-white/20 backdrop-blur hover:bg-white/30 px-2.5 py-1.5 rounded-lg transition inline-flex items-center justify-center gap-1">
+                  <lucide-angular [img]="Edit3" class="w-3 h-3"></lucide-angular>
+                  Modifier
+                </button>
+                <button (click)="deletePaymentMethod(payment.id)"
+                        class="text-[11px] font-bold bg-white/20 backdrop-blur hover:bg-red-500 px-2.5 py-1.5 rounded-lg transition">
+                  <lucide-angular [img]="Trash2" class="w-3 h-3"></lucide-angular>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security banner -->
+          <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center flex-shrink-0 shadow-md">
+              <lucide-angular [img]="Shield" class="w-5 h-5 text-white"></lucide-angular>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-emerald-900">Sécurité garantie</p>
+              <p class="text-xs text-emerald-700">Vos informations bancaires sont chiffrées et jamais stockées en clair. HELIGXIAM est certifié PCI-DSS.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== LOYALTY ======================== -->
+        <div *ngIf="currentView === 'loyalty'" class="space-y-6">
+          <!-- Big loyalty card -->
+          <div class="rounded-3xl p-6 md:p-8 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-white relative overflow-hidden shadow-xl">
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/20 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-10 -left-10 w-48 h-48 bg-amber-300/30 rounded-full blur-2xl"></div>
+            <div class="relative">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                    <lucide-angular [img]="Crown" class="w-6 h-6 text-white"></lucide-angular>
+                  </div>
+                  <div>
+                    <p class="text-[10px] uppercase tracking-widest font-bold opacity-90">HELIGXIAM Rewards</p>
+                    <h2 class="text-2xl font-extrabold">Statut {{ loyalty.tier }}</h2>
+                  </div>
+                </div>
+                <lucide-angular [img]="Award" class="w-10 h-10 opacity-50"></lucide-angular>
+              </div>
+              <p class="text-5xl md:text-6xl font-extrabold mb-1">{{ loyalty.points }}</p>
+              <p class="text-sm opacity-90 mb-5">points fidélité disponibles</p>
+              <div class="bg-white/20 backdrop-blur rounded-xl p-4">
+                <div class="flex items-center justify-between text-xs font-bold mb-2">
+                  <span>{{ loyalty.tier }}</span>
+                  <span>{{ loyalty.nextTier }}</span>
+                </div>
+                <div class="h-2 bg-white/30 rounded-full overflow-hidden mb-2">
+                  <div class="h-full bg-white rounded-full transition-all" [style.width.%]="loyaltyProgress"></div>
+                </div>
+                <p class="text-[11px] opacity-90">Encore <strong class="text-white">{{ loyalty.pointsToNext }} points</strong> pour atteindre {{ loyalty.nextTier }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier benefits + history -->
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <h3 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <lucide-angular [img]="Sparkles" class="w-4 h-4 text-amber-500"></lucide-angular>
+                Vos avantages {{ loyalty.tier }}
+              </h3>
+              <ul class="space-y-2">
+                <li *ngFor="let b of loyalty.tierBenefits" class="flex items-start gap-2">
+                  <lucide-angular [img]="CheckCircle2" class="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5"></lucide-angular>
+                  <span class="text-sm text-slate-700">{{ b }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <h3 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <lucide-angular [img]="Clock" class="w-4 h-4 text-indigo-500"></lucide-angular>
+                Historique des points
+              </h3>
+              <ul class="divide-y divide-slate-100">
+                <li *ngFor="let h of loyalty.history" class="flex items-center justify-between py-2.5">
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-slate-900 truncate">{{ h.label }}</p>
+                    <p class="text-[11px] text-slate-500">{{ h.date }}</p>
+                  </div>
+                  <span class="text-sm font-bold text-green-600 flex-shrink-0 ml-3">+{{ h.points }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== COUPONS ======================== -->
+        <div *ngIf="currentView === 'coupons'" class="space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">Mes coupons</h2>
+              <p class="text-sm text-slate-500">{{ activeCouponsCount }} coupons actifs</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div *ngFor="let c of coupons"
+                 [class]="'relative rounded-2xl p-5 text-white shadow-md overflow-hidden transition-all ' +
+                   (c.used ? 'opacity-60 grayscale' : 'hover:shadow-xl hover:-translate-y-0.5') +
+                   ' bg-gradient-to-br ' + c.color">
+              <div class="absolute -right-8 -top-8 w-28 h-28 bg-white/10 rounded-full blur-xl"></div>
+
+              <div class="relative flex items-start gap-3 mb-4">
+                <div class="w-11 h-11 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center flex-shrink-0">
+                  <lucide-angular [img]="c.icon" class="w-5 h-5 text-white"></lucide-angular>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-bold opacity-90 uppercase tracking-wide">{{ c.title }}</p>
+                  <p class="text-xl font-extrabold">{{ c.discount }}</p>
+                </div>
+                <span *ngIf="c.used" class="text-[10px] font-bold bg-white/25 backdrop-blur px-2 py-0.5 rounded-full uppercase">Utilisé</span>
+              </div>
+              <p class="relative text-sm mb-4 opacity-95">{{ c.description }}</p>
+
+              <div class="relative flex items-center gap-2 mb-3">
+                <div class="flex-1 px-3 py-2 bg-white/20 backdrop-blur border border-white/30 rounded-lg border-dashed flex items-center justify-between">
+                  <span class="text-sm font-mono font-bold tracking-wider">{{ c.code }}</span>
+                  <span *ngIf="copiedCouponId === c.id" class="text-[10px] font-bold text-amber-200">Copié !</span>
+                </div>
+                <button *ngIf="!c.used"
+                        (click)="copyCoupon(c)"
+                        class="px-3 py-2 bg-white text-slate-900 text-xs font-bold rounded-lg hover:scale-105 transition inline-flex items-center gap-1">
+                  <lucide-angular [img]="Copy" class="w-3.5 h-3.5"></lucide-angular>
+                  Copier
+                </button>
+              </div>
+              <div class="relative flex items-center justify-between text-[11px] opacity-80">
+                <span>Dès {{ c.minAmount }}€ d'achat</span>
+                <span class="flex items-center gap-1">
+                  <lucide-angular [img]="Clock" class="w-3 h-3"></lucide-angular>
+                  Expire le {{ c.expiresAt | date:'dd/MM/yyyy' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== SUBSCRIPTIONS ======================== -->
+        <div *ngIf="currentView === 'subscriptions'" class="space-y-4">
+          <h2 class="text-2xl font-bold text-slate-900 mb-1">Mes abonnements</h2>
+          <p class="text-sm text-slate-500 mb-4">{{ subscriptions.length }} abonnements · gérez tout en un clic</p>
+
+          <div class="space-y-4">
+            <div *ngFor="let s of subscriptions"
+                 class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              <div [class]="'p-5 text-white bg-gradient-to-br ' + s.color + ' relative overflow-hidden'">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                <div class="relative flex items-start justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                      <lucide-angular [img]="s.icon" class="w-6 h-6 text-white"></lucide-angular>
+                    </div>
+                    <div>
+                      <h3 class="text-lg font-extrabold">{{ s.name }}</h3>
+                      <p class="text-xs opacity-90">{{ s.description }}</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-lg font-extrabold">{{ s.price }}</p>
+                    <span [class]="'inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 ' + getSubStatusClass(s.status)">
+                      {{ getSubStatusLabel(s.status) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="p-5">
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                  <div *ngFor="let p of s.perks" class="flex items-start gap-2 text-xs text-slate-700">
+                    <lucide-angular [img]="CheckCircle2" class="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5"></lucide-angular>
+                    {{ p }}
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-xs text-slate-500 pb-3 border-b border-slate-100">
+                  <span>Prochaine facturation :</span>
+                  <strong class="text-slate-700">{{ s.renewDate | date:'dd MMMM yyyy' }}</strong>
+                </div>
+                <div class="flex items-center gap-2 mt-3">
+                  <button (click)="toggleSubscription(s)"
+                          class="flex-1 text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2 border border-slate-200 hover:bg-slate-50 rounded-lg transition">
+                    {{ s.status === 'active' ? 'Mettre en pause' : 'Réactiver' }}
+                  </button>
+                  <button class="flex-1 text-xs font-bold text-red-600 hover:text-red-700 px-3 py-2 border border-red-200 hover:bg-red-50 rounded-lg transition">
+                    Résilier
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== REVIEWS ======================== -->
+        <div *ngIf="currentView === 'reviews'" class="space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">Mes avis</h2>
+              <p class="text-sm text-slate-500">{{ reviews.length }} avis publiés · {{ stats.averageRating }}/5 en moyenne</p>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div *ngFor="let r of reviews"
+                 class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <div class="flex items-start gap-3 mb-3">
+                <img [src]="r.productImage" [alt]="r.productName"
+                     class="w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-slate-200" />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-slate-900">{{ r.productName }}</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <div class="flex">
+                      <ng-container *ngFor="let f of starArray(r.rating)">
+                        <lucide-angular [img]="Star" [class]="'w-3.5 h-3.5 ' + (f ? 'text-amber-400 fill-amber-400' : 'text-slate-300')"></lucide-angular>
+                      </ng-container>
+                    </div>
+                    <span class="text-xs text-slate-500">{{ r.date | date:'dd MMM yyyy' }}</span>
+                  </div>
+                </div>
+                <button class="text-xs font-semibold text-slate-500 hover:text-indigo-600 inline-flex items-center gap-1">
+                  <lucide-angular [img]="Edit3" class="w-3.5 h-3.5"></lucide-angular>
+                  Modifier
+                </button>
+              </div>
+              <p class="text-sm text-slate-700 leading-relaxed mb-3">{{ r.comment }}</p>
+              <div *ngIf="r.reply" class="bg-indigo-50 border-l-4 border-indigo-400 rounded-r-lg p-3 mb-3">
+                <p class="text-[11px] font-bold text-indigo-700 mb-0.5">Réponse du vendeur</p>
+                <p class="text-xs text-indigo-900">{{ r.reply }}</p>
+              </div>
+              <div class="flex items-center gap-3 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                <span class="flex items-center gap-1">
+                  <lucide-angular [img]="CheckCircle2" class="w-3 h-3 text-green-500"></lucide-angular>
+                  Achat vérifié
+                </span>
+                <span>·</span>
+                <span>{{ r.helpful }} personnes ont trouvé cet avis utile</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== MESSAGES ======================== -->
+        <div *ngIf="currentView === 'messages'" class="space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">Messagerie</h2>
+              <p class="text-sm text-slate-500">{{ unreadMessagesCount }} non lus sur {{ messages.length }}</p>
+            </div>
+            <button *ngIf="unreadMessagesCount > 0"
+                    (click)="markAllMessagesRead()"
+                    class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1">
+              <lucide-angular [img]="CheckCircle2" class="w-4 h-4"></lucide-angular>
+              Tout marquer comme lu
+            </button>
+          </div>
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
+            <button *ngFor="let m of messages"
+                    type="button"
+                    (click)="markMessageAsRead(m.id)"
+                    [class]="'w-full text-left flex items-start gap-3 p-4 hover:bg-slate-50 transition-colors ' + (!m.read ? 'bg-indigo-50/40' : '')">
+              <div class="relative">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {{ m.sender.charAt(0) }}
+                </div>
+                <span *ngIf="!m.read" class="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-500 ring-2 ring-white"></span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                  <p [class]="'text-sm font-bold ' + (!m.read ? 'text-slate-900' : 'text-slate-600')">{{ m.sender }}</p>
+                  <span [class]="'text-[10px] font-bold px-2 py-0.5 rounded-full ' + getMessageTypeBadge(m.type).class">
+                    {{ getMessageTypeBadge(m.type).label }}
+                  </span>
+                  <span class="text-[11px] text-slate-400 ml-auto">{{ m.date | date:'dd/MM HH:mm' }}</span>
+                </div>
+                <p [class]="'text-sm mb-1 ' + (!m.read ? 'font-semibold text-slate-900' : 'text-slate-700')">{{ m.subject }}</p>
+                <p class="text-xs text-slate-500 line-clamp-1">{{ m.preview }}</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- ======================== SETTINGS ======================== -->
+        <div *ngIf="currentView === 'settings'" class="space-y-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Paramètres du compte</h2>
+            <p class="text-sm text-slate-500">Gérez vos informations personnelles et préférences</p>
+          </div>
+
+          <!-- Avatar + Profile form -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 shadow-sm">
+            <h3 class="font-bold text-slate-900 mb-4">Informations personnelles</h3>
+            <div class="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100">
+              <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-extrabold shadow-md">
+                {{ initials }}
+              </div>
+              <div class="flex-1">
+                <p class="font-bold text-slate-900">{{ fullName }}</p>
+                <p class="text-xs text-slate-500 mb-2">{{ userInfo.email }}</p>
+                <div class="flex items-center gap-2">
+                  <button class="text-xs font-bold text-indigo-600 hover:text-indigo-700 px-3 py-1.5 border border-indigo-200 hover:bg-indigo-50 rounded-lg transition inline-flex items-center gap-1">
+                    <lucide-angular [img]="Camera" class="w-3 h-3"></lucide-angular>
+                    Changer la photo
+                  </button>
+                  <button class="text-xs font-semibold text-slate-500 hover:text-red-600 transition">
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Prénom</label>
+                <input formControlName="firstName" type="text" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-300 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Nom</label>
+                <input formControlName="lastName" type="text" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-300 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Email</label>
+                <input formControlName="email" type="email" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-300 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Téléphone</label>
+                <input formControlName="phone" type="tel" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-300 focus:outline-none" />
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Bio</label>
+                <textarea formControlName="bio" rows="3" placeholder="Parlez-nous un peu de vous…"
+                          class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:border-indigo-300 focus:outline-none resize-none"></textarea>
+              </div>
+              <div class="md:col-span-2 flex items-center gap-2">
+                <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold rounded-lg hover:shadow-lg transition">
+                  Sauvegarder
+                </button>
+                <button type="button" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-lg hover:bg-slate-50 transition">
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Notification preferences -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 shadow-sm">
+            <h3 class="font-bold text-slate-900 mb-4">Notifications</h3>
+            <div class="space-y-3">
+              <label *ngFor="let pref of [
+                {key:'emailNotifications', icon:Mail, label:'Notifications par email', desc:'Mises à jour de commandes, retours, messages'},
+                {key:'smsNotifications', icon:Smartphone, label:'Notifications SMS', desc:'Uniquement pour les livraisons'},
+                {key:'pushNotifications', icon:Bell, label:'Notifications push', desc:'Alertes instantanées sur votre navigateur'},
+                {key:'promoEmails', icon:Percent, label:'Offres promotionnelles', desc:'Recevez nos meilleures promos par email'},
+                {key:'newsletter', icon:BookOpen, label:'Newsletter mensuelle', desc:'Nouveautés, guides et idées cadeaux'}
+              ]"
+                     class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                <div class="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                  <lucide-angular [img]="pref.icon" class="w-4 h-4 text-indigo-600"></lucide-angular>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-slate-900">{{ pref.label }}</p>
+                  <p class="text-[11px] text-slate-500">{{ pref.desc }}</p>
+                </div>
+                <input type="checkbox" [(ngModel)]="securityPrefs[pref.key]" [name]="pref.key" class="sr-only peer" />
+                <div class="relative w-11 h-6 bg-slate-200 rounded-full peer-checked:bg-gradient-to-r peer-checked:from-indigo-600 peer-checked:to-purple-600 transition-colors">
+                  <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"
+                       [style.transform]="securityPrefs[pref.key] ? 'translateX(20px)' : 'translateX(0)'"></div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== SECURITY ======================== -->
+        <div *ngIf="currentView === 'security'" class="space-y-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Sécurité & Confidentialité</h2>
+            <p class="text-sm text-slate-500">Protégez votre compte en quelques clics</p>
+          </div>
+
+          <!-- Security score -->
+          <div class="rounded-2xl p-5 bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-md">
+            <div class="flex items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center flex-shrink-0">
+                <lucide-angular [img]="Shield" class="w-7 h-7 text-white"></lucide-angular>
+              </div>
+              <div class="flex-1">
+                <p class="text-[11px] uppercase tracking-widest opacity-90 font-bold">Score de sécurité</p>
+                <p class="text-2xl font-extrabold">Excellent (92/100)</p>
+              </div>
+              <span class="text-5xl font-extrabold opacity-30">92</span>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <h3 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <lucide-angular [img]="Lock" class="w-4 h-4 text-indigo-600"></lucide-angular>
+              Changer le mot de passe
+            </h3>
+            <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="grid md:grid-cols-3 gap-3">
+              <div class="relative">
+                <input formControlName="current" [type]="showPassword ? 'text' : 'password'" placeholder="Mot de passe actuel"
+                       class="w-full px-3 py-2 pr-10 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none" />
+                <button type="button" (click)="showPassword = !showPassword"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-700">
+                  <lucide-angular [img]="showPassword ? EyeOff : Eye" class="w-4 h-4"></lucide-angular>
+                </button>
+              </div>
+              <input formControlName="newPassword" type="password" placeholder="Nouveau mot de passe"
+                     class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none" />
+              <input formControlName="confirm" type="password" placeholder="Confirmer"
+                     class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none" />
+              <button type="submit" class="md:col-span-3 justify-self-start px-5 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition">
+                Mettre à jour
+              </button>
+            </form>
+          </div>
+
+          <!-- Security toggles -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <h3 class="font-bold text-slate-900 mb-4">Options de sécurité</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center">
+                    <lucide-angular [img]="Smartphone" class="w-4 h-4 text-green-600"></lucide-angular>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-slate-900">Authentification à deux facteurs</p>
+                    <p class="text-[11px] text-slate-500">Protection renforcée via SMS ou application</p>
+                  </div>
+                </div>
+                <span class="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase">Activée</span>
+              </div>
+
+              <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <lucide-angular [img]="Globe" class="w-4 h-4 text-blue-600"></lucide-angular>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-slate-900">Appareils connectés</p>
+                    <p class="text-[11px] text-slate-500">3 sessions actives (Chrome, iPhone, iPad)</p>
+                  </div>
+                </div>
+                <button class="text-xs font-bold text-indigo-600 hover:text-indigo-700">Gérer</button>
+              </div>
+
+              <div class="flex items-center justify-between p-3 rounded-xl border border-slate-200">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center">
+                    <lucide-angular [img]="AlertCircle" class="w-4 h-4 text-red-600"></lucide-angular>
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-slate-900">Supprimer mon compte</p>
+                    <p class="text-[11px] text-slate-500">Action définitive et irréversible</p>
+                  </div>
+                </div>
+                <button class="text-xs font-bold text-red-600 hover:text-red-700">Supprimer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================== HELP ======================== -->
+        <div *ngIf="currentView === 'help'" class="space-y-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Aide & Support</h2>
+            <p class="text-sm text-slate-500">Nous sommes là pour vous aider, 7j/7</p>
+          </div>
+
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div *ngFor="let h of [
+              {icon:MessageSquare, color:'from-indigo-500 to-blue-600', title:'Chat en direct', desc:'Temps de réponse < 2 min', cta:'Démarrer un chat'},
+              {icon:Phone, color:'from-emerald-500 to-green-600', title:'Téléphone', desc:'01 70 77 11 22 — 8h à minuit', cta:'Appeler maintenant'},
+              {icon:Mail, color:'from-fuchsia-500 to-pink-600', title:'Email', desc:'support@heligxiam.fr', cta:'Envoyer un email'},
+              {icon:BookOpen, color:'from-amber-500 to-orange-600', title:'Centre d\'aide', desc:'Des centaines de réponses', cta:'Consulter la FAQ'},
+              {icon:Truck, color:'from-cyan-500 to-teal-600', title:'Suivi de colis', desc:'Tracez votre commande', cta:'Suivre un colis'},
+              {icon:RefreshCw, color:'from-violet-500 to-purple-600', title:'Retours', desc:'Facile, gratuit, 60 jours', cta:'Lancer un retour'}
+            ]"
+                 class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all">
+              <div [class]="'w-12 h-12 rounded-xl bg-gradient-to-br ' + h.color + ' flex items-center justify-center shadow-md mb-3'">
+                <lucide-angular [img]="h.icon" class="w-6 h-6 text-white"></lucide-angular>
+              </div>
+              <h3 class="font-bold text-slate-900 mb-1">{{ h.title }}</h3>
+              <p class="text-xs text-slate-500 mb-3">{{ h.desc }}</p>
+              <button class="text-sm font-bold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1">
+                {{ h.cta }}
+                <lucide-angular [img]="ArrowRight" class="w-3.5 h-3.5"></lucide-angular>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick links -->
+          <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 rounded-2xl border border-indigo-100 p-5">
+            <h3 class="font-bold text-slate-900 mb-3 flex items-center gap-2">
+              <lucide-angular [img]="Sparkles" class="w-4 h-4 text-indigo-600"></lucide-angular>
+              Questions fréquentes
+            </h3>
+            <ul class="grid sm:grid-cols-2 gap-2">
+              <li *ngFor="let q of [
+                'Comment suivre ma commande ?',
+                'Comment retourner un produit ?',
+                'Modifier mon adresse de livraison',
+                'Utiliser un code promo',
+                'Ma commande est en retard',
+                'Mon remboursement est-il arrivé ?'
+              ]">
+                <a class="flex items-center justify-between p-2.5 bg-white/70 backdrop-blur hover:bg-white rounded-lg text-sm text-slate-700 hover:text-indigo-600 transition cursor-pointer">
+                  {{ q }}
+                  <lucide-angular [img]="ChevronRight" class="w-4 h-4 text-slate-400"></lucide-angular>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+</div>

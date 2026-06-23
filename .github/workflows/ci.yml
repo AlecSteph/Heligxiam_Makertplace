@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            auth-service/package-lock.json
+            product-service/package-lock.json
+            cart-service/package-lock.json
+
+      - name: Install auth dependencies
+        run: npm ci
+        working-directory: auth-service
+
+      - name: Install product dependencies
+        run: npm ci
+        working-directory: product-service
+
+      - name: Install cart dependencies
+        run: npm ci
+        working-directory: cart-service
+
+      - name: Lint auth (if present)
+        run: npm run lint --if-present
+        working-directory: auth-service
+
+      - name: Lint product (if present)
+        run: npm run lint --if-present
+        working-directory: product-service
+
+      - name: Lint cart (if present)
+        run: npm run lint --if-present
+        working-directory: cart-service
+
+      - name: Run auth tests
+        run: npm test
+        working-directory: auth-service
+
+      - name: Run product tests
+        run: npm test
+        working-directory: product-service
+
+      - name: Run cart tests
+        run: npm test
+        working-directory: cart-service
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build

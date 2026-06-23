@@ -1,0 +1,54 @@
+<div class="min-h-screen bg-slate-950 text-white">
+  <div
+    class="relative min-h-[42vh] md:min-h-[48vh] flex flex-col justify-end"
+    [style.background-image]="'url(' + coverUrl + ')'"
+    style="background-size: cover; background-position: center"
+  >
+    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-amber-900/40"></div>
+    <div class="relative z-10 max-w-5xl mx-auto px-4 pb-10 pt-20 w-full">
+      <a
+        routerLink="/"
+        class="inline-flex items-center gap-1.5 text-sm text-amber-200/90 hover:text-white mb-4"
+      >
+        <lucide-angular [img]="ArrowLeft" class="w-4 h-4"></lucide-angular>
+        Retour à l’accueil
+      </a>
+      <p class="text-amber-400 text-xs font-bold uppercase tracking-[0.2em] mb-2">Espace vendeur</p>
+      <h1 class="text-3xl md:text-4xl font-black tracking-tight mb-2">Vendez sur HELIGXIAM</h1>
+      <p class="text-slate-200 max-w-xl text-sm md:text-base">
+        Gérez votre boutique, votre catalogue et vos commandes. Rejoignez des milliers de marchands.
+      </p>
+    </div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-4 py-10 -mt-6 relative z-20">
+    <div class="grid sm:grid-cols-2 gap-4">
+      <a
+        routerLink="/sell"
+        class="group flex flex-col rounded-2xl border border-amber-500/30 bg-amber-950/40 backdrop-blur-sm p-6 hover:border-amber-400/60 hover:bg-amber-950/60 transition-all"
+      >
+        <lucide-angular [img]="UserPlus" class="w-8 h-8 text-amber-400 mb-2"></lucide-angular>
+        <h2 class="text-lg font-bold text-white">Créer ma boutique</h2>
+        <p class="text-sm text-slate-300 mt-1 flex-1">Inscription, frais, visibilité — tout pour démarrer.</p>
+        <span
+          class="mt-3 inline-flex items-center gap-1 text-amber-300 text-sm font-semibold group-hover:gap-2 transition-all"
+        >
+          Démarrer
+          <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+        </span>
+      </a>
+      <a
+        routerLink="/seller"
+        class="group flex flex-col rounded-2xl border border-slate-600/50 bg-slate-900/80 p-6 hover:border-amber-500/50 transition-all"
+      >
+        <lucide-angular [img]="LayoutDashboard" class="w-8 h-8 text-amber-400 mb-2"></lucide-angular>
+        <h2 class="text-lg font-bold text-white">Tableau de bord vendeur</h2>
+        <p class="text-sm text-slate-300 mt-1 flex-1">Déjà inscrit ? Accédez à votre espace (connexion requise).</p>
+        <span class="mt-3 inline-flex items-center gap-1 text-amber-200 text-sm font-semibold group-hover:gap-2 transition-all">
+          Ouvrir l’espace
+          <lucide-angular [img]="ChevronRight" class="w-4 h-4"></lucide-angular>
+        </span>
+      </a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,444 @@
+================================================================================
+HELIGXIAM MARKETPLACE — SPÉCIFICATION VENDEURS & CATALOGUE CÔTÉ CLIENT (ACHETEUR)
+================================================================================
+Date analyse    : 16 juin 2026
+Sources UI demo : src/app/data/products.data.ts, categories.data.ts
+                  home, search, category, offers, cart, profile, welcome-promo
+Objectif        : Créer les vendeurs MySQL + produits + promos pour remplacer
+                  toutes les données mock du parcours acheteur.
+
+--------------------------------------------------------------------------------
+1. SYNTHÈSE — COMBIEN DE VENDEURS ?
+--------------------------------------------------------------------------------
+
+État actuel côté client (demo Angular) :
+  • 15 produits centralisés (products.data.ts) — AUCUN lien vendeur dans le modèle
+  • 6 catégories principales (2 vides : Sport, Automobile)
+  • 6 ventes flash séparées (offers.component.ts)
+  • ~15 produits supplémentaires uniquement dans profil / commandes / recommandations
+  • 6 à 12 vendeurs/boutiques cités par nom, sans ID ni compte réel
+  • 10+ codes promo différents selon l'écran (non harmonisés)
+
+RECOMMANDATION POUR L'IMPLÉMENTATION RÉELLE :
+  → 10 vendeurs catalogue (+ le compte technique vendeur.demo déjà existant)
+  → 42 produits publiés au total (couvre demo + trous catégories)
+  → 6 catégories actives avec au moins 4 produits chacune
+  → 12 codes promo marketplace harmonisés (1 seule source de vérité)
+  → 6 bons vendeur (vouchers) rattachés à des boutiques réelles
+  → Tous les vendeurs : plan professionnel, statut boutique active, KYC validé
+
+Répartition articles par vendeur :
+  V01 TechStore Pro          : 10 produits
+  V02 ElectroMarket          :  5 produits
+  V03 Fashion Hub            :  6 produits
+  V04 Nike Flagship          :  4 produits
+  V05 HELIGXIAM Official     :  3 produits
+  V06 Home Essentials        :  5 produits
+  V07 Beauté Paris Select    :  4 produits
+  V08 Sport Performance      :  4 produits
+  V09 Auto Expert France     :  4 produits
+  V10 Samsung Premium        :  3 produits (marque absente du catalogue actuel)
+                              --------
+  TOTAL                      : 48 lignes produit (42 uniques + 6 doublons flash→catalogue fusionnés)
+
+Note : en fusionnant les doublons demo (ex. DeLonghi catalogue + flash), on vise 42 SKU uniques.
+
+--------------------------------------------------------------------------------
+2. CATÉGORIES MARKETPLACE (6)
+--------------------------------------------------------------------------------
+
+Slug BDD suggéré   | Nom UI actuel           | Produits demo | Cible réelle
+-------------------|-------------------------|---------------|-------------
+electronique       | Électronique            | 8             | min 8
+mode               | Mode & Accessoires      | 5             | min 8
+maison             | Maison & Décoration     | 2             | min 6
+beaute             | Beauté & Santé          | 1             | min 4
+sport              | Sport & Fitness         | 0 (+ filler)  | min 4
+auto               | Automobile              | 0 (+ filler)  | min 4
+
+Sous-catégories UI (categories.data.ts) : chips décoratifs uniquement — pas de table
+SQL dédiée aujourd'hui. À mapper plus tard via champ JSON ou table categories.
+
+Bannières promo par catégorie (UI seulement, à implémenter côté marketing) :
+  • Électronique  : APPLE20 −20%
+  • Mode          : 2ème article −50%
+  • Maison        : Pack Cuisine −30%
+  • Sport         : 3 articles −30%
+  • Auto          : −40% entretien hiver
+  • Beauté        : (via codes BEAUTY20 / Sephora)
+
+--------------------------------------------------------------------------------
+3. LISTE DES 10 VENDEURS À CRÉER
+--------------------------------------------------------------------------------
+
+Format compte :
+  email           : vendeur.{slug}@heligxiam.com
+  mot de passe    : Vendeur2026!  (à changer en prod)
+  plan            : professionnel
+  statut boutique : active
+  onboarding      : 5/5 étapes validées admin
+  KYC             : approuvé
+
+---- V01 — TechStore Pro -------------------------------------------------------
+  slug boutique     : techstore-pro
+  nom affichage     : TechStore Pro
+  raison sociale    : TechStore Pro SAS
+  SIRET             : 12345678900011
+  catégories        : Électronique (principale)
+  marques vendues   : Apple, Sony (partiel)
+  nb articles       : 10
+  promos vendeur    : bon −20€ (voucher Apple Store officiel → fusionner ici)
+  rôle dans demo    : commandes profil, wishlist, tracking Casque Aurora
+
+---- V02 — ElectroMarket -------------------------------------------------------
+  slug boutique     : electromarket
+  nom affichage     : ElectroMarket
+  raison sociale    : ElectroMarket SARL
+  SIRET             : 12345678900012
+  catégories        : Électronique (accessoires)
+  marques           : générique / multi-marques
+  nb articles       : 5
+  promos vendeur    : —
+  rôle demo         : commande CMD-2026-00239 (chargeur, câble USB-C)
+
+---- V03 — Fashion Hub ---------------------------------------------------------
+  slug boutique     : fashion-hub
+  nom affichage     : Fashion Hub
+  raison sociale    : Fashion Hub SARL
+  SIRET             : 12345678900013
+  catégories        : Mode & Accessoires
+  marques           : Ray-Ban, divers mode
+  nb articles       : 6
+  promos vendeur    : —
+  rôle demo         : sac à dos, t-shirt premium (commandes profil)
+
+---- V04 — Nike Flagship -------------------------------------------------------
+  slug boutique     : nike-flagship
+  nom affichage     : Nike Flagship
+  raison sociale    : Nike Flagship France SAS
+  SIRET             : 12345678900014
+  catégories        : Mode & Accessoires, Sport & Fitness
+  marques           : Nike
+  nb articles       : 4
+  promos vendeur    : bon −15% (voucher Nike Flagship)
+  cashback UI       : Nike 5%, Adidas 5% (Adidas = produit à ajouter ou 2e vendeur sport)
+
+---- V05 — HELIGXIAM Official --------------------------------------------------
+  slug boutique     : heligxiam-official
+  nom affichage     : HELIGXIAM Official
+  raison sociale    : HELIGXIAM SAS
+  SIRET             : 12345678900015
+  catégories        : Mode, Maison (marques maison)
+  marques           : HELIGXIAM Collection, HELIGXIAM Home, HELIGXIAM Couture
+  nb articles       : 3
+  promos vendeur    : —
+  note              : vendeur marketplace interne (comme Amazon Basics)
+
+---- V06 — Home Essentials -----------------------------------------------------
+  slug boutique     : home-essentials
+  nom affichage     : Home Essentials
+  raison sociale    : Home Essentials SARL
+  SIRET             : 12345678900016
+  catégories        : Maison & Décoration
+  marques           : DeLonghi, iLife, Dyson (Dyson = extension)
+  nb articles       : 5
+  promos vendeur    : bon −10% Dyson Official → produit Dyson chez ce vendeur
+  rôle demo         : diffuseur huiles (commande annulée profil)
+
+---- V07 — Beauté Paris Select -------------------------------------------------
+  slug boutique     : beaute-paris-select
+  nom affichage     : Beauté Paris Select
+  raison sociale    : Beauté Paris Select SARL
+  SIRET             : 12345678900017
+  catégories        : Beauté & Santé
+  marques           : Tom Ford, Sephora (coffrets), L'Occitane
+  nb articles       : 4
+  promos vendeur    : bon −30% Sephora, bon −40€ L'Occitane
+  cashback UI       : Sephora 6%
+
+---- V08 — Sport Performance ---------------------------------------------------
+  slug boutique     : sport-performance
+  nom affichage     : Sport Performance
+  raison sociale    : Sport Performance SAS
+  SIRET             : 12345678900018
+  catégories        : Sport & Fitness
+  marques           : Garmin, Nike (sport), Adidas
+  nb articles       : 4
+  promos vendeur    : —
+  note              : comble catégorie Sport aujourd'hui VIDE côté client
+
+---- V09 — Auto Expert France --------------------------------------------------
+  slug boutique     : auto-expert-france
+  nom affichage     : Auto Expert France
+  raison sociale    : Auto Expert France SARL
+  SIRET             : 12345678900019
+  catégories        : Automobile
+  marques           : Bosch, Michelin, Garmin (auto)
+  nb articles       : 4
+  promos vendeur    : —
+  note              : comble catégorie Auto aujourd'hui VIDE côté client
+
+---- V10 — Samsung Premium -----------------------------------------------------
+  slug boutique     : samsung-premium
+  nom affichage     : Samsung Premium
+  raison sociale    : Samsung Premium France SAS
+  SIRET             : 12345678900020
+  catégories        : Électronique
+  marques           : Samsung
+  nb articles       : 3
+  promos vendeur    : bon −25€ (voucher Samsung Premium)
+  cashback UI       : Samsung 4%
+  note              : marque citée en promos mais absente du catalogue actuel
+
+--------------------------------------------------------------------------------
+4. CATALOGUE PRODUITS COMPLET (42 SKU UNIQUES)
+--------------------------------------------------------------------------------
+
+Légende colonnes :
+  SKU demo | Titre | Vendeur | Catégorie | Prix € | Prix barré € | Stock | Badge | Promo %
+
+--- ÉLECTRONIQUE (18 produits) ---
+
+P001 | MacBook Pro 16" M3 Max              | V01 TechStore Pro    | Électronique | 2899.00 | 3299.00 | 15 | Premium     | 12
+P002 | AirPods Max Silver Edition          | V01 TechStore Pro    | Électronique |  579.00 |    —    | 40 | Bestseller  | —
+P003 | iPhone 15 Pro Max Titane            | V01 TechStore Pro    | Électronique | 1479.00 | 1599.00 | 25 | Nouveau     | 8
+P004 | iPad Pro 12.9" M2                   | V01 TechStore Pro    | Électronique | 1449.00 |    —    | 18 | —           | —
+P005 | Casque Audio Aurora                 | V01 TechStore Pro    | Électronique |  159.00 |    —    | 80 | Bestseller  | —   [profil commandes]
+P006 | Montre connectée Pulse X2           | V01 TechStore Pro    | Électronique |  189.00 |    —    | 50 | —           | —   [profil commandes]
+P007 | AirPods Pro 2 USB-C                 | V01 TechStore Pro    | Électronique |  189.00 |  279.00 |120 | Flash       | 32  [offers flash]
+P008 | iPad Air M2                         | V01 TechStore Pro    | Électronique |  799.00 |    —    | 30 | —           | —   [profil récemment consulté]
+P009 | Sony A7R V Full Frame               | V01 TechStore Pro    | Électronique | 3899.00 |    —    |  8 | Pro         | —
+P010 | PlayStation 5 Pro Digital           | V01 TechStore Pro    | Électronique |  699.00 |    —    |  0 | Stock limité| —   [rupture volontaire]
+P011 | Bose SoundLink Revolve+ II          | V01 TechStore Pro    | Électronique |  329.00 |  379.00 | 35 | Promotion   | 13
+P012 | Sony WH-1000XM5                     | V05 Audio → V01      | Électronique |  349.00 |  399.00 |  0 | —           | 12  [wishlist profil]
+P013 | Chargeur sans fil 15W               | V02 ElectroMarket    | Électronique |   29.90 |    —    |200 | —           | —
+P014 | Câble USB-C tressé 2m               | V02 ElectroMarket    | Électronique |   14.90 |    —    |500 | —           | —
+P015 | Enceinte Bluetooth Waveform         | V02 ElectroMarket    | Électronique |   89.00 |    —    | 60 | Best-seller | —   [recommandations]
+P016 | Clavier mécanique RGB               | V02 ElectroMarket    | Électronique |  129.90 |    —    | 45 | —           | —
+P017 | Webcam 4K StreamPro                 | V02 ElectroMarket    | Électronique |  149.00 |    —    | 30 | —           | —
+P018 | Galaxy S24 Ultra 256Go              | V10 Samsung Premium  | Électronique | 1199.00 | 1299.00 | 20 | Nouveau     | 8   [NOUVEAU — comble Samsung]
+P019 | TV Samsung QLED 55"                 | V10 Samsung Premium  | Électronique |  899.00 | 1099.00 | 12 | Premium     | 18  [NOUVEAU]
+P020 | Écouteurs Samsung Galaxy Buds3      | V10 Samsung Premium  | Électronique |  149.00 |  179.00 | 80 | Promo       | 17  [NOUVEAU]
+
+--- MODE & ACCESSOIRES (10 produits) ---
+
+P021 | Apple Watch Ultra 2 Titanium        | V01 TechStore Pro    | Mode         |  899.00 |    —    | 22 | Premium     | —
+P022 | Sac Hermès Kelly Replica Premium    | V05 HELIGXIAM Official| Mode        |  349.00 |  449.00 | 40 | Exclusif    | 22
+P023 | Sneakers Nike Air Jordan 1 Retro    | V04 Nike Flagship    | Mode         |  189.00 |    —    | 55 | Bestseller  | —
+P024 | Lunettes Ray-Ban Aviator Gold       | V03 Fashion Hub      | Mode         |  179.00 |  219.00 | 70 | Promo       | 18
+P025 | Tenue Élégante Mode Luxe            | V05 HELIGXIAM Official| Mode        |  599.00 |  799.00 | 15 | Exclusif    | 25
+P026 | Sac à dos minimaliste               | V03 Fashion Hub      | Mode         |   49.90 |    —    |100 | —           | —   [profil commandes]
+P027 | T-shirt premium coton bio           | V03 Fashion Hub      | Mode         |   39.60 |    —    |150 | —           | —
+P028 | MacBook Air M2                      | V01 TechStore Pro    | Électronique*|  999.99 |    —    | 10 | —           | —   [wishlist — catégorie élec]
+P029 | Nike Air Max 2026                   | V04 Nike Flagship    | Sport/Mode   |  129.00 |  199.00 |200 | Flash       | 35  [offers flash]
+
+--- MAISON & DÉCORATION (6 produits) ---
+
+P030 | Vase Design Minimaliste             | V05 HELIGXIAM Official| Maison      |   89.00 |    —    | 80 | —           | —
+P031 | Machine à Café DeLonghi Dinamica    | V06 Home Essentials  | Maison       |  699.00 |    —    | 25 | Premium     | —
+P032 | Cafetière Delonghi Auto (flash)     | V06 Home Essentials  | Maison       |  349.00 |  499.00 | 80 | Flash       | 30  [fusion avec P031 ou variante]
+P033 | Robot aspirateur iLife Pro          | V06 Home Essentials  | Maison       |  229.00 |  399.00 |150 | Promo       | 43  [offers flash]
+P034 | Diffuseur huiles essentielles        | V06 Home Essentials  | Maison       |   49.90 |    —    | 90 | —           | —   [profil commande annulée]
+P035 | Aspirateur Dyson V15 Detect         | V06 Home Essentials  | Maison       |  649.00 |  749.00 | 18 | Premium     | 13  [NOUVEAU — voucher Dyson]
+
+--- BEAUTÉ & SANTÉ (4 produits) ---
+
+P036 | Parfum Tom Ford Black Orchid        | V07 Beauté Paris     | Beauté       |  159.00 |    —    | 45 | —           | —
+P037 | Parfum Coffret premium              | V07 Beauté Paris     | Beauté       |   79.00 |  139.00 |400 | Flash       | 43  [offers flash]
+P038 | Coffret Sephora Best Sellers        | V07 Beauté Paris     | Beauté       |   59.00 |   89.00 |120 | Promo       | 34  [NOUVEAU — voucher Sephora]
+P039 | Crème Immortelle L'Occitane 50ml    | V07 Beauté Paris     | Beauté       |   45.00 |    —    |200 | —           | —   [NOUVEAU — voucher L'Occitane]
+
+--- SPORT & FITNESS (4 produits — catégorie vide aujourd'hui) ---
+
+P040 | Montre Garmin Fenix 8               | V08 Sport Performance| Sport        |  699.00 |  899.00 | 60 | Flash       | 22  [offers flash]
+P041 | Chaussures running Adidas Ultraboost| V08 Sport Performance| Sport      |  159.00 |  199.00 | 85 | Bestseller  | 20  [NOUVEAU]
+P042 | Haltères réglables 20 kg            | V08 Sport Performance| Sport        |  129.00 |    —    | 40 | —           | —   [NOUVEAU]
+P043 | Tapis yoga premium 6mm              | V08 Sport Performance| Sport        |   39.90 |    —    |200 | —           | —   [NOUVEAU]
+
+--- AUTOMOBILE (4 produits — catégorie vide aujourd'hui) ---
+
+P044 | Kit entretien hiver liquide lave-glace| V09 Auto Expert    | Automobile   |   24.90 |   41.50 |300 | Promo hiver | 40  [NOUVEAU — bannière auto]
+P045 | Balai essuie-glace Bosch Aerotwin   | V09 Auto Expert      | Automobile   |   34.90 |    —    |150 | —           | —
+P046 | Dashcam Garmin Mini 3                 | V09 Auto Expert      | Automobile   |  129.00 |  149.00 | 45 | Nouveau     | 13  [NOUVEAU]
+P047 | Compresseur portable 12V              | V09 Auto Expert      | Automobile   |   59.00 |    —    | 60 | —           | —   [NOUVEAU]
+
+* P028 MacBook Air : garder chez V01 en Électronique (wishlist profil).
+
+STOCK TOTAL DÉMO : ~3 500 unités (pour effet « marketplace vivante »)
+PRODUITS EN RUPTURE VOLONTAIRE : P010 (PS5), P012 (Sony WH-1000XM5) — pour UI « stock limité »
+
+--------------------------------------------------------------------------------
+5. PROMOTIONS & RÉDUCTIONS — TABLE DE VÉRITÉ UNIQUE
+--------------------------------------------------------------------------------
+
+Problème demo actuel : codes différents selon l'écran. À unifier en BDD table
+`codes_promotion` (à créer) ou configuration marketplace.
+
+--- 5.1 Codes promo marketplace (12 codes) ---
+
+Code          | Type      | Valeur | Min panier | Catégorie cible      | Écrans demo actuels
+--------------|-----------|--------|------------|----------------------|--------------------
+HELIX15       | %         | 15     | 49 €       | Toutes               | offers, welcome-promo
+TECH25        | %         | 25     | 199 €      | Électronique         | offers
+MODE30        | %         | 30     | 89 €       | Mode & Accessoires   | offers, profile
+HOME10        | montant   | 10 €   | 60 €       | Maison               | offers
+BEAUTY20      | %         | 20     | 0 €        | Beauté               | offers
+SPORT50       | montant   | 50 €   | 250 €      | Sport                | offers
+WELCOME10     | %         | 10     | 0 €        | Toutes               | cart
+FREESHIP      | livraison | 0 €    | 99 €*      | Toutes               | cart (*welcome: 49€)
+HELI20        | montant   | 20 €   | 150 €      | Toutes               | cart
+BIENVENUE10   | montant   | 10 €   | 50 €       | Toutes               | profile
+TECH15        | %         | 15     | 100 €      | Électronique         | profile (≠ TECH25!)
+FIRST5        | montant   | 5 €    | 25 €       | Toutes               | profile (utilisé)
+
+ACTION IMPLÉMENTATION :
+  Fusionner en 8 codes actifs :
+    HELIX15, TECH25, MODE30, HOME10, BEAUTY20, SPORT50, FREESHIP, HELI20
+  Supprimer doublons : WELCOME10=HELIX15?, BIENVENUE10=HOME10?, TECH15=TECH25?
+
+--- 5.2 Bons vendeur (6 vouchers → boutique réelle) ---
+
+Bon UI              | Vendeur cible        | Type    | Valeur
+--------------------|----------------------|---------|--------
+Bon −20€ Apple      | V01 TechStore Pro    | montant | 20 €
+Bon −15% Nike       | V04 Nike Flagship    | %       | 15
+Bon −10% Dyson      | V06 Home Essentials  | %       | 10
+Bon −25€ Samsung    | V10 Samsung Premium  | montant | 25 €
+Bon −30% Sephora    | V07 Beauté Paris     | %       | 30
+Bon −40€ L'Occitane | V07 Beauté Paris     | montant | 40 €
+
+--- 5.3 Réductions produit (prix barré = originalPrice en demo) ---
+
+Produits avec promo prix : P001,P003,P007,P011,P018-P020,P022,P024-P025,P029,
+P032-P033,P035-P038,P040-P041,P044,P046
+Total : 22 produits sur 42 (~52 %) — cohérent avec home « promos »
+
+--- 5.4 Cashback (programme marketplace — pas par vendeur) ---
+
+Tiers : Standard 2% | Premium 5% | VIP 8%
+Marques partenaires UI : Apple 3%, Nike 5%, Samsung 4%, Sephora 6%, Dyson 5%,
+Adidas 5%, HP 4%, Bosch 3%
+→ À implémenter table `cashback_marques` ou règles JSON admin
+
+--- 5.5 Ventes flash (6 slots offers + home hero −70%) ---
+
+Produits flash mappés : P007, P029, P032, P040, P037, P033
+Durée : timer dynamique (offers) ou countdown fixe 12h42m (category page)
+Statut BDD suggéré : champ `est_flash` + `prix_promo_debut/fin` sur produits
+
+--- 5.6 Livraison gratuite (seuils incohérents demo) ---
+
+  Home / cart standard : 99 €
+  Welcome promo        : 49 €
+  Chatbot              : 25 €
+  → Choisir UNE règle prod : 49 € standard, 99 € sans compte Premium
+
+--------------------------------------------------------------------------------
+6. MATRICE VENDEUR × CATÉGORIE × ARTICLES
+--------------------------------------------------------------------------------
+
+Vendeur              | Élec | Mode | Maison | Beauté | Sport | Auto | TOTAL
+---------------------|------|------|--------|--------|-------|------|------
+V01 TechStore Pro    |  12  |   1  |   0    |   0    |   0   |   0  |  13*
+V02 ElectroMarket    |   5  |   0  |   0    |   0    |   0   |   0  |   5
+V03 Fashion Hub      |   0  |   4  |   0    |   0    |   0   |   0  |   4
+V04 Nike Flagship    |   0  |   1  |   0    |   0    |   1   |   0  |   2
+V05 HELIGXIAM Official|  0  |   2  |   1    |   0    |   0   |   0  |   3
+V06 Home Essentials  |   0  |   0  |   5    |   0    |   0   |   0  |   5
+V07 Beauté Paris     |   0  |   0  |   0    |   4    |   0   |   0  |   4
+V08 Sport Performance|   0  |   0  |   0    |   0    |   4   |   0  |   4
+V09 Auto Expert      |   0  |   0  |   0    |   0    |   0   |   4  |   4
+V10 Samsung Premium  |   3  |   0  |   0    |   0    |   0   |   0  |   3
+---------------------|------|------|--------|--------|-------|------|------
+TOTAL par catégorie  |  20  |   8  |   6    |   4    |   5   |   4  |  47
+
+* V01 inclut Apple Watch classée Mode dans demo (id 4 products.data.ts)
+
+--------------------------------------------------------------------------------
+7. ÉCARTS DEMO À CORRIGER LORS DU PASSAGE RÉEL
+--------------------------------------------------------------------------------
+
+[CRITIQUE]
+  • Ajouter sellerId / boutiqueId au modèle Product Angular + API catalogue public
+  • Remplacer products.data.ts par GET /api/catalog/products (ou équivalent)
+  • Sport et Auto : 0 produit aujourd'hui → P040-P047 ci-dessus
+  • Samsung, Dyson, Sephora cités sans produits → V10, P035, P038
+
+[MOYEN]
+  • Harmoniser 10+ codes promo en 8 codes
+  • Fusionner wishlist profil (hardcodée) et WishlistService (PRODUCTS)
+  • Produits profil (Casque Aurora, Pulse X2…) absents du catalogue central
+  • Search affiche « 50 000+ produits » → ajuster ou seed massif
+  • Param collection= dans URL search ignoré par resolveCollection()
+
+[FAIBLE]
+  • Avis produit : 8 templates identiques → table avis_acheteur
+  • Countdown flash fixe catégorie → API date fin promo
+  • Footer liens ?category=high-tech ≠ slug Électronique
+
+--------------------------------------------------------------------------------
+8. PLAN D'IMPLÉMENTATION MySQL (ordre recommandé)
+--------------------------------------------------------------------------------
+
+Étape 1 — Comptes vendeur
+  INSERT comptes_vendeur + profils_vendeur + boutiques (×10)
+  Valider KYC + onboarding admin pour chaque boutique
+
+Étape 2 — Produits
+  INSERT produits (statut_moderation = 'publie') + images_produit + inventaire
+  reference_sku : P001 … P047
+  prix_de_base = prix promo si flash actif, sinon prix normal
+  (variante : table prix_promo séparée)
+
+Étape 3 — API catalogue acheteur (nouvelle route)
+  GET /api/catalog/products?category=&seller=&promo=&flash=
+  GET /api/catalog/products/:id
+  GET /api/catalog/categories
+  GET /api/catalog/sellers/:slug
+
+Étape 4 — Promotions
+  Créer table codes_promotion + codes_promotion_utilisation
+  Brancher cart.component + offers.component + welcome-promo
+
+Étape 5 — Frontend
+  Remplacer import PRODUCTS par HttpClient
+  Ajouter champs vendeur sur product-card et product-detail
+  Filtrer category/search sur vraies données
+
+Étape 6 — Profil acheteur
+  Commandes → GET /api/buyer/orders (Mongo ou MySQL commandes)
+  Wishlist → sync API
+  Coupons → GET /api/buyer/coupons
+
+--------------------------------------------------------------------------------
+9. CHECKLIST CRÉATION VENDEUR (copier par vendeur)
+--------------------------------------------------------------------------------
+
+[ ] Compte auth-service /api/auth/register (role vendeur) ou seed SQL
+[ ] Boutique : nom, slug, SIRET, plan professionnel
+[ ] Onboarding 5 étapes validées
+[ ] KYC documents (kbis, cni, rib) statut valide
+[ ] N produits publiés (voir section 4)
+[ ] Stock inventaire renseigné
+[ ] Au moins 1 produit en promo ou flash (pour home/offers)
+[ ] Notification test admin ↔ vendeur OK
+
+--------------------------------------------------------------------------------
+10. RÉSUMÉ EXÉCUTIF
+--------------------------------------------------------------------------------
+
+  VENDEURS À CRÉER     : 10 (+ vendeur.demo technique existant)
+  PRODUITS UNIQUES     : 42 (47 lignes avec variantes flash)
+  CATÉGORIES COUVERTES : 6/6 avec minimum 4 produits chacune
+  CODES PROMO          : 8 harmonisés (fusion des doublons demo)
+  BONS VENDEUR         : 6
+  PRODUITS EN PROMO    : ~22 (52 %)
+  PRODUITS FLASH       : 6
+
+Fichier généré pour implémentation seed SQL / scripts Node / import CSV vendeur.
+Prochaine étape suggérée : script seed `auth-service/scripts/seed-catalog-demo.js`
++ route API catalogue public.
+
+================================================================================
+FIN DU DOCUMENT
+================================================================================

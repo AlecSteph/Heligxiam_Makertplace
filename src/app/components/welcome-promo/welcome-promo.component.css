@@ -1,0 +1,94 @@
+/* ========= Overlay & entrance ========= */
+@keyframes wp-overlay-fade {
+  from { opacity: 0; backdrop-filter: blur(0); }
+  to   { opacity: 1; backdrop-filter: blur(8px); }
+}
+@keyframes wp-modal-in {
+  0%   { opacity: 0; transform: scale(0.6)  translateY(40px) rotate(-4deg); }
+  40%  { opacity: 1; transform: scale(1.04) translateY(-8px) rotate(1deg); }
+  70%  { transform: scale(0.99) translateY(2px) rotate(0); }
+  100% { transform: scale(1)    translateY(0)  rotate(0); }
+}
+.wp-overlay { animation: wp-overlay-fade 0.45s ease-out; }
+.wp-modal   { animation: wp-modal-in 0.9s cubic-bezier(0.22, 1.15, 0.36, 1); transform-origin: center 60%; }
+
+/* ========= Flying stars ========= */
+@keyframes wp-star {
+  0%   { opacity: 0; transform: scale(0) rotate(0deg) translateY(12px); }
+  20%  { opacity: 1; transform: scale(1.15) rotate(120deg) translateY(0); }
+  60%  { opacity: 1; transform: scale(0.9) rotate(280deg) translateY(-8px); }
+  100% { opacity: 0; transform: scale(0.2) rotate(420deg) translateY(-28px); }
+}
+.wp-star {
+  position: absolute;
+  pointer-events: none;
+  color: #fde68a;
+  filter: drop-shadow(0 0 6px rgba(253, 224, 71, 0.9));
+  animation: wp-star 2.4s ease-out infinite;
+  will-change: transform, opacity;
+}
+
+/* ========= Halo pulse ========= */
+@keyframes wp-halo {
+  0%   { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.6), 0 0 0 0 rgba(139, 92, 246, 0.4); }
+  70%  { box-shadow: 0 0 0 22px rgba(236, 72, 153, 0), 0 0 0 44px rgba(139, 92, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0), 0 0 0 0 rgba(139, 92, 246, 0); }
+}
+.wp-halo { animation: wp-halo 2.4s ease-out infinite; }
+
+/* ========= Sound wave ========= */
+@keyframes wp-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50%      { transform: scaleY(1); }
+}
+.wp-bar {
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: currentColor;
+  border-radius: 2px;
+  transform-origin: center;
+  animation: wp-bar 0.9s ease-in-out infinite;
+}
+.wp-bar:nth-child(2) { animation-delay: 0.1s; }
+.wp-bar:nth-child(3) { animation-delay: 0.2s; }
+
+/* ========= Shine sweep on promo cards ========= */
+@keyframes wp-shine {
+  from { transform: translateX(-120%) skewX(-20deg); }
+  to   { transform: translateX(220%)  skewX(-20deg); }
+}
+.wp-card { position: relative; overflow: hidden; }
+.wp-card::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-120%) skewX(-20deg);
+  pointer-events: none;
+}
+.wp-card:hover::after {
+  animation: wp-shine 1.1s ease-in-out;
+}
+
+/* ========= Confetti emoji bounce ========= */
+@keyframes wp-pop {
+  0%   { transform: scale(0) rotate(-20deg); }
+  60%  { transform: scale(1.25) rotate(15deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.wp-pop { animation: wp-pop 0.6s cubic-bezier(0.22, 1.4, 0.36, 1) both; }
+
+@keyframes wp-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+.wp-title-gradient {
+  background: linear-gradient(90deg, #ec4899, #f59e0b, #8b5cf6, #ec4899);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+          background-clip: text;
+  color: transparent;
+  animation: wp-gradient-shift 4s ease-in-out infinite;
+}
