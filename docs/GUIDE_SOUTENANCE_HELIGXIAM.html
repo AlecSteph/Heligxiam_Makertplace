@@ -1,0 +1,625 @@
+﻿<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.4;margin:2cm;}
+h1{font-size:18pt;color:#1a365d;border-bottom:2px solid #1a365d;padding-bottom:6px;}
+h2{font-size:14pt;color:#2c5282;margin-top:18px;}
+h3{font-size:12pt;color:#2d3748;}
+blockquote{border-left:4px solid #4299e1;margin:10px 0;padding:8px 16px;background:#ebf8ff;font-style:italic;}
+pre{background:#f7fafc;border:1px solid #e2e8f0;padding:10px;font-family:Consolas,monospace;font-size:9pt;}
+table{border-collapse:collapse;width:100%;margin:10px 0;}
+td,th{border:1px solid #cbd5e0;padding:6px 8px;}
+hr{margin:20px 0;border:none;border-top:1px solid #e2e8f0;}
+</style></head><body>
+<h1>Guide de soutenance — Heligxiam Marketplace</h1>
+<h2>Côté client Angular + Microservices</h2>
+
+<p>*Document de préparation pour expliquer le projet à un professeur.*</p>
+
+---
+
+<h1>PARTIE 1 — CÔTÉ CLIENT (Frontend Angular)</h1>
+
+<h2>1. Pitch d'ouverture (30 secondes)</h2>
+
+<p>&gt; « Notre marketplace est une <strong>SPA Angular 21</strong> : une seule page web qui charge les écrans à la demande. Le <strong>côté client</strong>, c'est tout ce que voit l'acheteur : accueil, catalogue, fiche produit, panier, favoris, compte et profil. On communique avec le backend via <strong>HTTP</strong> (auth sur le port 3001, commandes sur le 3004). Côté navigateur, on gère l'<strong>état</strong> avec des <strong>services Angular + RxJS</strong>, sans NgRx. »</p>
+
+<strong>Si le prof demande « c'est quoi une SPA ? » :</strong>
+
+<p>&gt; « Single Page Application : le navigateur charge Angular une fois, puis Angular change les écrans via le <strong>router</strong> sans recharger toute la page. »</p>
+
+---
+
+<h2>2. Architecture globale</h2>
+
+<h3>Stack technique</h3>
+
+| Élément | Détail |
+|--------|--------|
+| <strong>Angular</strong> | Version 21, composants <strong>standalone</strong> (pas de NgModule racine) |
+| <strong>Bootstrap</strong> | `main.ts` → `bootstrapApplication(AppComponent, appConfig)` |
+| <strong>Routing</strong> | `app.routes.ts` — lazy loading pour presque toutes les pages |
+| <strong>HTTP</strong> | `HttpClient` + 3 interceptors dans `app.config.ts` |
+| <strong>État</strong> | `BehaviorSubject` dans les services (panier, auth, locale) |
+| <strong>Styles</strong> | Tailwind CSS + CSS par composant |
+| <strong>Icônes</strong> | lucide-angular |
+
+<h3>Structure des dossiers (`src/app/`)</h3>
+
+<pre><code>
+<p>src/app/</p>
+<p>├── app.component.ts          # Shell : header, footer, router-outlet, chatbot</p>
+<p>├── app.config.ts             # Providers globaux (router, HTTP, interceptors)</p>
+<p>├── app.routes.ts             # Définition des routes</p>
+<p>├── components/               # UI réutilisable (header, footer, product-card, logo)</p>
+<p>├── pages/                    # Pages routées (home, cart, login, profile…)</p>
+<p>├── services/                 # Logique métier + appels HTTP</p>
+<p>├── guards/                   # Protection des routes</p>
+<p>├── interceptors/             # Token JWT, erreurs, logs</p>
+<p>├── pipes/                    # | t (traduction), localizedPrice</p>
+<p>├── models/                   # Interfaces TypeScript (User, Product)</p>
+<p>├── i18n/                     # Dictionnaires de traduction</p>
+<p>└── utils/                    # password.util.ts</p>
+</code></pre>
+
+<strong>Phrase clé :</strong> « On sépare <strong>composants de présentation</strong> (header, product-card) et <strong>pages</strong> (cart, profile) qui orchestrent les services. »
+
+<h3>Fichier central : `app.config.ts`</h3>
+
+<p>Ce fichier configure toute l'application :</p>
+
+- <strong>Router</strong> avec scroll en haut à chaque navigation
+- <strong>HttpClient</strong> avec interceptors
+- <strong>APP_INITIALIZER</strong> : au démarrage, restaure la session utilisateur (token localStorage + appel `/me`)
+- <strong>Interceptors</strong> : AuthInterceptor, ErrorInterceptor, LoggingInterceptor
+
+---
+
+<h2>3. Parcours client — fil conducteur</h2>
+
+<pre><code>
+<p>Accueil → Catalogue → Fiche produit → Panier → Checkout → Profil (commandes)</p>
+</code></pre>
+
+<h3>Étape 1 — Accueil (`/` → HomeComponent)</h3>
+
+- Charge les produits via `CatalogService.loadProducts()`
+- Affiche carrousels (bestsellers, promos) avec `ProductCardComponent`
+- Header : recherche, langue, compteur panier
+
+<h3>Étape 2 — Catalogue</h3>
+
+| Route | Composant | Rôle |
+|-------|-----------|------|
+| `/search` | SearchComponent | Recherche + filtres |
+| `/category/:category` | CategoryComponent | Produits par catégorie |
+| `/product/:id` | ProductDetailComponent | Détail, avis, ajout panier/favoris |
+
+<strong>CatalogService</strong> appelle `http://localhost:3001/api/catalog/products` et met en cache en mémoire.
+
+<strong>API catalogue (testée) :</strong> `GET /api/catalog/products` → `{ success: true, data: { rows: [...], total: 47 } }` — 47 produits seed.
+
+<h3>Étape 3 — Panier (`/cart`)</h3>
+
+- Géré par <strong>CartService</strong> — 100 % côté navigateur (localStorage)
+- Au checkout → <strong>BuyerService.checkout()</strong> → `order-service:3004`
+
+<h3>Étape 4 — Compte (`/account`)</h3>
+
+- Login, inscription, mot de passe oublié
+- Redirection selon le rôle : client → `/profile`, vendeur → `/seller`
+
+<h3>Étape 5 — Profil (`/profile` — protégé par AuthGuard)</h3>
+
+- Commandes, retours, paramètres, changement de mot de passe
+- Vues via query param : `?view=orders`, `?view=settings`
+
+---
+
+<h2>4. Routes principales (`app.routes.ts`)</h2>
+
+| Route | Composant | Guard |
+|-------|-----------|-------|
+| `''` | HomeComponent | — |
+| `search` | SearchComponent | lazy |
+| `product/:id` | ProductDetailComponent | lazy |
+| `category/:category` | CategoryComponent | lazy |
+| `cart` | CartComponent | lazy |
+| `wishlist` | WishlistComponent | lazy |
+| `account` | LoginComponent | lazy |
+| `reset-password` | ResetPasswordComponent | lazy |
+| `profile` | ProfileComponent | <strong>AuthGuard</strong> |
+| `seller` | SellerDashboardComponent | <strong>SellerGuard</strong> |
+| `admin/*` | Admin components | <strong>adminAuthGuard</strong> |
+
+---
+
+<h2>5. Les 6 concepts Angular à maîtriser</h2>
+
+<h3>① Composants standalone</h3>
+
+<p>Chaque page déclare ses imports explicitement :</p>
+
+<pre><code>typescript
+<p>@Component({</p>
+<p>  standalone: true,</p>
+<p>  imports: [CommonModule, RouterModule, LucideAngularModule],</p>
+<p>})</p>
+</code></pre>
+
+<p>&gt; « Chaque feature est autonome, sans gros NgModule central. »</p>
+
+<h3>② Lazy loading</h3>
+
+<pre><code>typescript
+<p>loadComponent: () =&gt; import('./pages/cart/cart.component').then(m =&gt; m.CartComponent)</p>
+</code></pre>
+
+<p>&gt; « Le code du panier n'est téléchargé que quand l'utilisateur va sur `/cart` → bundle initial plus léger. »</p>
+
+<h3>③ Reactive Forms</h3>
+
+<p>Login / register : `FormBuilder`, `Validators`, validateurs custom (`passwordMatchValidator`).</p>
+
+<p>&gt; « On valide avant d'envoyer au serveur : email, longueur mot de passe, correspondance confirm password. »</p>
+
+<h3>④ Services injectables</h3>
+
+<pre><code>typescript
+<p>@Injectable({ providedIn: 'root' })</p>
+<p>export class CartService { ... }</p>
+</code></pre>
+
+<p>Singleton partagé dans toute l'application.</p>
+
+<h3>⑤ RxJS — BehaviorSubject</h3>
+
+<pre><code>typescript
+<p>private cartItems = new BehaviorSubject&lt;CartItem[]&gt;([]);</p>
+<p>public cart$ = this.cartItems.asObservable();</p>
+</code></pre>
+
+<p>&gt; « BehaviorSubject garde la dernière valeur. Les composants s'abonnent et se mettent à jour automatiquement. »</p>
+
+<h3>⑥ Guards</h3>
+
+<pre><code>typescript
+<p>path: 'profile',</p>
+<p>canActivate: [() =&gt; import('./guards/auth.guard').then(m =&gt; m.AuthGuard)]</p>
+</code></pre>
+
+<p>&gt; « Avant d'afficher `/profile`, Angular appelle le guard. Si pas connecté → redirect `/account?returnUrl=/profile`. »</p>
+
+---
+
+<h2>6. Services Angular (`src/app/services`)</h2>
+
+| Service | Rôle | API |
+|---------|------|-----|
+| <strong>AuthService</strong> | Login, JWT, session, profil | `localhost:3001/api/auth/*` |
+| <strong>CatalogService</strong> | Catalogue produits (cache) | `localhost:3001/api/catalog/*` |
+| <strong>BuyerService</strong> | Commandes, checkout, retours | `localhost:3004/api/buyer/*` |
+| <strong>CartService</strong> | Panier localStorage | Aucune API |
+| <strong>WishlistService</strong> | Favoris localStorage | Aucune API |
+| <strong>LocaleService</strong> | Langue, pays, devise, i18n | Aucune API |
+| <strong>RecaptchaService</strong> | Widget reCAPTCHA v2 | `GET /api/auth/recaptcha-config` |
+| <strong>NotificationService</strong> | Toast « Article ajouté » | Aucune API |
+
+---
+
+<h2>7. Authentification — sujet n°1</h2>
+
+<h3>Flux login</h3>
+
+<p>1. Formulaire → `AuthService.login()` → `POST /api/auth/login`</p>
+<p>2. Réponse : `token`, `refreshToken`, `user`</p>
+<p>3. Stockage <strong>localStorage</strong> : `auth_token`, `refresh_token`, `user_data`</p>
+<p>4. Mise à jour `authState$` (BehaviorSubject)</p>
+<p>5. Redirection selon `user.role`</p>
+
+<h3>Rôles (`auth.model.ts`)</h3>
+
+<pre><code>typescript
+<p>role: 'client' | 'vendeur' | 'admin'</p>
+</code></pre>
+
+<h3>Intercepteur (AuthInterceptor)</h3>
+
+<p>&gt; « Chaque requête HTTP reçoit `Authorization: Bearer {token}`. Si 401, on tente un refresh token puis on relance la requête. »</p>
+
+<h3>Register ≠ login auto</h3>
+
+<p>&gt; « Après inscription, l'utilisateur doit se connecter explicitement — choix de sécurité / UX. »</p>
+
+<h3>reCAPTCHA</h3>
+
+- Config depuis le backend (`RecaptchaService`)
+- Token dans `LoginRequest.recaptchaToken`
+
+<h3>Politique mot de passe (`password.util.ts`)</h3>
+
+<pre><code>
+<p>/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,128}$/</p>
+</code></pre>
+
+<p>Min 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre. Underscore et symboles autorisés. Même règle frontend et backend.</p>
+
+<h3>APP_INITIALIZER</h3>
+
+<p>Au F5 (rechargement page) : `bootstrapSession()` relit le token et appelle `GET /me` pour restaurer l'état connecté.</p>
+
+---
+
+<h2>8. Panier — sujet n°2</h2>
+
+<strong>CartService</strong> (`cart.service.ts`) :
+
+<p>1. <strong>Invité</strong> : clé localStorage `heligxiam-cart-guest`</p>
+<p>2. <strong>Connecté</strong> : clé `heligxiam-cart-{userId}`</p>
+<p>3. <strong>Au login</strong> : fusion panier invité + panier utilisateur (`mergeGuestCartIntoUser`)</p>
+<p>4. <strong>reconcileWithCatalog()</strong> : corrige prix/stock si produit modifié en API</p>
+
+<strong>Question piège : « Pourquoi pas NgRx ? »</strong>
+
+<p>&gt; « Pour notre échelle, service + BehaviorSubject + localStorage suffit. NgRx ajouterait de la complexité sans gain immédiat. »</p>
+
+<strong>Question piège : « Pourquoi le panier n'appelle pas cart-service ? »</strong>
+
+<p>&gt; « Choix de simplicité : persistance locale immédiate. Le checkout passe par l'API commandes (order-service). »</p>
+
+---
+
+<h2>9. Internationalisation (i18n)</h2>
+
+<p>Solution <strong>maison</strong> (pas @angular/localize) :</p>
+
+| Couche | Fichier |
+|--------|---------|
+| Dictionnaires | `i18n/translations.ts` |
+| Home/Footer | `i18n/home-footer.translations.ts` |
+| Service | `LocaleService.t('header.nav.cart')` |
+| Template | `{{ 'header.nav.cart' | t }}` |
+| Pipe | `translate.pipe.ts` — <strong>pure: false</strong> pour réagir au changement de langue |
+
+<p>8 langues : fr, en, es, de, it, pt, nl, ar. Layout LTR même pour l'arabe.</p>
+
+<p>Prix : `LocalizedPricePipe` + `Intl.NumberFormat`.</p>
+
+---
+
+<h2>10. Composants clés</h2>
+
+| Composant | Rôle |
+|-----------|------|
+| <strong>Header</strong> | Nav, recherche, panier, langue, menu utilisateur |
+| <strong>Footer</strong> | Liens légaux, newsletter, slogan i18n |
+| <strong>ProductCard</strong> | Carte produit réutilisée (home, search, category) |
+| <strong>Logo</strong> | Identité Heligxiam + tagline |
+| <strong>Chatbot</strong> | FAQ rule-based (pas de LLM), position en localStorage |
+| <strong>Notification</strong> | Toast « Article ajouté au panier » |
+
+<strong>AppComponent</strong> masque header/footer sur `/account`, `/seller`, `/reset-password`.
+
+---
+
+<h2>11. Checkout — flux bout en bout</h2>
+
+<p>Dans `cart.component.ts` :</p>
+
+<p>1. Vérifier adresse livraison</p>
+<p>2. `buyerService.checkout({ items, address, promo, delivery })`</p>
+<p>3. `POST http://localhost:3004/api/buyer/orders/checkout`</p>
+<p>4. Succès → vider panier, redirect profil commandes</p>
+
+---
+
+<h2>12. Fichiers à ouvrir pendant la soutenance</h2>
+
+| Priorité | Fichier | Pour montrer |
+|----------|---------|--------------|
+| ★★★ | `app.routes.ts` | Toutes les routes |
+| ★★★ | `app.config.ts` | Wiring global |
+| ★★★ | `services/auth.service.ts` | Login, tokens |
+| ★★★ | `services/cart.service.ts` | État + localStorage |
+| ★★ | `guards/auth.guard.ts` | Protection /profile |
+| ★★ | `interceptors/auth.interceptor.ts` | Bearer + refresh |
+| ★★ | `pages/login/login.component.ts` | Forms + reCAPTCHA |
+| ★ | `services/locale.service.ts` | i18n |
+| ★ | `models/auth.model.ts` | Contrats TypeScript |
+
+---
+
+<h2>13. Questions du prof + réponses</h2>
+
+<strong>« Différence composant vs service ? »</strong>
+<p>&gt; Composant = UI. Service = logique réutilisable + appels HTTP.</p>
+
+<strong>« C'est quoi un interceptor ? »</strong>
+<p>&gt; Middleware HTTP : modifie requêtes/réponses avant le composant.</p>
+
+<strong>« Où est stocké le JWT ? »</strong>
+<p>&gt; localStorage (`auth_token`). Admin séparé en sessionStorage.</p>
+
+<strong>« Que se passe-t-il au F5 ? »</strong>
+<p>&gt; APP_INITIALIZER → bootstrapSession() → GET /me → restaure l'état.</p>
+
+<strong>« Comment empêcher l'accès à /profile ? »</strong>
+<p>&gt; AuthGuard + validateSession().</p>
+
+<strong>« Reactive vs Template-driven forms ? »</strong>
+<p>&gt; Reactive = définition en TypeScript, testable, validateurs composables.</p>
+
+<strong>« Observable vs Promise ? »</strong>
+<p>&gt; Observable = flux RxJS, annulable, opérateurs (map, filter).</p>
+
+<strong>« Pourquoi TypeScript ? »</strong>
+<p>&gt; Typage fort : User, CartItem, AuthResponse — moins d'erreurs.</p>
+
+<strong>« CORS ? »</strong>
+<p>&gt; Backend autorise localhost:4200. Frontend appelle URLs absolues (3001, 3004).</p>
+
+---
+
+<h2>14. Script démo (3 minutes)</h2>
+
+<p>1. <strong>Home</strong> — CatalogService charge le catalogue</p>
+<p>2. <strong>Clic produit</strong> — getProductById</p>
+<p>3. <strong>Ajouter au panier</strong> — CartService.addToCart(), compteur header</p>
+<p>4. <strong>Changer langue</strong> — LocaleService, pipe | t</p>
+<p>5. <strong>Panier</strong> — localStorage, promo, livraison</p>
+<p>6. <strong>Login</strong> — Reactive form, reCAPTCHA</p>
+<p>7. <strong>Profile</strong> — Guard + commandes BuyerService</p>
+
+---
+
+<h2>15. Ce qu'il vaut mieux ne pas dire</h2>
+
+- « L'IA a fait le frontend »
+- « Tout est synchronisé en temps réel » (le panier est local)
+- « NgRx gère l'état » (c'est BehaviorSubject)
+
+<strong>Points honnêtes (ça impressionne) :</strong>
+- Panier localStorage, pas cart-service en temps réel
+- Chatbot rule-based, pas ChatGPT
+- i18n custom, pas la lib officielle Angular
+- Favoris pas liés au compte utilisateur
+
+---
+
+<h2>16. Vocabulaire à placer</h2>
+
+| Terme | Explication |
+|-------|-------------|
+| SPA | Une page, navigation sans reload complet |
+| Lazy loading | Charger le code à la demande |
+| Guard | Videur à l'entrée d'une route |
+| Interceptor | Filtre sur toutes les requêtes HTTP |
+| BehaviorSubject | Variable observable avec valeur courante |
+| Standalone | Composant autonome sans NgModule |
+| JWT | Token signé pour identifier l'utilisateur |
+| Refresh token | Renouveler l'accès sans re-login |
+
+---
+
+<h2>17. Phrase de conclusion (côté client)</h2>
+
+<p>&gt; « Le côté client Heligxiam, c'est une SPA Angular modulaire : routing lazy, services pour l'état, guards pour la sécurité, interceptors pour l'auth HTTP, et une UX marketplace complète du catalogue au checkout. On a gardé le panier côté navigateur pour la réactivité, et on délègue la persistance métier au backend au moment du paiement. »</p>
+
+---
+
+<h1>PARTIE 2 — MICROSERVICES (Backend)</h1>
+
+<h2>1. Qu'est-ce qu'un microservice ?</h2>
+
+<p>Une <strong>petite application backend indépendante</strong> qui fait <strong>une seule chose bien</strong> et communique via <strong>HTTP</strong> (API REST).</p>
+
+<strong>Monolithe</strong> = tout dans un seul serveur.
+
+<strong>Microservices</strong> = chaque domaine métier a son dossier, son port, souvent sa base.
+
+<h3>Services Heligxiam</h3>
+
+| Service | Port | Rôle |
+|---------|------|------|
+| auth-service | 3001 | Connexion, JWT, catalogue, vendeurs |
+| product-service | 3002 | Produits |
+| cart-service | 3003 | Panier serveur |
+| order-service | 3004 | Commandes, checkout |
+
+<p>Frontend Angular (:4200) appelle ces APIs.</p>
+
+---
+
+<h2>2. Les 7 étapes pour créer un microservice</h2>
+
+<h3>Étape 1 — Définir le périmètre</h3>
+
+<p>« Ce service fait quoi, et quoi seulement ? »</p>
+
+<p>Exemple order-service : créer commande, lister, annuler, reçu PDF. Pas le login.</p>
+
+<h3>Étape 2 — Structure du dossier</h3>
+
+<pre><code>
+<p>order-service/</p>
+<p>├── server.js          # Point d'entrée</p>
+<p>├── app.js             # Express (middlewares, routes)</p>
+<p>├── package.json</p>
+<p>├── Dockerfile</p>
+<p>├── .env.example</p>
+<p>├── config/database.js</p>
+<p>├── routes/buyer.js, seller.js</p>
+<p>├── lib/ordersRepository.js</p>
+<p>├── middlewares/auth.js</p>
+<p>└── utils/security.js</p>
+</code></pre>
+
+<h3>Étape 3 — Node.js + Express</h3>
+
+<pre><code>json
+<p>{</p>
+<p>  "name": "order-microservice",</p>
+<p>  "main": "server.js",</p>
+<p>  "scripts": { "start": "node server.js", "dev": "nodemon server.js" },</p>
+<p>  "dependencies": { "express", "cors", "dotenv", "pg" }</p>
+<p>}</p>
+</code></pre>
+
+<h3>Étape 4 — Configurer Express (app.js)</h3>
+
+- helmet() — sécurité headers
+- cors() — autorise Angular (:4200)
+- express.json() — parse JSON
+- GET /health — santé du service
+- app.use('/api/buyer', buyerRoutes)
+
+<h3>Étape 5 — Démarrer (server.js)</h3>
+
+```javascript
+<p>const PORT = process.env.PORT || 3004;</p>
+<p>await db.testConnection();</p>
+<p>app.listen(PORT, () =&gt; console.log(`Order service on ${PORT}`));</p>
+<pre><code>
+
+<h3>Étape 6 — Routes REST</h3>
+
+| Méthode | URL | Action |
+|---------|-----|--------|
+| GET | /api/buyer/orders | Lire |
+| POST | /api/buyer/orders/checkout | Créer |
+| PUT | /api/buyer/orders/:id/cancel | Modifier |
+
+<h3>Étape 7 — Docker + docker-compose</h3>
+
+<strong>Dockerfile :</strong>
+</code></pre>
+<p>FROM node:20-alpine</p>
+<p>WORKDIR /app</p>
+<p>COPY package*.json ./</p>
+<p>RUN npm ci --omit=dev</p>
+<p>COPY . .</p>
+<p>EXPOSE 3004</p>
+<p>CMD ["node", "server.js"]</p>
+<pre><code>
+
+<strong>docker-compose.yml :</strong> ports, environment, depends_on, healthcheck, network.
+
+---
+
+<h2>3. Schéma architecture</h2>
+
+</code></pre>
+<p>Angular :4200</p>
+<p>    │ HTTP</p>
+<p>    ├── auth-service :3001 → MySQL, PostgreSQL, MongoDB</p>
+<p>    ├── product-service :3002 → PostgreSQL</p>
+<p>    ├── cart-service :3003 → PostgreSQL</p>
+<p>    └── order-service :3004 → PostgreSQL</p>
+<pre><code>
+
+---
+
+<h2>4. Critères d'un vrai microservice</h2>
+
+| Critère | Heligxiam |
+|---------|-----------|
+| Responsabilité unique | order = commandes |
+| Déploiement indépendant | Dockerfile + Docker séparé |
+| API HTTP | /api/buyer/orders |
+| État propre | Tables PostgreSQL |
+| Health check | GET /health |
+| Config externe | Variables d'environnement |
+| Auth partagée | JWT même secret |
+
+---
+
+<h2>5. Communication frontend ↔ microservice</h2>
+
+</code></pre>typescript
+<p>// buyer.service.ts</p>
+<p>private API = 'http://localhost:3004/api/buyer';</p>
+<p>checkout(payload) {</p>
+<p>  return this.http.post(`${this.API}/orders/checkout`, payload);</p>
+<p>}</p>
+<pre><code>
+
+---
+
+<h2>6. Phrases pour le prof (microservices)</h2>
+
+<p>&gt; « Un microservice, c'est une app Node.js autonome avec Express, un port dédié et une API REST. On le containerise avec Docker et on l'orchestre via docker-compose. »</p>
+
+<p>&gt; « order-service sur le port 3004 gère uniquement les commandes. Il se connecte à PostgreSQL, expose /api/buyer/orders/checkout, et vérifie le JWT. »</p>
+
+<p>&gt; « Le endpoint /health permet à Docker de savoir si le service est prêt (depends_on). »</p>
+
+---
+
+<h2>7. Erreurs fréquentes</h2>
+
+- Tout dans un seul service
+- Oublier CORS
+- Hardcoder localhost dans Docker (utiliser order-service:3004)
+- Pas de /health
+- Pas de gestion d'erreur JSON
+
+---
+
+<h2>8. Checklist nouveau microservice</h2>
+
+<p>1. Créer le dossier</p>
+<p>2. npm init + express, cors, dotenv</p>
+<p>3. app.js + server.js + /health</p>
+<p>4. Routes métier</p>
+<p>5. Connexion DB</p>
+<p>6. Dockerfile</p>
+<p>7. Bloc docker-compose.yml</p>
+<p>8. Test curl /health</p>
+<p>9. Brancher frontend ou autre service</p>
+
+---
+
+<h1>PARTIE 3 — SYNTHÈSE GLOBALE PROJET</h1>
+
+<h2>Ports et URLs</h2>
+
+| Composant | URL |
+|-----------|-----|
+| Frontend Angular | http://localhost:4200 |
+| Auth + Catalogue | http://localhost:3001 |
+| Product | http://localhost:3002 |
+| Cart | http://localhost:3003 |
+| Order | http://localhost:3004 |
+| MySQL Docker | localhost:3307 |
+| PostgreSQL | localhost:5432 |
+
+<h2>Compte test (si seed)</h2>
+
+- Email : vendeur.techstore-pro@heligxiam.com
+- Mot de passe : Vendeur2026!
+
+<h2>Commandes utiles</h2>
+
+</code></pre>bash
+<h1>Frontend</h1>
+<p>npm start</p>
+
+<h1>Stack Docker</h1>
+<p>docker compose up -d</p>
+
+<h1>Vérifier catalogue</h1>
+<p>curl http://localhost:3001/api/catalog/products</p>
+
+<h1>Vérifier order-service</h1>
+<p>curl http://localhost:3004/health</p>
+```
+
+<h2>Branche Git</h2>
+
+<p>Travail poussé sur la branche <strong>Heloise</strong> (fusion code Alec + doc Héloïse).</p>
+
+---
+
+<p>*Document généré pour la soutenance Heligxiam Marketplace — Bonne chance !*</p>
+
+</body></html>
